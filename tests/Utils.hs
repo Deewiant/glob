@@ -1,4 +1,4 @@
--- File created: 16:28:53
+-- File created: 2008-10-10 16:28:53
 
 module Utils
    ( prop_overlapperLosesNoInfo
