@@ -20,5 +20,6 @@ tests =
    [ testGroup "Utils"
       [ testProperty "overlapperLosesNoInfo" prop_overlapperLosesNoInfo
       , testProperty "increasingSeq-1"       prop_increasingSeq1
+      , testProperty "addToRange-1"          prop_addToRange1
       ]
    ]

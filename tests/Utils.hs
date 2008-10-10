@@ -3,16 +3,21 @@
 module Utils
    ( prop_overlapperLosesNoInfo
    , prop_increasingSeq1
+   , prop_addToRange1
    ) where
+
+import Data.Maybe
+import Test.QuickCheck
 
 import System.FilePath.Glob.Utils
 
-(-->) :: Bool -> Bool -> Bool
 a --> b = not a || b
 
-prop_overlapperLosesNoInfo (a1,b1) (a2,b2) c =
-   let r1 = if b1 > a1 then (a1,b1) else (b1,a1)
-       r2 = if b2 > a2 then (a2,b2) else (b2,a2)
+validateRange (a,b) = if b > a then (a,b) else (b,a)
+
+prop_overlapperLosesNoInfo x1 x2 c =
+   let r1 = validateRange x1
+       r2 = validateRange x2
        _  = c :: Float
     in case overlap r1 r2 of
 
@@ -27,3 +32,8 @@ prop_overlapperLosesNoInfo (a1,b1) (a2,b2) c =
 prop_increasingSeq1 a xs =
    let s = fst . increasingSeq $ a:xs
     in s == reverse [a :: Float .. head s]
+
+prop_addToRange1 x c =
+   let r  = validateRange x
+       r' = addToRange r c
+    in isJust r' ==> inRange (fromJust r') (c :: Float)
