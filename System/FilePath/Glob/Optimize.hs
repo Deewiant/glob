@@ -2,7 +2,6 @@
 
 module System.FilePath.Glob.Optimize (optimize) where
 
-import Control.Exception (assert)
 import Data.List (sortBy)
 
 import System.FilePath.Glob.Base
