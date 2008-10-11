@@ -11,7 +11,7 @@ import Optimizer
 import Utils
 
 testOptions = mempty `mappend`
-   TestOptions Nothing (Just 1000) Nothing (Just (Just (10^6)))
+   TestOptions Nothing (Just 1000) Nothing (Just (Just (10^7)))
 
 runnerOptions = mempty `mappend`
    RunnerOptions Nothing (Just testOptions) Nothing

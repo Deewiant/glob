@@ -24,8 +24,8 @@ instance Arbitrary PString where
              , (10, charRange)
              , (10, openRange)
              ]
-      
-      s <- mapM (const $ frequency xs) [1..max size 10]
+
+      s <- mapM (const $ frequency xs) [1..size]
       return.PatString $ concat s
 
 instance Arbitrary Path where
@@ -36,11 +36,11 @@ instance Arbitrary Path where
              , (25, return [extSeparator])
              , (20, return [pathSeparator])
              ]
-      s <- mapM (const $ frequency xs) [1..max size 10]
+      s <- mapM (const $ frequency xs) [1..size]
       return.Path $ concat s
 
 plain = sized $ \size -> do
-   s <- mapM (const $ elements alpha) [1..max size 3]
+   s <- mapM (const $ elements alpha) [0..size `mod` 3]
    return s
 
 charRange = do
