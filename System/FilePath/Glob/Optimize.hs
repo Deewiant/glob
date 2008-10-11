@@ -43,10 +43,12 @@ optimizeCharRange = go . sortCharRange
               -- [aaaaa] -> [a]
               | c == d      -> go$ Left c : ys
               | d == succ c ->
-                 let (ls,rest)        = span isLeft ys
+                 let (ls,rest)        = span isLeft xs -- start from y
                      (catable,others) = increasingSeq (map fromLeft ls)
                      range            = (c, head catable)
-                  in if null catable
+
+                  in -- three (or more) Lefts make a Right
+                     if null catable || null (tail catable)
                         then x : y : go ys
                         -- [abcd] -> [a-d]
                         else go$ Right range : map Left others ++ rest
