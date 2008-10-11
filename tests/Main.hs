@@ -24,9 +24,6 @@ tests =
       , testProperty "increasingSeq"         prop_increasingSeq
       , testProperty "addToRange"            prop_addToRange
       ]
-   , testGroup "Compiler"
-      [ testProperty "decompileCompile"  prop_decompileCompile
-      ]
    , testGroup "Optimizer"
       [ testProperty "optimize-1" prop_optimize1
       , testProperty "optimize-2" prop_optimize2
