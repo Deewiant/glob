@@ -12,16 +12,17 @@ import Utils (fromRight, isRight)
 newtype PString = PatString { unPS :: String } deriving Show
 newtype Path    = Path      { unP  :: String } deriving Show
 
-alpha = extSeparator : pathSeparator : "-" ++ ['a'..'z']
+alpha = extSeparator : pathSeparator : "-" ++ ['a'..'z'] ++ ['0'..'9']
 
 instance Arbitrary PString where
    arbitrary = sized $ \size -> do
       let xs =
+             (1, return "**/") :
+             map (\(a,b) -> (a*100,b))
              [ (40, plain)
              , (20, return "?")
+             , (20, charRange)
              , (10, return "*")
-             , (10, return "**/")
-             , (10, charRange)
              , (10, openRange)
              ]
 
@@ -30,13 +31,7 @@ instance Arbitrary PString where
 
 instance Arbitrary Path where
    arbitrary = sized $ \size -> do
-      let xs =
-             -- Paths are a bit more likely to have . and /
-             [ (55, plain)
-             , (25, return [extSeparator])
-             , (20, return [pathSeparator])
-             ]
-      s <- mapM (const $ frequency xs) [1..size]
+      s <- mapM (const plain) [1..size `mod` 16]
       return.Path $ concat s
 
 plain = sized $ \size -> do
