@@ -28,7 +28,7 @@ decompile = concatMap stringify . unPattern
    stringify (CharRange r)       =
       '[' : concatMap (either (:[]) (\(a,b) -> [a,'-',b])) r ++ "]"
    stringify (OpenRange a b)     =
-      '<' : maybe "" show a ++
+      '<' : maybe "" show a ++ "-" ++
             maybe "" show b ++ ">"
 
 tokenize :: String -> Either String Pattern
