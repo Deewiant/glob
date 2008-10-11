@@ -20,10 +20,7 @@ data Token
 --   | AnyDirectoryAtDepth Int             -- */*/*/.../
    deriving (Show)
 
-newtype Pattern = Pattern [Token] deriving (Show)
+newtype Pattern = Pattern { unPattern :: [Token] } deriving (Show)
 
 liftP :: ([Token] -> [Token]) -> Pattern -> Pattern
 liftP f (Pattern pat) = Pattern (f pat)
-
-unPattern :: Pattern -> [Token]
-unPattern (Pattern pat) = pat
