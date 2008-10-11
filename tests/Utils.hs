@@ -1,15 +1,23 @@
 -- File created: 2008-10-10 16:28:53
 
+-- A bit of a misnomer: tests Utils but also has Utils for testing
 module Utils
    ( prop_overlapperLosesNoInfo
-   , prop_increasingSeq1
-   , prop_addToRange1
+   , prop_increasingSeq
+   , prop_addToRange
+   , fromRight, isRight
    ) where
 
 import Data.Maybe
 import Test.QuickCheck
 
 import System.FilePath.Glob.Utils
+
+fromRight (Right x) = x
+fromRight _         = error "fromRight :: Left"
+
+isRight (Right _) = True
+isRight _         = False
 
 a --> b = not a || b
 
@@ -29,11 +37,11 @@ prop_overlapperLosesNoInfo x1 x2 c =
         Just o  -> (inRange r1 c --> inRange o c) &&
                    (inRange r2 c --> inRange o c)
 
-prop_increasingSeq1 a xs =
+prop_increasingSeq a xs =
    let s = fst . increasingSeq $ a:xs
     in s == reverse [a :: Float .. head s]
 
-prop_addToRange1 x c =
+prop_addToRange x c =
    let r  = validateRange x
        r' = addToRange r c
     in isJust r' ==> inRange (fromJust r') (c :: Float)

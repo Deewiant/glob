@@ -6,10 +6,12 @@ import Data.Monoid
 import Test.Framework
 import Test.Framework.Providers.QuickCheck
 
+import Compiler
+import Optimizer
 import Utils
 
 testOptions = mempty `mappend`
-   TestOptions Nothing (Just 1000) Nothing Nothing
+   TestOptions Nothing (Just 1000) Nothing (Just (Just (10^6)))
 
 runnerOptions = mempty `mappend`
    RunnerOptions Nothing (Just testOptions) Nothing
@@ -19,7 +21,15 @@ main = defaultMainWithOpts tests runnerOptions
 tests =
    [ testGroup "Utils"
       [ testProperty "overlapperLosesNoInfo" prop_overlapperLosesNoInfo
-      , testProperty "increasingSeq-1"       prop_increasingSeq1
-      , testProperty "addToRange-1"          prop_addToRange1
+      , testProperty "increasingSeq"         prop_increasingSeq
+      , testProperty "addToRange"            prop_addToRange
+      ]
+   , testGroup "Compiler"
+      [ testProperty "decompileTokenize" prop_decompileTokenize
+      , testProperty "decompileCompile"  prop_decompileCompile
+      ]
+   , testGroup "Optimizer"
+      [ testProperty "optimize-1" prop_optimize1
+      , testProperty "optimize-2" prop_optimize2
       ]
    ]
