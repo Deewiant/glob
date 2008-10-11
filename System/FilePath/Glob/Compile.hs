@@ -1,7 +1,8 @@
 -- File created: 2008-10-10 13:29:13
 
-module System.FilePath.Glob.Compile (compile, decompile) where
+module System.FilePath.Glob.Compile (compile, decompile, tokenize) where
 
+import Control.Monad.Error ()
 import Numeric         (readDec)
 import System.FilePath
    ( isPathSeparator, pathSeparator
@@ -11,8 +12,8 @@ import System.FilePath
 import System.FilePath.Glob.Base
 import System.FilePath.Glob.Optimize (optimize)
 
-compile :: String -> Pattern
-compile = optimize . tokenize
+compile :: String -> Either String Pattern
+compile = fmap optimize . tokenize
 
 decompile :: Pattern -> String
 decompile = concatMap stringify . unPattern
@@ -30,57 +31,61 @@ decompile = concatMap stringify . unPattern
       '<' : maybe "" show a ++
             maybe "" show b ++ ">"
 
-tokenize :: String -> Pattern
-tokenize = Pattern . go
+tokenize :: String -> Either String Pattern
+tokenize = fmap Pattern . sequence . go
  where
+   err s = [Left s]
+
+   go :: String -> [Either String Token]
    go [] = []
-   go ('?':cs) = NonPathSeparator : go cs
+   go ('?':cs) = Right NonPathSeparator : go cs
    go ('*':cs) =
       case cs of
-           ('*':p:xs) | isPathSeparator p -> AnyDirectory        : go xs
-                      | otherwise         -> AnyNonPathSeparator : go xs
-           _                              -> AnyNonPathSeparator : go cs
+           ('*':p:xs) | isPathSeparator p -> Right AnyDirectory        : go xs
+                      | otherwise         -> Right AnyNonPathSeparator : go xs
+           _                              -> Right AnyNonPathSeparator : go cs
    go ('[':cs) =
       let (range, rest) = break (==']') cs
        in if null rest
-             then error "compile :: unclosed [] in pattern"
+             then err "compile :: unclosed [] in pattern"
              else if null range
                      then let (range', rest') = break (==']') (tail rest)
                            in if null rest'
-                                 then error "compile :: unclosed [] in pattern"
+                                 then err "compile :: unclosed [] in pattern"
                                  else charRange range' : go (tail rest')
                      else charRange range : go (tail rest)
    go ('<':cs) =
       let (range, rest) = break (=='>') cs
        in if null rest
-             then error "compile :: unclosed <> in pattern"
+             then err "compile :: unclosed <> in pattern"
              else openRange range : go (tail rest)
    go (c:cs)
-      | isPathSeparator c = PathSeparator : go cs
-      | isExtSeparator  c =  ExtSeparator : go cs
-      | otherwise         = Literal c     : go cs
+      | isPathSeparator c = Right PathSeparator : go cs
+      | isExtSeparator  c = Right  ExtSeparator : go cs
+      | otherwise         = Right (Literal c)   : go cs
 
-openRange :: String -> Token
-openRange ['-']   = OpenRange Nothing Nothing
+openRange :: String -> Either String Token
+openRange ['-']   = Right $ OpenRange Nothing Nothing
 openRange ('-':s) =
    case readDec s of
-        [(b,"")] -> OpenRange Nothing (Just b)
-        _        -> error "compile :: bad <>, expected only number after -"
+        [(b,"")] -> Right $ OpenRange Nothing (Just b)
+        _        -> Left $ "compile :: bad <>, expected number, got " ++ s
 openRange s =
    case readDec s of
-        [(a,"-")]    -> OpenRange (Just a) Nothing
+        [(a,"-")]    -> Right $ OpenRange (Just a) Nothing
         [(a,'-':s')] ->
            case readDec s' of
                 [(b,"")] ->
                    case compare a b of
-                        LT -> OpenRange (Just a) (Just b)
-                        GT -> OpenRange (Just b) (Just a)
-                        EQ -> let l = show a in LongLiteral (length l) l
-                _ -> error "compile :: bad <>, expected only number after -"
-        _ -> error "compile :: bad <>, expected number followed by -"
+                        LT -> Right $ OpenRange (Just a) (Just b)
+                        GT -> Right $ OpenRange (Just b) (Just a)
+                        EQ -> let l = show a
+                               in Right $ LongLiteral (length l) l
+                _ -> Left $ "compile :: bad <>, expected number, got " ++ s'
+        _ -> Left $ "compile :: bad <>, expected number followed by - in " ++ s
 
-charRange :: String -> Token
-charRange = CharRange . go
+charRange :: String -> Either String Token
+charRange = Right . CharRange . go
  where
    go [] = []
    go (a:'-':b:cs) = (: go cs) $
