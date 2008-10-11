@@ -41,9 +41,13 @@ tokenize = fmap Pattern . sequence . go
    go ('?':cs) = Right NonPathSeparator : go cs
    go ('*':cs) =
       case cs of
-           ('*':p:xs) | isPathSeparator p -> Right AnyDirectory        : go xs
-                      | otherwise         -> Right AnyNonPathSeparator : go xs
-           _                              -> Right AnyNonPathSeparator : go cs
+           '*':ys@(p:xs) | isPathSeparator p ->
+                            Right AnyDirectory        : go xs
+                         | otherwise         ->
+                            -- can eat the second * since * and ** are
+                            -- equivalent
+                            Right AnyNonPathSeparator : go ys
+           _             -> Right AnyNonPathSeparator : go cs
    go ('[':cs) =
       let (range, rest) = break (==']') cs
        in if null rest
