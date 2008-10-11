@@ -2,7 +2,7 @@
 
 module Main (main) where
 
-import Data.Monoid
+import System.Environment (getArgs)
 import Test.Framework
 import Test.Framework.Providers.QuickCheck
 
@@ -10,13 +10,13 @@ import Compiler
 import Optimizer
 import Utils
 
-testOptions = mempty `mappend`
-   TestOptions Nothing (Just 1000) Nothing (Just (Just (10^7)))
-
-runnerOptions = mempty `mappend`
-   RunnerOptions Nothing (Just testOptions) Nothing
-
-main = defaultMainWithOpts tests runnerOptions
+main = do
+   args <- getArgs
+   defaultMainWithArgs tests . concat $
+      [ ["--timeout", show 10]
+      , ["--maximum-generated-tests", show 1000]
+      , args
+      ]
 
 tests =
    [ testGroup "Utils"
