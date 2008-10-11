@@ -25,8 +25,7 @@ tests =
       , testProperty "addToRange"            prop_addToRange
       ]
    , testGroup "Compiler"
-      [ testProperty "decompileTokenize" prop_decompileTokenize
-      , testProperty "decompileCompile"  prop_decompileCompile
+      [ testProperty "decompileCompile"  prop_decompileCompile
       ]
    , testGroup "Optimizer"
       [ testProperty "optimize-1" prop_optimize1
