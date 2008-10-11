@@ -11,17 +11,25 @@ optimize :: Pattern -> Pattern
 optimize = liftP go
  where
    go [] = []
-   go (PathSeparator:PathSeparator:xs) = PathSeparator : go xs
    go (CharRange r : xs) = CharRange (optimizeCharRange r) : go xs
    go (x:y:xs) | isLiteral x && isLiteral y =
       let (ls,rest) = span isLiteral xs
        in (:go rest) $
             LongLiteral (length ls + 2)
                         (foldr (\(Literal a) -> (a:)) [] (x:y:ls))
+
+   go (x@AnyNonPathSeparator : xs) = x : go (dropWhile isStar xs)
+   go (x@PathSeparator       : xs) = x : go (dropWhile isSlash xs)
    go (x:xs) = x : go xs
 
    isLiteral (Literal _) = True
    isLiteral _           = False
+
+   isStar AnyNonPathSeparator = True
+   isStar _                   = False
+
+   isSlash PathSeparator = True
+   isSlash _             = False
 
 optimizeCharRange :: [Either Char (Char,Char)] -> [Either Char (Char,Char)]
 optimizeCharRange = go . sortCharRange
