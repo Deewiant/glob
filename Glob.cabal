@@ -1,0 +1,29 @@
+Cabal-Version: >= 1.2
+
+Name:        Glob
+Version:     0.1
+Homepage:    http://iki.fi/matti.niemenmaa/glob/
+Synopsis:    Globbing library
+Category:    System
+Stability:   provisional
+Description:
+   A library for globbing: matching patterns against file paths.
+
+Author:       Matti Niemenmaa
+Maintainer:   Matti Niemenmaa <matti.niemenmaa+glob@iki.fi>
+License:      BSD3
+License-File: LICENSE.txt
+
+Build-Type: Simple
+
+Library
+   Build-Depends: base     >= 3 && < 5
+                , mtl      == 1.*
+                , filepath == 1.*
+
+   Exposed-Modules: System.FilePath.Glob
+   Other-Modules:   System.FilePath.Glob.Base
+                    System.FilePath.Glob.Compile
+                    System.FilePath.Glob.Match
+                    System.FilePath.Glob.Optimize
+                    System.FilePath.Glob.Utils
