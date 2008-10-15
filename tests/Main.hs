@@ -4,11 +4,10 @@ module Main (main) where
 
 import System.Environment (getArgs)
 import Test.Framework
-import Test.Framework.Providers.QuickCheck
 
-import Optimizer
+import qualified Optimizer
 import qualified Regression
-import Utils
+import qualified Utils
 
 main = do
    args <- getArgs
@@ -18,15 +17,8 @@ main = do
       , args
       ]
 
-tests =
-   Regression.tests ++
-   [ testGroup "Utils"
-      [ testProperty "overlapperLosesNoInfo" prop_overlapperLosesNoInfo
-      , testProperty "increasingSeq"         prop_increasingSeq
-      , testProperty "addToRange"            prop_addToRange
-      ]
-   , testGroup "Optimizer"
-      [ testProperty "optimize-1" prop_optimize1
-      , testProperty "optimize-2" prop_optimize2
-      ]
+tests = concat
+   [ Regression.tests
+   , Optimizer.tests
+   , Utils.tests
    ]

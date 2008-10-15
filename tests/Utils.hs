@@ -1,17 +1,22 @@
 -- File created: 2008-10-10 16:28:53
 
 -- A bit of a misnomer: tests Utils but also has Utils for testing
-module Utils
-   ( prop_overlapperLosesNoInfo
-   , prop_increasingSeq
-   , prop_addToRange
-   , fromRight, isRight
-   ) where
+module Utils (tests, fromRight, isRight) where
 
 import Data.Maybe
+import Test.Framework
+import Test.Framework.Providers.QuickCheck
 import Test.QuickCheck
 
 import System.FilePath.Glob.Utils
+
+tests =
+   [ testGroup "Utils"
+      [ testProperty "overlapperLosesNoInfo" prop_overlapperLosesNoInfo
+      , testProperty "increasingSeq"         prop_increasingSeq
+      , testProperty "addToRange"            prop_addToRange
+      ]
+   ]
 
 fromRight (Right x) = x
 fromRight _         = error "fromRight :: Left"

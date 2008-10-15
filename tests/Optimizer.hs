@@ -1,15 +1,22 @@
 -- File created: 2008-10-11 11:18:31
 
-module Optimizer
-   ( prop_optimize1
-   , prop_optimize2
-   ) where
+module Optimizer (tests) where
+
+import Test.Framework
+import Test.Framework.Providers.QuickCheck
 
 import System.FilePath.Glob.Compile
 import System.FilePath.Glob.Optimize
 import System.FilePath.Glob.Match
 
 import Base
+
+tests =
+   [ testGroup "Optimizer"
+       [ testProperty "optimize-1" prop_optimize1
+       , testProperty "optimize-2" prop_optimize2
+       ]
+   ]
 
 -- Optimizing twice should give the same result as optimizing once
 prop_optimize1 s =
