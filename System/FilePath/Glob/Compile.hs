@@ -7,7 +7,7 @@ module System.FilePath.Glob.Compile
    ) where
 
 import Control.Monad.Error ()
-import Numeric         (readDec)
+import Numeric             (readDec)
 import System.FilePath
    ( isPathSeparator, pathSeparator
    ,  isExtSeparator,  extSeparator
