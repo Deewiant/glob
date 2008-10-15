@@ -5,9 +5,9 @@ module Main (main) where
 import System.Environment (getArgs)
 import Test.Framework
 
-import qualified Optimizer
-import qualified Regression
-import qualified Utils
+import qualified Tests.Optimizer  as Optimizer
+import qualified Tests.Regression as Regression
+import qualified Tests.Utils      as Utils
 
 main = do
    args <- getArgs

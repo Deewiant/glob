@@ -1,11 +1,10 @@
 -- File created: 2008-10-10 22:03:00
 
-module Base (PString(unPS), Path(unP), fromRight, isRight) where
+module Tests.Base (PString(unPS), Path(unP), fromRight, isRight) where
 
 import Test.QuickCheck
 
 import System.FilePath (extSeparator, pathSeparator)
-import System.FilePath.Glob.Base
 
 import Utils (fromRight, isRight)
 

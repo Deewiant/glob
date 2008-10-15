@@ -1,6 +1,6 @@
 -- File created: 2008-10-15 20:21:41
 
-module Regression (tests) where
+module Tests.Regression (tests) where
 
 import Test.Framework
 import Test.Framework.Providers.HUnit

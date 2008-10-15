@@ -1,6 +1,6 @@
 -- File created: 2008-10-11 11:18:31
 
-module Optimizer (tests) where
+module Tests.Optimizer (tests) where
 
 import Test.Framework
 import Test.Framework.Providers.QuickCheck
@@ -9,7 +9,7 @@ import System.FilePath.Glob.Compile
 import System.FilePath.Glob.Optimize
 import System.FilePath.Glob.Match
 
-import Base
+import Tests.Base
 
 tests =
    [ testGroup "Optimizer"
