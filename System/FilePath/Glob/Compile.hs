@@ -1,6 +1,10 @@
 -- File created: 2008-10-10 13:29:13
 
-module System.FilePath.Glob.Compile (compile, decompile, tokenize) where
+module System.FilePath.Glob.Compile
+   ( compile, tryCompile
+   , decompile
+   , tokenize
+   ) where
 
 import Control.Monad.Error ()
 import Numeric         (readDec)
@@ -12,8 +16,11 @@ import System.FilePath
 import System.FilePath.Glob.Base
 import System.FilePath.Glob.Optimize (optimize)
 
-compile :: String -> Either String Pattern
-compile = fmap optimize . tokenize
+compile :: String -> Pattern
+compile = either error id . tryCompile
+
+tryCompile :: String -> Either String Pattern
+tryCompile = fmap optimize . tokenize
 
 decompile :: Pattern -> String
 decompile = concatMap stringify . unPattern

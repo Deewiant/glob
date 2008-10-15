@@ -2,8 +2,9 @@
 
 module System.FilePath.Glob
    ( match
-   , compile, decompile
+   , compile, tryCompile
+   , decompile
    ) where
 
-import System.FilePath.Glob.Compile (compile, decompile)
+import System.FilePath.Glob.Compile (compile, tryCompile, decompile)
 import System.FilePath.Glob.Match   (match)

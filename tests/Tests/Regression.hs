@@ -13,9 +13,7 @@ tests =
    [ testGroup "Regression" $
         flip map testCases $ \t@(b,p,s) ->
             testCase (nameTest t) . assertBool "" $
-               case compile p of
-                    Right pat -> match pat s == b
-                    Left _    -> False
+               match (compile p) s == b
    ]
 
 nameTest (True ,p,s) = show p ++ " matches " ++ show s
