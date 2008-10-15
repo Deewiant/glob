@@ -4,14 +4,14 @@ module Tests.Base (PString(unPS), Path(unP), fromRight, isRight) where
 
 import Test.QuickCheck
 
-import System.FilePath (extSeparator, pathSeparator)
+import System.FilePath (extSeparator, pathSeparators)
 
 import Utils (fromRight, isRight)
 
 newtype PString = PatString { unPS :: String } deriving Show
 newtype Path    = Path      { unP  :: String } deriving Show
 
-alpha = extSeparator : pathSeparator : "-" ++ ['a'..'z'] ++ ['0'..'9']
+alpha = extSeparator : pathSeparators ++ "-" ++ ['a'..'z'] ++ ['0'..'9']
 
 instance Arbitrary PString where
    arbitrary = sized $ \size -> do
