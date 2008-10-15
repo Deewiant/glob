@@ -6,7 +6,6 @@ import System.Environment (getArgs)
 import Test.Framework
 import Test.Framework.Providers.QuickCheck
 
-import Compiler
 import Optimizer
 import Utils
 
