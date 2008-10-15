@@ -7,6 +7,7 @@ import Test.Framework
 import Test.Framework.Providers.QuickCheck
 
 import Optimizer
+import qualified Regression
 import Utils
 
 main = do
@@ -18,6 +19,7 @@ main = do
       ]
 
 tests =
+   Regression.tests ++
    [ testGroup "Utils"
       [ testProperty "overlapperLosesNoInfo" prop_overlapperLosesNoInfo
       , testProperty "increasingSeq"         prop_increasingSeq
