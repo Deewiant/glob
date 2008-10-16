@@ -17,7 +17,6 @@ data Token
 
    -- after optimization only
    | LongLiteral Int String                    -- also "pre-optimized": <a-a>
---   | AnyDirectoryAtDepth Int             -- */*/*/.../
    deriving (Show)
 
 newtype Pattern = Pattern { unPattern :: [Token] } deriving (Show)

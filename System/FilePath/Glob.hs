@@ -6,5 +6,6 @@ module System.FilePath.Glob
    , decompile
    ) where
 
-import System.FilePath.Glob.Compile (compile, tryCompile, decompile)
-import System.FilePath.Glob.Match   (match)
+import System.FilePath.Glob.Compile   (compile, tryCompile, decompile)
+import System.FilePath.Glob.Directory (globDir)
+import System.FilePath.Glob.Match     (match)
