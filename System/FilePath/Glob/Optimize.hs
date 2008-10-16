@@ -20,6 +20,7 @@ optimize = liftP go
 
    go (x@AnyNonPathSeparator : xs) = x : go (dropWhile isStar xs)
    go (x@PathSeparator       : xs) = x : go (dropWhile isSlash xs)
+   go (x@AnyDirectory        : xs) = x : go (dropWhile isStarSlash xs)
    go (x:xs) = x : go xs
 
    isLiteral (Literal _) = True
@@ -30,6 +31,9 @@ optimize = liftP go
 
    isSlash PathSeparator = True
    isSlash _             = False
+
+   isStarSlash AnyDirectory = True
+   isStarSlash _            = False
 
 optimizeCharRange :: [Either Char (Char,Char)] -> [Either Char (Char,Char)]
 optimizeCharRange = go . sortCharRange
