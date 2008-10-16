@@ -6,6 +6,9 @@ import Data.List (sortBy)
 
 import System.FilePath.Glob.Base
 import System.FilePath.Glob.Utils
+   ( isLeft, fromLeft
+   , increasingSeq
+   , addToRange, overlap)
 
 optimize :: Pattern -> Pattern
 optimize = liftP go
