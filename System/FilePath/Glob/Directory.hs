@@ -3,9 +3,9 @@
 module System.FilePath.Glob.Directory (globDir) where
 
 import Control.Monad     (forM)
-import Data.List         ((\\), partition, tails)
+import Data.List         ((\\), partition)
 import System.Directory  (doesDirectoryExist, getDirectoryContents)
-import System.FilePath   ((</>), splitPath)
+import System.FilePath   ((</>))
 
 import System.FilePath.Glob.Base
 import System.FilePath.Glob.Match (match)
