@@ -76,13 +76,13 @@ matchTypedAndGo (Dir p:ps) path absPath = do
 
 matchTypedAndGo (AnyDir p:ps) path absPath = do
    isDir <- doesDirectoryExist absPath
-   if isDir && (null (unPattern p) || match p path)
-      then do
-         entries <- getRecursiveContents absPath
-         let pat = unseparate ps
-         return (partition (any (match pat) . pathParts) entries)
-      else
-         didn'tMatch absPath isDir
+   let pat = unseparate ps
+
+   case null (unPattern p) || match p path of
+        True | isDir          -> fmap (partition (any (match pat) . pathParts))
+                                      (getRecursiveContents absPath)
+        True | match pat path -> return ([absPath], [])
+        _                     -> didn'tMatch absPath isDir
 
 didn'tMatch :: FilePath -> Bool -> IO ([FilePath], [FilePath])
 didn'tMatch absPath isDir = (fmap $ (,) []) $
