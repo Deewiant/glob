@@ -9,7 +9,7 @@ import System.FilePath   ((</>), splitPath)
 
 import System.FilePath.Glob.Base
 import System.FilePath.Glob.Match (match)
-import System.FilePath.Glob.Utils (getRecursiveContents, pathParts)
+import System.FilePath.Glob.Utils (getRecursiveContents, nubOrd, pathParts)
 
 -- The Patterns in TypedPattern don't contain PathSeparator or AnyDirectory
 data TypedPattern
@@ -42,7 +42,7 @@ globDir pats dir = do
 
    let (matches, others) = unzip results
 
-   return (matches, concat others)
+   return (matches, nubOrd $ concat others)
 
 globDir' :: [TypedPattern] -> FilePath -> IO ([FilePath], [FilePath])
 globDir' pats dir = do

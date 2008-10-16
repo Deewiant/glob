@@ -17,9 +17,10 @@ License-File: LICENSE.txt
 Build-Type: Simple
 
 Library
-   Build-Depends: base     >= 3 && < 5
-                , mtl      == 1.*
-                , filepath == 1.*
+   Build-Depends: base       >= 3 && < 5
+                , containers == 0.*
+                , mtl        == 1.*
+                , filepath   == 1.*
 
    Exposed-Modules: System.FilePath.Glob
    Other-Modules:   System.FilePath.Glob.Base

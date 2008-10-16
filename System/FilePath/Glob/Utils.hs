@@ -4,6 +4,7 @@ module System.FilePath.Glob.Utils where
 
 import Control.Exception (assert, handle, IOException)
 import Data.List         ((\\), tails)
+import qualified Data.Set as Set
 import System.Directory  (doesDirectoryExist, getDirectoryContents)
 import System.FilePath   ((</>), joinPath, splitPath)
 import System.IO.Unsafe  (unsafeInterleaveIO)
@@ -83,3 +84,12 @@ partitionM p (x:xs) = do
    return $ if b
                then (x:ts, fs)
                else (ts, x:fs)
+
+nubOrd :: Ord a => [a] -> [a]
+nubOrd = go Set.empty
+ where
+   go _ [] = []
+   go set (x:xs) =
+      if Set.member x set
+         then go set xs
+         else x : go (Set.insert x set) xs
