@@ -4,6 +4,7 @@ module System.FilePath.Glob
    ( match
    , compile, tryCompile
    , decompile
+   , globDir
    ) where
 
 import System.FilePath.Glob.Compile   (compile, tryCompile, decompile)
