@@ -5,6 +5,7 @@ module Main (main) where
 import System.Environment (getArgs)
 import Test.Framework
 
+import qualified Tests.Matcher    as Matcher
 import qualified Tests.Optimizer  as Optimizer
 import qualified Tests.Regression as Regression
 import qualified Tests.Utils      as Utils
@@ -19,6 +20,7 @@ main = do
 
 tests = concat
    [ Regression.tests
+   , Matcher.tests
    , Optimizer.tests
    , Utils.tests
    ]

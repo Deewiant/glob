@@ -13,9 +13,12 @@ match _         "." = False
 match _        ".." = False
 match (Pattern p) s = begMatch p s
 
--- . at the beginning of a pattern or after / needs to be matched explicitly:
--- begMatch takes care of that
+-- begMatch takes care of some things at the beginning of a pattern or after /:
+--    - . needs to be matched explicitly
+--    - ./foo is equivalent to foo
 begMatch, match' :: [Token] -> FilePath -> Bool
+begMatch (ExtSeparator:PathSeparator:pat) s                  = begMatch pat s
+begMatch pat (x:y:s) | isExtSeparator x && isPathSeparator y = begMatch pat s
 begMatch pat s =
    if not (null s) && isExtSeparator (head s)
       then case pat of
@@ -23,9 +26,9 @@ begMatch pat s =
                 _                 -> False
       else match' pat s
 
-match' []                      s  = null s
-match' (AnyNonPathSeparator:_) "" = True
-match' _                       "" = False
+match' []                        s  = null s
+match' (AnyNonPathSeparator:_)   "" = True
+match' _                         "" = False
 match' (Literal l       :xs) (c:cs) =                 l == c  && match'   xs cs
 match' ( ExtSeparator   :xs) (c:cs) =       isExtSeparator c  && match'   xs cs
 match' (PathSeparator   :xs) (c:cs) =      isPathSeparator c  && begMatch xs cs
