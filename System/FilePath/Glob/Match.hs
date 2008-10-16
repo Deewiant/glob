@@ -2,12 +2,11 @@
 
 module System.FilePath.Glob.Match (match) where
 
-import Data.List       (tails)
 import Numeric         (readDec)
-import System.FilePath (isPathSeparator, isExtSeparator, joinPath, splitPath)
+import System.FilePath (isPathSeparator, isExtSeparator)
 
 import System.FilePath.Glob.Base
-import System.FilePath.Glob.Utils
+import System.FilePath.Glob.Utils (inRange, pathParts)
 
 match :: Pattern -> FilePath -> Bool
 match _         "." = False
@@ -51,7 +50,7 @@ match' again@(AnyNonPathSeparator:xs) path@(c:cs) =
       else null cs || match' again cs
 
 match' again@(AnyDirectory:xs) path =
-   let parts   = map joinPath . tails . splitPath $ path
+   let parts   = pathParts path
        matches = any (match' xs) parts || any (match' again) (tail parts)
     in if null xs
           -- **/ shouldn't match foo/.bar, so check that remaining bits don't

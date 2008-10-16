@@ -3,13 +3,13 @@
 module System.FilePath.Glob.Directory (globDir) where
 
 import Control.Monad     (forM)
-import Data.List         (partition, (\\))
+import Data.List         ((\\), partition, tails)
 import System.Directory  (doesDirectoryExist, getDirectoryContents)
-import System.FilePath   ((</>), takeFileName)
+import System.FilePath   ((</>), splitPath)
 
 import System.FilePath.Glob.Base
 import System.FilePath.Glob.Match (match)
-import System.FilePath.Glob.Utils (getRecursiveContents)
+import System.FilePath.Glob.Utils (getRecursiveContents, pathParts)
 
 -- The Patterns in TypedPattern don't contain PathSeparator or AnyDirectory
 data TypedPattern
@@ -80,7 +80,7 @@ matchTypedAndGo (AnyDir p:ps) path absPath = do
       then do
          entries <- getRecursiveContents absPath
          let pat = unseparate ps
-         return (partition (match pat . takeFileName) entries)
+         return (partition (any (match pat) . pathParts) entries)
       else
          didn'tMatch absPath isDir
 

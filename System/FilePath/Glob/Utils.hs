@@ -3,9 +3,9 @@
 module System.FilePath.Glob.Utils where
 
 import Control.Exception (assert, handle, IOException)
-import Data.List         ((\\))
+import Data.List         ((\\), tails)
 import System.Directory  (doesDirectoryExist, getDirectoryContents)
-import System.FilePath   ((</>))
+import System.FilePath   ((</>), joinPath, splitPath)
 import System.IO.Unsafe  (unsafeInterleaveIO)
 
 inRange :: Ord a => (a,a) -> a -> Bool
@@ -55,6 +55,9 @@ isLeft _        = False
 fromLeft :: Either a b -> a
 fromLeft (Left x) = x
 fromLeft _        = error "fromLeft :: Right"
+
+pathParts :: FilePath -> [FilePath]
+pathParts = map joinPath . tails . splitPath
 
 getRecursiveContents :: FilePath -> IO [FilePath]
 getRecursiveContents dir = handle (\e->const (return []) (e::IOException)) $ do
