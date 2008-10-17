@@ -28,6 +28,7 @@ testCases =
    , (True , "*"          , "asdf")
    , (True , "a*bc"       , "aXbaXbc")
    , (True , "a**bc"      , "aXbaXbc")
+   , (False, "a*b"        , "aXc")
    , (True , "foo/bar.*"  , "foo/bar.baz")
    , (True , "foo/*.baz"  , "foo/bar.baz")
    , (False, "*bar.*"     , "foo/bar.baz")

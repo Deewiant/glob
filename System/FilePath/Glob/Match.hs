@@ -31,7 +31,7 @@ begMatch pat s =
       else match' pat s
 
 match' []                        s  = null s
-match' (AnyNonPathSeparator:_)   "" = True
+match' (AnyNonPathSeparator:s)   "" = null s
 match' _                         "" = False
 match' (Literal l       :xs) (c:cs) =                 l == c  && match'   xs cs
 match' ( ExtSeparator   :xs) (c:cs) =       isExtSeparator c  && match'   xs cs
@@ -63,12 +63,7 @@ match' (OpenRange lo hi :xs) path =
                 ((num,"") : numChoices)
 
 match' again@(AnyNonPathSeparator:xs) path@(c:cs) =
-   if isPathSeparator c
-      then match' xs path
-
-      -- AnyNonPathSeparator [] is not a separate case since we don't want
-      -- anything except "" to match ""; instead, check for a null tail here
-      else null cs || match' again cs
+   match' xs path || (if isPathSeparator c then False else match' again cs)
 
 match' again@(AnyDirectory:xs) path =
    let parts   = pathParts path
