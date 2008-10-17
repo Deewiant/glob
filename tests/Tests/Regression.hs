@@ -55,4 +55,8 @@ testCases =
    , (True , "foo.[c-h]"  , "foo.f")
    , (True , "foo.[c-h]"  , "foo.h")
    , (False, "foo.[c-h]"  , "foo.i")
+   , (True , "<->3foo"    , "123foo")
+   , (True , "<10-15>3foo", "123foo")
+   , (True , "<0-5>23foo" , "123foo")
+   , (True , "<94-200>foo", "123foo")
    ]

@@ -30,6 +30,10 @@ optimize = liftP (go . pre)
    -- /./ -> /
    go (PathSeparator:ExtSeparator:xs@(PathSeparator:_)) = go xs
 
+   -- <a-a> -> a
+   go (OpenRange (Just a) (Just b):xs)
+      | a == b = LongLiteral (length a) a : go xs
+
    go (x:xs) =
       case find ($x) compressors of
            Just c  -> x : go (dropWhile c xs)

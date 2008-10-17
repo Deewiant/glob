@@ -7,7 +7,8 @@ module System.FilePath.Glob.Compile
    ) where
 
 import Control.Monad.Error ()
-import Numeric             (readDec)
+import Data.Char           (isDigit)
+import Data.Maybe          (fromMaybe)
 import System.FilePath
    ( isPathSeparator, pathSeparator
    ,  isExtSeparator,  extSeparator
@@ -15,6 +16,7 @@ import System.FilePath
 
 import System.FilePath.Glob.Base
 import System.FilePath.Glob.Optimize (optimize)
+import System.FilePath.Glob.Utils    (dropLeadingZeroes)
 
 compile :: String -> Pattern
 compile = either error id . tryCompile
@@ -35,8 +37,8 @@ decompile = concatMap stringify . unPattern
    stringify (CharRange r)       =
       '[' : concatMap (either (:[]) (\(a,b) -> [a,'-',b])) r ++ "]"
    stringify (OpenRange a b)     =
-      '<' : maybe "" show a ++ "-" ++
-            maybe "" show b ++ ">"
+      '<' : fromMaybe "" a ++ "-" ++
+            fromMaybe "" b ++ ">"
 
 tokenize :: String -> Either String Pattern
 tokenize = fmap Pattern . sequence . go
@@ -70,25 +72,24 @@ tokenize = fmap Pattern . sequence . go
       | isExtSeparator  c = Right  ExtSeparator : go cs
       | otherwise         = Right (Literal c)   : go cs
 
+-- <a-b> where a > b can never match anything; this is not considered an error
 openRange :: String -> Either String Token
 openRange ['-']   = Right $ OpenRange Nothing Nothing
 openRange ('-':s) =
-   case readDec s of
-        [(b,"")] -> Right $ OpenRange Nothing (Just b)
-        _        -> Left $ "compile :: bad <>, expected number, got " ++ s
+   case span isDigit s of
+        (b,"") -> Right $ OpenRange Nothing (openRangeNum b)
+        _      -> Left $ "compile :: bad <>, expected number, got " ++ s
 openRange s =
-   case readDec s of
-        [(a,"-")]    -> Right $ OpenRange (Just a) Nothing
-        [(a,'-':s')] ->
-           case readDec s' of
-                [(b,"")] ->
-                   case compare a b of
-                        LT -> Right $ OpenRange (Just a) (Just b)
-                        GT -> Right $ OpenRange (Just b) (Just a)
-                        EQ -> let l = show a
-                               in Right $ LongLiteral (length l) l
+   case span isDigit s of
+        (a,"-")    -> Right $ OpenRange (openRangeNum a) Nothing
+        (a,'-':s') ->
+           case span isDigit s' of
+                (b,"") -> Right $ OpenRange (openRangeNum a) (openRangeNum b)
                 _ -> Left $ "compile :: bad <>, expected number, got " ++ s'
         _ -> Left $ "compile :: bad <>, expected number followed by - in " ++ s
+
+openRangeNum :: String -> Maybe String
+openRangeNum = Just . dropLeadingZeroes
 
 charRange :: String -> Either String Token
 charRange = Right . CharRange . go

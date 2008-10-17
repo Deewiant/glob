@@ -2,11 +2,13 @@
 
 module System.FilePath.Glob.Match (match) where
 
-import Numeric         (readDec)
-import System.FilePath (isPathSeparator, isExtSeparator)
+import Control.Exception (assert)
+import Data.Char         (isDigit)
+import Data.Monoid       (mappend)
+import System.FilePath   (isPathSeparator, isExtSeparator)
 
 import System.FilePath.Glob.Base
-import System.FilePath.Glob.Utils (inRange, pathParts)
+import System.FilePath.Glob.Utils (dropLeadingZeroes, inRange, pathParts)
 
 match :: Pattern -> FilePath -> Bool
 match _         "." = False
@@ -38,11 +40,24 @@ match' (CharRange range :xs) (c:cs) =
    any (either (== c) (`inRange` c)) range && match' xs cs
 
 match' (OpenRange lo hi :xs) path =
-   case readDec path of
-        [(n,cs)] ->
-           maybe True (n >=) lo &&
-           maybe True (n <=) hi && match' xs cs
-        _ -> False
+   let
+      (lzNum,cs) = span isDigit path
+      num        = dropLeadingZeroes lzNum
+      numChoices =
+         tail . takeWhile (not.null.snd) . map (flip splitAt num) $ [0..]
+    in if null lzNum
+          then False -- no digits
+          else
+            -- So, given the path "123foo" what we've got is:
+            --    cs         = "foo"
+            --    num        = "123"
+            --    numChoices = [("1","23"),("12","3")]
+            --
+            -- We want to try matching x against each of 123, 12, and 1.
+            -- 12 and 1 are in numChoices already, but we need to add (num,"")
+            -- manually.
+            any (\(n,rest) -> inOpenRange lo hi n && match' xs (rest ++ cs))
+                ((num,"") : numChoices)
 
 match' again@(AnyNonPathSeparator:xs) path@(c:cs) =
    if isPathSeparator c
@@ -64,3 +79,38 @@ match' again@(AnyDirectory:xs) path =
 match' (LongLiteral len s:xs) path =
    let (pre,cs) = splitAt len path
     in pre == s && match' xs cs
+
+-- Does the actual open range matching: finds whether the third parameter
+-- is between the first two or not.
+--
+-- It does this by keeping track of the Ordering so far (e.g. having
+-- looked at "12" and "34" the Ordering of the two would be LT: 12 < 34)
+-- and aborting if a String "runs out": a longer string is automatically
+-- greater.
+--
+-- Assumes that the input strings contain only digits, and no leading zeroes.
+inOpenRange :: Maybe String -> Maybe String -> String -> Bool
+inOpenRange l_ h_ s_ = assert (all isDigit s_) $ go l_ h_ s_ EQ EQ
+ where
+   go Nothing      Nothing   _     _ _  = True  -- no bounds
+   go (Just [])    _         []    LT _ = False --  lesser than lower bound
+   go _            (Just []) _     _ GT = False -- greater than upper bound
+   go _            (Just []) (_:_) _ _  = False --  longer than upper bound
+   go (Just (_:_)) _         []    _ _  = False -- shorter than lower bound
+   go _            _         []    _ _  = True
+
+   go (Just (l:ls)) (Just (h:hs)) (c:cs) ordl ordh =
+      let ordl' = ordl `mappend` compare c l
+          ordh' = ordh `mappend` compare c h
+       in go (Just ls) (Just hs) cs ordl' ordh'
+
+   go Nothing (Just (h:hs)) (c:cs) _ ordh =
+      let ordh' = ordh `mappend` compare c h
+       in go Nothing (Just hs) cs GT ordh'
+
+   go (Just (l:ls)) Nothing (c:cs) ordl _ =
+      let ordl' = ordl `mappend` compare c l
+       in go (Just ls) Nothing cs ordl' LT
+
+   -- lower bound is shorter: s is greater
+   go (Just []) hi s _ ordh = go Nothing hi s GT ordh

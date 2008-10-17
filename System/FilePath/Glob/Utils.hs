@@ -57,6 +57,11 @@ fromLeft :: Either a b -> a
 fromLeft (Left x) = x
 fromLeft _        = error "fromLeft :: Right"
 
+dropLeadingZeroes :: String -> String
+dropLeadingZeroes s =
+   let x = dropWhile (=='0') s
+    in if null x then "0" else x
+
 pathParts :: FilePath -> [FilePath]
 pathParts = map joinPath . tails . splitPath
 
