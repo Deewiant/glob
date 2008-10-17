@@ -12,7 +12,7 @@ import System.FilePath.Glob.Match
 tests =
    [ testGroup "Regression" $
         flip map testCases $ \t@(b,p,s) ->
-            testCase (nameTest t) . assertBool "" $
+            testCase (nameTest t) . assertBool "failed" $
                match (compile p) s == b
    ]
 
@@ -65,4 +65,7 @@ testCases =
    , (False, "foo[,-0]bar", "foo.bar")
    , (True , "[]x]"       , "]")
    , (True , "[]x]"       , "x")
+
+   -- if matched, decompile would be [0-]] which is different
+   , (False, "[]-0]"      , "0")
    ]

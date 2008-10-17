@@ -109,9 +109,5 @@ charRange :: String -> Either String Token
 charRange = Right . CharRange . go
  where
    go [] = []
-   go (a:'-':b:cs) = (: go cs) $
-      case compare b a of
-           GT -> Right (a,b)
-           LT -> Right (b,a)
-           EQ -> Left b
+   go (a:'-':b:cs) = (if a == b then Left a else Right (a,b)) : go cs
    go (c:cs)       = Left c : go cs

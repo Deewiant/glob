@@ -2,7 +2,7 @@
 
 module System.FilePath.Glob.Utils where
 
-import Control.Exception (assert, handle, IOException)
+import Control.Exception (handle, IOException)
 import Data.List         ((\\), tails)
 import qualified Data.Set as Set
 import System.Directory  (doesDirectoryExist, getDirectoryContents)
@@ -10,14 +10,14 @@ import System.FilePath   ((</>), joinPath, splitPath)
 import System.IO.Unsafe  (unsafeInterleaveIO)
 
 inRange :: Ord a => (a,a) -> a -> Bool
-inRange (a,b) c = assert (b >= a) $ c >= a && c <= b
+inRange (a,b) c = c >= a && c <= b
 
 -- returns Just (a range which covers both given ranges) or Nothing if they are
 -- disjoint.
 --
 -- Assumes that the ranges are in the correct order, i.e. (fst x < snd x).
 overlap :: Ord a => (a,a) -> (a,a) -> Maybe (a,a)
-overlap (a,b) (c,d) = assert (b >= a) $ assert (d >= c) $
+overlap (a,b) (c,d) =
    if b >= c
       then if b >= d
               then if a <= c
