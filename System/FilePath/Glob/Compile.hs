@@ -13,9 +13,44 @@ import System.FilePath.Glob.Base
 import System.FilePath.Glob.Optimize (optimize)
 import System.FilePath.Glob.Utils    (dropLeadingZeroes)
 
+-- |Like 'tryCompile', but calls 'error' if an error results.
 compile :: String -> Pattern
 compile = either error id . tryCompile
 
+-- |Compiles a glob pattern from its textual representation into a 'Pattern'
+-- object, giving an error message in a 'Left' if the pattern is erroneous.
+--
+-- Recognized operators are as follows:
+--
+-- > ?     -- Matches any character except path separators.
+-- > *     -- Matches any number of characters except path separators,
+-- >          including the empty string.
+-- > [..]  -- Matches any of the enclosed characters. Ranges of characters can
+-- >          be specified by separating the endpoints with a '-'. '-' or ']'
+-- >          can be matched by including them as the first character in the
+-- >          list.
+-- > <m-n> -- Matches any integer in the range m to n, inclusive. The range may
+-- >          be open-ended by leaving out either number: "<->", for instance,
+-- >          matches any integer.
+-- > **/   -- Matches any number of characters, including path separators,
+-- >          excluding the empty string.
+--
+-- Note that path separators (typically @\'/\'@) have to be matched explicitly
+-- or using the @**/@ pattern. In addition, extension separators (typically
+-- @\'.\'@) have to be matched explicitly at the beginning of the pattern or
+-- after any path separator.
+--
+-- If a system supports multiple path separators, any one of them will match
+-- any of them. For instance, on Windows, @\'/\'@ will match itself as well as
+-- @\'\\\'@.
+--
+-- Erroneous patterns include:
+--
+-- * An empty @[]@
+--
+-- * A @[@ or @\<@ without a matching @]@ or @>@
+--
+-- * A malformed @\<>@: e.g. nonnumeric characters or no hyphen
 tryCompile :: String -> Either String Pattern
 tryCompile = fmap optimize . tokenize
 

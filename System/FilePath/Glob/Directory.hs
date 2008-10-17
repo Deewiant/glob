@@ -2,10 +2,10 @@
 
 module System.FilePath.Glob.Directory (globDir) where
 
-import Control.Monad     (forM)
-import Data.List         ((\\), partition)
-import System.Directory  (doesDirectoryExist, getDirectoryContents)
-import System.FilePath   ((</>))
+import Control.Monad    (forM)
+import Data.List        ((\\), partition)
+import System.Directory (doesDirectoryExist, getDirectoryContents)
+import System.FilePath  ((</>))
 
 import System.FilePath.Glob.Base
 import System.FilePath.Glob.Match (match)
@@ -18,24 +18,25 @@ data TypedPattern
    | AnyDir Pattern -- pattern**/
    deriving Show
 
--- |Matches each given @Pattern@ against the contents of the given @FilePath@,
--- recursively. The result pair's first component contains the matched paths,
--- grouped for each given @Pattern@, and the second contains all paths which
--- were not matched by any @Pattern@.
+-- |Matches each given 'Pattern' against the contents of the given 'FilePath',
+-- recursively. The result pair\'s first component contains the matched paths,
+-- grouped for each given 'Pattern', and the second contains all paths which
+-- were not matched by any 'Pattern'.
 --
--- If multiple @Pattern@s match a single @FilePath@, that path will be included
+-- If multiple 'Pattern's match a single 'FilePath', that path will be included
 -- in multiple groups.
 --
--- This function is different from a simple @filter@ over all the contents of
+-- This function is different from a simple 'filter' over all the contents of
 -- the directory: the matching is performed relative to the directory, so that
 -- for instance the following is true:
 --
---     fmap (head.fst) (globDir [compile "*"] dir) == getDirectoryContents dir
+-- > fmap (head.fst) (globDir [compile "*"] dir) == getDirectoryContents dir
 --
--- If 'dir' is '\"foo\"' the pattern should be '\"foo/*\"' to get the same
--- results with a plain @filter@.
+-- If @dir@ is @\"foo\"@ the pattern should be @\"foo/*\"@ to get the same
+-- results with a plain 'filter'.
 --
--- The results are enumerated lazily, using @unsafeInterleaveIO@.
+-- Any results deeper than in the given directory are enumerated lazily, using
+-- 'unsafeInterleaveIO'.
 globDir :: [Pattern] -> FilePath -> IO ([[FilePath]], [FilePath])
 globDir pats dir = do
    results <- mapM (\p -> globDir' (separate p) dir) pats

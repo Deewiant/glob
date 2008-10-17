@@ -10,17 +10,18 @@ import System.FilePath (pathSeparator, extSeparator)
 data Token
    -- primitives
    = Literal !Char
-   | ExtSeparator                            -- .
-   | PathSeparator                           -- /
-   | NonPathSeparator                        -- ?
-   | CharRange [Either Char (Char,Char)]     -- []
-   | OpenRange (Maybe String) (Maybe String) -- <>
-   | AnyNonPathSeparator                     -- *
-   | AnyDirectory                            -- **/
+   | ExtSeparator                            --  .
+   | PathSeparator                           --  /
+   | NonPathSeparator                        --  ?
+   | CharRange [Either Char (Char,Char)]     --  []
+   | OpenRange (Maybe String) (Maybe String) --  <>
+   | AnyNonPathSeparator                     --  *
+   | AnyDirectory                            --  **/
 
    -- after optimization only
    | LongLiteral !Int String
 
+-- |An abstract data type representing a compiled pattern.
 newtype Pattern = Pattern { unPattern :: [Token] }
 
 liftP :: ([Token] -> [Token]) -> Pattern -> Pattern

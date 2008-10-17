@@ -10,6 +10,8 @@ import System.FilePath   (isPathSeparator, isExtSeparator)
 import System.FilePath.Glob.Base
 import System.FilePath.Glob.Utils (dropLeadingZeroes, inRange, pathParts)
 
+-- |Matches the given 'Pattern' against the given 'FilePath', returning 'True'
+-- if the pattern matches and 'False' otherwise.
 match :: Pattern -> FilePath -> Bool
 match _         "." = False
 match _        ".." = False
@@ -75,7 +77,7 @@ match' again@(AnyDirectory:xs) path =
    let parts   = pathParts path
        matches = any (match' xs) parts || any (match' again) (tail parts)
     in if null xs
-          -- **/ shouldn't match foo/.bar, so check that remaining bits don't
+          --  **/ shouldn't match foo/.bar, so check that remaining bits don't
           -- start with .
           then all (not.isExtSeparator.head) (init parts) && matches
           else matches
