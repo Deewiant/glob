@@ -2,7 +2,6 @@
 
 module System.FilePath.Glob.Utils where
 
-import Control.Exception (handle, IOException)
 import Data.List         ((\\), tails)
 import qualified Data.Set as Set
 import System.Directory  (doesDirectoryExist, getDirectoryContents)
@@ -66,7 +65,7 @@ pathParts :: FilePath -> [FilePath]
 pathParts = map joinPath . tails . splitPath
 
 getRecursiveContents :: FilePath -> IO [FilePath]
-getRecursiveContents dir = handle (\e->const (return []) (e::IOException)) $ do
+getRecursiveContents dir = flip catch (const $ return []) $ do
    raw <- getDirectoryContents dir
 
    let entries    = raw \\ [".",".."]
