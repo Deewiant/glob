@@ -33,10 +33,10 @@ optimize = liftP (fin . go . pre)
    fin (x:xs) = x : fin xs
 
    go [] = []
-   go (CharRange r : xs) =
-      case optimizeCharRange r of
-           x@(CharRange _) -> x : go xs
-           x               -> go (x:xs)
+   go (x@(CharRange _ _) : xs) =
+      case optimizeCharRange x of
+           x'@(CharRange _ _) -> x' : go xs
+           x'                 -> go (x':xs)
 
    -- Literals to LongLiteral
    go (x:y:xs) | isLiteral x && isLiteral y =
@@ -55,7 +55,7 @@ optimize = liftP (fin . go . pre)
    -- <a-b> -> [a-b]
    -- a and b are guaranteed non-null
    go (OpenRange (Just [a]) (Just [b]):xs)
-      | b > a = go $ CharRange [Right (a,b)] : xs
+      | b > a = go $ CharRange True [Right (a,b)] : xs
 
    go (x:xs) =
       case find ($x) compressors of
@@ -75,14 +75,12 @@ optimize = liftP (fin . go . pre)
    isAnyNumber (OpenRange Nothing Nothing) = True
    isAnyNumber _                           = False
 
-optimizeCharRange :: [Either Char (Char,Char)] -> Token
-optimizeCharRange = fin . go . sortCharRange
+optimizeCharRange :: Token -> Token
+optimizeCharRange (CharRange b_ rs) = fin b_ . go . sortCharRange $ rs
  where
-   fin [Left c]  | not (isPathSeparator c || isExtSeparator c)
-         = Literal c
-   fin [Right r] | r == (minBound,maxBound)
-         = NonPathSeparator
-   fin x = CharRange x
+   fin True [Left  c] | not (isPathSeparator c || isExtSeparator c) = Literal c
+   fin True [Right r] | r == (minBound,maxBound) = NonPathSeparator
+   fin b x = CharRange b x
 
    go [] = []
 

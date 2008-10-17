@@ -11,7 +11,7 @@ import Utils (fromRight, isRight)
 newtype PString = PatString { unPS :: String } deriving Show
 newtype Path    = Path      { unP  :: String } deriving Show
 
-alpha = extSeparator : pathSeparators ++ "-" ++ ['a'..'z'] ++ ['0'..'9']
+alpha = extSeparator : pathSeparators ++ "-^!" ++ ['a'..'z'] ++ ['0'..'9']
 
 instance Arbitrary PString where
    arbitrary = sized $ \size -> do
@@ -39,7 +39,12 @@ plain = sized $ \size -> do
 
 charRange = do
    s <- plain
-   return$ "[" ++ s ++ "]"
+   if s `elem` ["^","!"]
+      then do
+         s' <- plain
+         return$ "[" ++ s ++ s' ++ "]"
+      else
+         return$ "[" ++ s ++       "]"
 
 openRange = do
    probA <- choose (0,1) :: Gen Float

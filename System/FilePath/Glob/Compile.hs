@@ -23,15 +23,22 @@ compile = either error id . tryCompile
 -- Recognized operators are as follows:
 --
 -- > ?     -- Matches any character except path separators.
+-- >
 -- > *     -- Matches any number of characters except path separators,
 -- >          including the empty string.
+-- >
 -- > [..]  -- Matches any of the enclosed characters. Ranges of characters can
 -- >          be specified by separating the endpoints with a '-'. '-' or ']'
 -- >          can be matched by including them as the first character in the
 -- >          list.
+-- >
+-- > [^..]
+-- > [!..] -- Like [..], but matches any character not listed.
+-- >
 -- > <m-n> -- Matches any integer in the range m to n, inclusive. The range may
 -- >          be open-ended by leaving out either number: "<->", for instance,
 -- >          matches any integer.
+-- >
 -- > **/   -- Matches any number of characters, including path separators,
 -- >          excluding the empty string.
 --
@@ -106,11 +113,16 @@ openRangeNum :: String -> Maybe String
 openRangeNum = Just . dropLeadingZeroes
 
 charRange :: String -> Either String Token
-charRange s =
-   case s of
-        (']':t) -> Right . CharRange . (Left ']':) . go $ t
-        t       -> Right . CharRange .               go $ t
+charRange [x] | x `elem` "^!" = Left ("compile :: empty [" ++ [x]
+                                                           ++ "] in pattern")
+charRange x =
+   if head x `elem` "^!"
+      then Right . CharRange False . f $ tail x
+      else Right . CharRange True  . f $      x
  where
+   f (']':s) = Left ']' : go s
+   f      s  =            go s
+
    go [] = []
    go (a:'-':b:cs) = (if a == b then Left a else Right (a,b)) : go cs
    go (c:cs)       = Left c : go cs

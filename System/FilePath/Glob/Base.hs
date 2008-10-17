@@ -10,13 +10,13 @@ import System.FilePath (pathSeparator, extSeparator)
 data Token
    -- primitives
    = Literal !Char
-   | ExtSeparator                            --  .
-   | PathSeparator                           --  /
-   | NonPathSeparator                        --  ?
-   | CharRange [Either Char (Char,Char)]     --  []
-   | OpenRange (Maybe String) (Maybe String) --  <>
-   | AnyNonPathSeparator                     --  *
-   | AnyDirectory                            --  **/
+   | ExtSeparator                              --  .
+   | PathSeparator                             --  /
+   | NonPathSeparator                          --  ?
+   | CharRange !Bool [Either Char (Char,Char)] --  []
+   | OpenRange (Maybe String) (Maybe String)   --  <>
+   | AnyNonPathSeparator                       --  *
+   | AnyDirectory                              --  **/
 
    -- after optimization only
    | LongLiteral !Int String
@@ -35,8 +35,9 @@ instance Show Token where
    show AnyNonPathSeparator = "*"
    show AnyDirectory        = "**/"
    show (LongLiteral _ s)   = s
-   show (CharRange r)       =
-      '[' : concatMap (either (:[]) (\(a,b) -> [a,'-',b])) r ++ "]"
+   show (CharRange b r)     =
+      '[' : if b then "" else "^" ++
+            concatMap (either (:[]) (\(x,y) -> [x,'-',y])) r ++ "]"
    show (OpenRange a b)     =
       '<' : fromMaybe "" a ++ "-" ++
             fromMaybe "" b ++ ">"

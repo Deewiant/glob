@@ -62,7 +62,7 @@ testCases =
    , (False, "[.]x"       , ".x")
    , (False, "foo[/]bar"  , "foo/bar")
    , (False, "foo[,-0]bar", "foo/bar")
-   , (False, "foo[,-0]bar", "foo.bar")
+   , (True , "foo[,-0]bar", "foo.bar")
    , (True , "[]x]"       , "]")
    , (True , "[]x]"       , "x")
    , (False, "[b-a]"      , "a")
@@ -71,4 +71,8 @@ testCases =
    , (True , "[]-b]"      , "-")
    , (True , "[]-b]"      , "b")
    , (False, "[]-b]"      , "a")
+   , (False, "[^x]"       , "/")
+   , (False, "[/]"        , "/")
+   , (True , "a[^x]"      , "a.")
+   , (True , "a[.]"       , "a.")
    ]

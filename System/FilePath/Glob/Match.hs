@@ -37,13 +37,10 @@ match' (Literal l       :xs) (c:cs) =                 l == c  && match'   xs cs
 match' ( ExtSeparator   :xs) (c:cs) =       isExtSeparator c  && match'   xs cs
 match' (PathSeparator   :xs) (c:cs) =      isPathSeparator c  && begMatch xs cs
 match' (NonPathSeparator:xs) (c:cs) = not (isPathSeparator c) && match'   xs cs
-
-match' (CharRange _     :_ ) (c:_)
-   | isExtSeparator c || isPathSeparator c
-      = False
-
-match' (CharRange range :xs) (c:cs) =
-   any (either (== c) (`inRange` c)) range && match' xs cs
+match' (CharRange b rng :xs) (c:cs) =
+   not (isPathSeparator c) &&
+   any (either (== c) (`inRange` c)) rng == b &&
+   match' xs cs
 
 match' (OpenRange lo hi :xs) path =
    let
