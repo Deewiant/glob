@@ -13,14 +13,14 @@ import System.FilePath.Glob.Utils (dropLeadingZeroes, inRange, pathParts)
 -- |Matches the given 'Pattern' against the given 'FilePath', returning 'True'
 -- if the pattern matches and 'False' otherwise.
 match :: Pattern -> FilePath -> Bool
-match _         "." = False
-match _        ".." = False
-match (Pattern p) s = begMatch p s
+match = begMatch . unPattern
 
 -- begMatch takes care of some things at the beginning of a pattern or after /:
 --    - . needs to be matched explicitly
 --    - ./foo is equivalent to foo
 begMatch, match' :: [Token] -> FilePath -> Bool
+begMatch _ "." = False
+begMatch _ ".." = False
 begMatch (ExtSeparator:PathSeparator:pat) s                  = begMatch pat s
 begMatch pat (x:y:s) | isExtSeparator x && isPathSeparator y = begMatch pat s
 begMatch pat s =
