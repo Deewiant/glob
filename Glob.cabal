@@ -16,6 +16,10 @@ License-File: LICENSE.txt
 
 Build-Type: Simple
 
+Extra-Source-Files: tests/README.txt
+                    tests/*.hs
+                    tests/Tests/*.hs
+
 Library
    Build-Depends: base       >= 3 && < 5
                 , containers == 0.*
