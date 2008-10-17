@@ -106,7 +106,10 @@ openRangeNum :: String -> Maybe String
 openRangeNum = Just . dropLeadingZeroes
 
 charRange :: String -> Either String Token
-charRange = Right . CharRange . go
+charRange s =
+   case s of
+        (']':t) -> Right . CharRange . (Left ']':) . go $ t
+        t       -> Right . CharRange .               go $ t
  where
    go [] = []
    go (a:'-':b:cs) = (if a == b then Left a else Right (a,b)) : go cs

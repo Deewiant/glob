@@ -65,7 +65,10 @@ testCases =
    , (False, "foo[,-0]bar", "foo.bar")
    , (True , "[]x]"       , "]")
    , (True , "[]x]"       , "x")
-
-   -- if matched, decompile would be [0-]] which is different
-   , (False, "[]-0]"      , "0")
+   , (False, "[b-a]"      , "a")
+   , (False, "<4-3>"      , "3")
+   , (True , "[]-b]"      , "]")
+   , (True , "[]-b]"      , "-")
+   , (True , "[]-b]"      , "b")
+   , (False, "[]-b]"      , "a")
    ]
