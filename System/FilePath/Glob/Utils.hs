@@ -47,6 +47,7 @@ increasingSeq (x:xs) = go [x] xs
       if y == succ i
          then go (y:is) ys
          else (is, y:ys)
+   go _ _ = error "Glob.increasingSeq :: internal error"
 
 isLeft :: Either a b -> Bool
 isLeft (Left _) = True

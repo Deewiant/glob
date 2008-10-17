@@ -85,6 +85,8 @@ matchTypedAndGo (AnyDir p:ps) path absPath = do
         True | match pat path -> return ([absPath], [])
         _                     -> didn'tMatch absPath isDir
 
+matchTypedAndGo _ _ _ = error "Glob.matchTypedAndGo :: internal error"
+
 didn'tMatch :: FilePath -> Bool -> IO ([FilePath], [FilePath])
 didn'tMatch absPath isDir = (fmap $ (,) []) $
    if isDir

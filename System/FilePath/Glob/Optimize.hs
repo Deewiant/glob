@@ -127,6 +127,7 @@ optimizeCharRange (CharRange b_ rs) = fin b_ . go . sortCharRange $ rs
                    -- [a-cb-d] -> [a-d]
                    Just o  -> go$ Right o : ys
                    Nothing -> x : go xs
+optimizeCharRange _ = error "Glob.optimizeCharRange :: internal error"
 
 sortCharRange :: [Either Char (Char,Char)] -> [Either Char (Char,Char)]
 sortCharRange = sortBy cmp
