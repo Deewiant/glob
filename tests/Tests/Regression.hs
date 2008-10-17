@@ -63,4 +63,6 @@ testCases =
    , (False, "foo[/]bar"  , "foo/bar")
    , (False, "foo[,-0]bar", "foo/bar")
    , (False, "foo[,-0]bar", "foo.bar")
+   , (True , "[]x]"       , "]")
+   , (True , "[]x]"       , "x")
    ]

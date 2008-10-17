@@ -74,7 +74,7 @@ tokenize = fmap Pattern . sequence . go
                      then let (range', rest') = break (==']') (tail rest)
                            in if null rest'
                                  then err "compile :: empty [] in pattern"
-                                 else charRange range' : go (tail rest')
+                                 else charRange (']':range') : go (tail rest')
                      else charRange range : go (tail rest)
    go ('<':cs) =
       let (range, rest) = break (=='>') cs
