@@ -3,10 +3,9 @@
 module System.FilePath.Glob
    ( match
    , compile, tryCompile
-   , decompile
    , globDir
    ) where
 
-import System.FilePath.Glob.Compile   (compile, tryCompile, decompile)
+import System.FilePath.Glob.Compile   (compile, tryCompile)
 import System.FilePath.Glob.Directory (globDir)
 import System.FilePath.Glob.Match     (match)

@@ -2,17 +2,12 @@
 
 module System.FilePath.Glob.Compile
    ( compile, tryCompile
-   , decompile
    , tokenize
    ) where
 
 import Control.Monad.Error ()
 import Data.Char           (isDigit)
-import Data.Maybe          (fromMaybe)
-import System.FilePath
-   ( isPathSeparator, pathSeparator
-   ,  isExtSeparator,  extSeparator
-   )
+import System.FilePath     (isPathSeparator, isExtSeparator)
 
 import System.FilePath.Glob.Base
 import System.FilePath.Glob.Optimize (optimize)
@@ -23,22 +18,6 @@ compile = either error id . tryCompile
 
 tryCompile :: String -> Either String Pattern
 tryCompile = fmap optimize . tokenize
-
-decompile :: Pattern -> String
-decompile = concatMap stringify . unPattern
- where
-   stringify (Literal c)         = [c]
-   stringify ExtSeparator        = [ extSeparator]
-   stringify PathSeparator       = [pathSeparator]
-   stringify NonPathSeparator    = "?"
-   stringify AnyNonPathSeparator = "*"
-   stringify AnyDirectory        = "**/"
-   stringify (LongLiteral _ s)   = s
-   stringify (CharRange r)       =
-      '[' : concatMap (either (:[]) (\(a,b) -> [a,'-',b])) r ++ "]"
-   stringify (OpenRange a b)     =
-      '<' : fromMaybe "" a ++ "-" ++
-            fromMaybe "" b ++ ">"
 
 tokenize :: String -> Either String Pattern
 tokenize = fmap Pattern . sequence . go

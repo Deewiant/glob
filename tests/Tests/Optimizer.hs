@@ -22,7 +22,7 @@ tests =
 prop_optimize1 s =
    let pat = tokenize (unPS s)
        xs = iterate optimize (fromRight pat)
-    in isRight pat && decompile (xs !! 1) == decompile (xs !! 2)
+    in isRight pat && show (xs !! 1) == show (xs !! 2)
 
 -- Optimizing shouldn't affect whether a match succeeds
 prop_optimize2 p s =
