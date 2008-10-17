@@ -11,21 +11,38 @@ import System.FilePath.Glob.Utils
    , addToRange, overlap)
 
 optimize :: Pattern -> Pattern
-optimize = liftP (go . pre)
+optimize = liftP (fin . go . pre)
  where
    -- ./ at beginning -> nothing
    pre (ExtSeparator:PathSeparator:xs) = pre xs
    pre                             xs  = xs
 
+   fin [] = []
+
+   -- concatenate LongLiterals
+   -- Has to be done here: we can't backtrack in go, but some cases might
+   -- result in two consecutive LongLiterals being generated.
+   -- E.g. "<1-1>foo".
+   fin (LongLiteral l1 s1 : LongLiteral l2 s2 : xs) =
+      fin $ LongLiteral (l1+l2) (s1++s2) : xs
+
+   fin (LongLiteral l s : Literal c : xs) =
+      fin $ LongLiteral (l+1) (s++[c]) : xs
+
+   fin (x:xs) = x : fin xs
+
    go [] = []
-   go (CharRange r : xs) = CharRange (optimizeCharRange r) : go xs
+   go (CharRange r : xs) =
+      case optimizeCharRange r of
+           x@(CharRange _) -> x : go xs
+           x               -> go (x:xs)
 
    -- Literals to LongLiteral
    go (x:y:xs) | isLiteral x && isLiteral y =
       let (ls,rest) = span isLiteral xs
-       in (:go rest) $
-            LongLiteral (length ls + 2)
-                        (foldr (\(Literal a) -> (a:)) [] (x:y:ls))
+       in LongLiteral (length ls + 2)
+                      (foldr (\(Literal a) -> (a:)) [] (x:y:ls))
+          : go rest
 
    -- /./ -> /
    go (PathSeparator:ExtSeparator:xs@(PathSeparator:_)) = go xs
@@ -33,6 +50,11 @@ optimize = liftP (go . pre)
    -- <a-a> -> a
    go (OpenRange (Just a) (Just b):xs)
       | a == b = LongLiteral (length a) a : go xs
+
+   -- <a-b> -> [a-b]
+   -- a and b are guaranteed non-null
+   go (OpenRange (Just [a]) (Just [b]):xs)
+      | b > a = go $ CharRange [Right (a,b)] : xs
 
    go (x:xs) =
       case find ($x) compressors of
@@ -52,9 +74,13 @@ optimize = liftP (go . pre)
    isAnyNumber (OpenRange Nothing Nothing) = True
    isAnyNumber _                           = False
 
-optimizeCharRange :: [Either Char (Char,Char)] -> [Either Char (Char,Char)]
-optimizeCharRange = go . sortCharRange
+optimizeCharRange :: [Either Char (Char,Char)] -> Token
+optimizeCharRange = fin . go . sortCharRange
  where
+   fin [Left c]                             = Literal c
+   fin [Right r] | r == (minBound,maxBound) = NonPathSeparator
+   fin x                                    = CharRange x
+
    go [] = []
 
    go (x@(Left c) : xs) =
