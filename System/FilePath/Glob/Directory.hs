@@ -43,7 +43,7 @@ globDir pats dir = do
 
    let (matches, others) = unzip results
 
-   return (matches, nubOrd $ concat others)
+   return (matches, nubOrd (concat others) \\ concat matches)
 
 globDir' :: [TypedPattern] -> FilePath -> IO ([FilePath], [FilePath])
 globDir' pats dir = do
