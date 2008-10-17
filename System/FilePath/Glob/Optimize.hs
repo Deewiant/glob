@@ -20,10 +20,21 @@ optimize = liftP (fin . go . pre)
 
    fin [] = []
 
-   -- concatenate LongLiterals
+   -- Literals to LongLiteral
    -- Has to be done here: we can't backtrack in go, but some cases might
-   -- result in two consecutive LongLiterals being generated.
-   -- E.g. "<1-1>foo".
+   -- result in consecutive Literals being generated.
+   -- E.g. "a[b]".
+   fin (x:y:xs) | isLiteral x && isLiteral y =
+      let (ls,rest) = span isLiteral xs
+       in fin $ LongLiteral (length ls + 2)
+                      (foldr (\(Literal a) -> (a:)) [] (x:y:ls))
+                : rest
+
+   -- concatenate LongLiterals
+   -- Has to be done here because LongLiterals are generated above.
+   --
+   -- So one could say that we have one pass (go) which flattens everything as
+   -- much as it can and one pass (fin) which concatenates what it can.
    fin (LongLiteral l1 s1 : LongLiteral l2 s2 : xs) =
       fin $ LongLiteral (l1+l2) (s1++s2) : xs
 
@@ -37,13 +48,6 @@ optimize = liftP (fin . go . pre)
       case optimizeCharRange x of
            x'@(CharRange _ _) -> x' : go xs
            x'                 -> go (x':xs)
-
-   -- Literals to LongLiteral
-   go (x:y:xs) | isLiteral x && isLiteral y =
-      let (ls,rest) = span isLiteral xs
-       in LongLiteral (length ls + 2)
-                      (foldr (\(Literal a) -> (a:)) [] (x:y:ls))
-          : go rest
 
    -- /./ -> /
    go (PathSeparator:ExtSeparator:xs@(PathSeparator:_)) = go xs
