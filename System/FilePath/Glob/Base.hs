@@ -47,7 +47,7 @@ instance Show Token where
    show AnyDirectory        = "**/"
    show (LongLiteral _ s)   = s
    show (CharRange b r)     =
-      '[' : if b then "" else "^" ++
+      '[' : (if b then "" else "^") ++
             concatMap (either (:[]) (\(x,y) -> [x,'-',y])) r ++ "]"
    show (OpenRange a b)     =
       '<' : fromMaybe "" a ++ "-" ++
