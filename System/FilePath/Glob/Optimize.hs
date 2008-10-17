@@ -11,15 +11,24 @@ import System.FilePath.Glob.Utils
    , addToRange, overlap)
 
 optimize :: Pattern -> Pattern
-optimize = liftP go
+optimize = liftP (go . pre)
  where
+   -- ./ at beginning -> nothing
+   pre (ExtSeparator:PathSeparator:xs) = pre xs
+   pre                             xs  = xs
+
    go [] = []
    go (CharRange r : xs) = CharRange (optimizeCharRange r) : go xs
+
+   -- Literals to LongLiteral
    go (x:y:xs) | isLiteral x && isLiteral y =
       let (ls,rest) = span isLiteral xs
        in (:go rest) $
             LongLiteral (length ls + 2)
                         (foldr (\(Literal a) -> (a:)) [] (x:y:ls))
+
+   -- /./ -> /
+   go (PathSeparator:ExtSeparator:xs@(PathSeparator:_)) = go xs
 
    go (x:xs) =
       case find ($x) compressors of
