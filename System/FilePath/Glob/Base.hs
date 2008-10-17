@@ -6,7 +6,7 @@ module System.FilePath.Glob.Base where
 
 data Token
    -- primitives
-   = Literal Char
+   = Literal !Char
    | ExtSeparator                            -- .
    | PathSeparator                           -- /
    | NonPathSeparator                        -- ?
@@ -16,7 +16,7 @@ data Token
    | AnyDirectory                            -- **/
 
    -- after optimization only
-   | LongLiteral Int String
+   | LongLiteral !Int String
    deriving (Show)
 
 newtype Pattern = Pattern { unPattern :: [Token] } deriving (Show)
