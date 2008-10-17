@@ -20,9 +20,20 @@ data Token
 
    -- after optimization only
    | LongLiteral !Int String
+   deriving (Eq)
 
 -- |An abstract data type representing a compiled pattern.
-newtype Pattern = Pattern { unPattern :: [Token] }
+-- 
+-- The 'Show' instance is essentially the inverse of @'compile'@. Though it may
+-- not return exactly what was given to @'compile'@ it will return code which
+-- produces the same 'Pattern'.
+--
+-- Note that the 'Eq' instance cannot tell you whether two patterns behave in
+-- the same way; only whether they compile to the same 'Pattern'. For instance,
+-- @'compile' \"x\"@ and @'compile' \"[x]\"@ may or may not compare equal,
+-- though a @'match'@ will behave the exact same way no matter which 'Pattern'
+-- is used.
+newtype Pattern = Pattern { unPattern :: [Token] } deriving (Eq)
 
 liftP :: ([Token] -> [Token]) -> Pattern -> Pattern
 liftP f (Pattern pat) = Pattern (f pat)
