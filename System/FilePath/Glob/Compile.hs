@@ -20,27 +20,27 @@ compile = either error id . tryCompile
 -- |Compiles a glob pattern from its textual representation into a 'Pattern'
 -- object, giving an error message in a 'Left' if the pattern is erroneous.
 --
--- Recognized operators are as follows:
+-- For the most part, a character matches itself. Recognized operators are as
+-- follows:
 --
--- > ?     -- Matches any character except path separators.
--- >
--- > *     -- Matches any number of characters except path separators,
--- >          including the empty string.
--- >
--- > [..]  -- Matches any of the enclosed characters. Ranges of characters can
--- >          be specified by separating the endpoints with a '-'. '-' or ']'
--- >          can be matched by including them as the first character in the
--- >          list.
--- >
--- > [^..]
--- > [!..] -- Like [..], but matches any character not listed.
--- >
--- > <m-n> -- Matches any integer in the range m to n, inclusive. The range may
--- >          be open-ended by leaving out either number: "<->", for instance,
--- >          matches any integer.
--- >
--- > **/   -- Matches any number of characters, including path separators,
--- >          excluding the empty string.
+-- [@?@]      Matches any character except path separators.
+-- 
+-- [@*@]      Matches any number of characters except path separators,
+--            including the empty string.
+-- 
+-- [@[..\]@]  Matches any of the enclosed characters. Ranges of characters can
+--            be specified by separating the endpoints with a \'-'. \'-' or ']'
+--            can be matched by including them as the first character(s) in the
+--            list.
+-- 
+-- [@[^..\]@ or @[!..\]@] Like [..], but matches any character /not/ listed.
+-- 
+-- [@\<m-n>@]  Matches any integer in the range m to n, inclusive. The range may
+--            be open-ended by leaving out either number: \"\<->\", for
+--            instance, matches any integer.
+-- 
+-- [@**/@]    Matches any number of characters, including path separators,
+--            excluding the empty string.
 --
 -- Note that path separators (typically @\'/\'@) have to be matched explicitly
 -- or using the @**/@ pattern. In addition, extension separators (typically
@@ -53,7 +53,7 @@ compile = either error id . tryCompile
 --
 -- Erroneous patterns include:
 --
--- * An empty @[]@
+-- * An empty @[]@ or @[^]@ or @[!]@
 --
 -- * A @[@ or @\<@ without a matching @]@ or @>@
 --

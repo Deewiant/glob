@@ -1,9 +1,18 @@
 -- File created: 2008-10-10 13:37:42
 
+-- | A library for globbing: matching patterns against file paths.
+--
+-- Basic usage: @'match' ('compile' pattern) filepath@.
+--
+-- Basic usage in IO: @'globDir' ['compile' pattern] directory@.
 module System.FilePath.Glob
-   ( Pattern
+   ( -- * Data type
+     Pattern
+     -- * Functions
+     -- ** Compilation
+   , tryCompile, compile
+     -- ** Matching
    , match
-   , compile, tryCompile
    , globDir
    ) where
 
