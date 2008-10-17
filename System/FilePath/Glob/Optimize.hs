@@ -2,7 +2,8 @@
 
 module System.FilePath.Glob.Optimize (optimize) where
 
-import Data.List (find, sortBy)
+import Data.List       (find, sortBy)
+import System.FilePath (isPathSeparator, isExtSeparator)
 
 import System.FilePath.Glob.Base
 import System.FilePath.Glob.Utils
@@ -77,9 +78,11 @@ optimize = liftP (fin . go . pre)
 optimizeCharRange :: [Either Char (Char,Char)] -> Token
 optimizeCharRange = fin . go . sortCharRange
  where
-   fin [Left c]                             = Literal c
-   fin [Right r] | r == (minBound,maxBound) = NonPathSeparator
-   fin x                                    = CharRange x
+   fin [Left c]  | not (isPathSeparator c || isExtSeparator c)
+         = Literal c
+   fin [Right r] | r == (minBound,maxBound)
+         = NonPathSeparator
+   fin x = CharRange x
 
    go [] = []
 

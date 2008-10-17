@@ -36,6 +36,10 @@ match' ( ExtSeparator   :xs) (c:cs) =       isExtSeparator c  && match'   xs cs
 match' (PathSeparator   :xs) (c:cs) =      isPathSeparator c  && begMatch xs cs
 match' (NonPathSeparator:xs) (c:cs) = not (isPathSeparator c) && match'   xs cs
 
+match' (CharRange _     :_ ) (c:_)
+   | isExtSeparator c || isPathSeparator c
+      = False
+
 match' (CharRange range :xs) (c:cs) =
    any (either (== c) (`inRange` c)) range && match' xs cs
 

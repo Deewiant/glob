@@ -59,4 +59,8 @@ testCases =
    , (True , "<10-15>3foo", "123foo")
    , (True , "<0-5>23foo" , "123foo")
    , (True , "<94-200>foo", "123foo")
+   , (False, "[.]x"       , ".x")
+   , (False, "foo[/]bar"  , "foo/bar")
+   , (False, "foo[,-0]bar", "foo/bar")
+   , (False, "foo[,-0]bar", "foo.bar")
    ]
