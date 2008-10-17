@@ -24,8 +24,8 @@ Library
    Build-Depends: base       >= 3 && < 5
                 , containers == 0.*
                 , directory  == 1.*
-                , mtl        == 1.*
                 , filepath   == 1.*
+                , mtl        == 1.*
 
    Exposed-Modules: System.FilePath.Glob
    Other-Modules:   System.FilePath.Glob.Base
