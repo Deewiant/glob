@@ -5,7 +5,7 @@ module System.FilePath.Glob.Utils where
 import Data.List         ((\\), tails)
 import qualified Data.Set as Set
 import System.Directory  (doesDirectoryExist, getDirectoryContents)
-import System.FilePath   ((</>), joinPath, splitPath)
+import System.FilePath   ((</>), isPathSeparator, dropDrive)
 import System.IO.Unsafe  (unsafeInterleaveIO)
 
 inRange :: Ord a => (a,a) -> a -> Bool
@@ -62,8 +62,19 @@ dropLeadingZeroes s =
    let x = dropWhile (=='0') s
     in if null x then "0" else x
 
+-- foo/bar/baz -> [foo/bar/baz,bar/baz,baz]
 pathParts :: FilePath -> [FilePath]
-pathParts = map joinPath . tails . splitPath
+pathParts p = p : let d = dropDrive p
+                   in if null d || d == p
+                         then     f d
+                         else d : f d
+ where
+   f []  = []
+   f (x:xs@(y:_)) | isPathSeparator x && isPathSeparator y = f xs
+   f (x:xs) =
+      if isPathSeparator x
+         then xs : f xs
+         else      f xs
 
 getRecursiveContents :: FilePath -> IO [FilePath]
 getRecursiveContents dir = flip catch (const $ return []) $ do
