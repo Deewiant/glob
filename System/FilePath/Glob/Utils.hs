@@ -2,6 +2,7 @@
 
 module System.FilePath.Glob.Utils where
 
+import Control.Monad     (foldM)
 import Data.List         ((\\), tails)
 import qualified Data.Set as Set
 import System.Directory  (doesDirectoryExist, getDirectoryContents)
@@ -93,13 +94,12 @@ getRecursiveContents dir = flip catch (const $ return []) $ do
    return$ dir : files ++ concat subs
 
 partitionM :: (Monad m) => (a -> m Bool) -> [a] -> m ([a], [a])
-partitionM _ []     = return ([],[])
-partitionM p (x:xs) = do
-   ~(ts,fs) <- partitionM p xs
-   b <- p x
-   return $ if b
-               then (x:ts, fs)
-               else (ts, x:fs)
+partitionM p_ = foldM (f p_) ([],[])
+ where
+   f p (ts,fs) x = p x >>= \b ->
+      if b
+         then return (x:ts, fs)
+         else return (ts, x:fs)
 
 nubOrd :: Ord a => [a] -> [a]
 nubOrd = go Set.empty
