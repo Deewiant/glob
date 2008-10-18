@@ -3,13 +3,16 @@
 module System.FilePath.Glob.Directory (globDir) where
 
 import Control.Monad    (forM)
+import qualified Data.DList as DL
+import Data.DList       (DList)
 import Data.List        ((\\), partition)
 import System.Directory (doesDirectoryExist, getDirectoryContents)
 import System.FilePath  ((</>))
 
 import System.FilePath.Glob.Base
 import System.FilePath.Glob.Match (match)
-import System.FilePath.Glob.Utils (getRecursiveContents, nubOrd, pathParts)
+import System.FilePath.Glob.Utils
+   (getRecursiveContents, nubOrd, pathParts, partitionDL)
 
 -- The Patterns in TypedPattern don't contain PathSeparator or AnyDirectory
 data TypedPattern
@@ -42,10 +45,15 @@ globDir pats dir = do
    results <- mapM (\p -> globDir' (separate p) dir) pats
 
    let (matches, others) = unzip results
+       allMatches        = DL.toList . DL.concat $ matches
+       allOthers         = DL.toList . DL.concat $ others
 
-   return (matches, nubOrd (concat others) \\ concat matches)
+   return ( map DL.toList matches
+          , nubOrd allOthers \\ allMatches
+          )
 
-globDir' :: [TypedPattern] -> FilePath -> IO ([FilePath], [FilePath])
+globDir' :: [TypedPattern] -> FilePath -> IO (DList FilePath, DList FilePath)
+globDir' []   _   = return (DL.empty, DL.empty)
 globDir' pats dir = do
    raw <- getDirectoryContents dir
 
@@ -55,18 +63,16 @@ globDir' pats dir = do
 
    let (matches, others) = unzip results
 
-   return (concat matches, concat others)
+   return (DL.concat matches, DL.concat others)
 
 matchTypedAndGo :: [TypedPattern]
                 -> FilePath -> FilePath
-                -> IO ([FilePath], [FilePath])
-
-matchTypedAndGo [] _ _ = return ([], [])
+                -> IO (DList FilePath, DList FilePath)
 
 -- (Any p) is always the last element
 matchTypedAndGo [Any p] path absPath =
    if match p path
-      then return ([absPath], [])
+      then return (DL.singleton absPath, DL.empty)
       else doesDirectoryExist absPath >>= didn'tMatch absPath
 
 matchTypedAndGo (Dir p:ps) path absPath = do
@@ -77,21 +83,21 @@ matchTypedAndGo (Dir p:ps) path absPath = do
 
 matchTypedAndGo (AnyDir p:ps) path absPath = do
    isDir <- doesDirectoryExist absPath
-   let pat = unseparate ps
+   let m = match (unseparate ps)
 
    case null (unPattern p) || match p path of
-        True | isDir          -> fmap (partition (any (match pat) . pathParts))
-                                      (getRecursiveContents absPath)
-        True | match pat path -> return ([absPath], [])
-        _                     -> didn'tMatch absPath isDir
+        True | isDir  -> fmap (partitionDL (any m . pathParts))
+                              (getRecursiveContents absPath)
+        True | m path -> return (DL.singleton absPath, DL.empty)
+        _             -> didn'tMatch absPath isDir
 
 matchTypedAndGo _ _ _ = error "Glob.matchTypedAndGo :: internal error"
 
-didn'tMatch :: FilePath -> Bool -> IO ([FilePath], [FilePath])
-didn'tMatch absPath isDir = (fmap $ (,) []) $
+didn'tMatch :: FilePath -> Bool -> IO (DList FilePath, DList FilePath)
+didn'tMatch absPath isDir = (fmap $ (,) DL.empty) $
    if isDir
       then getRecursiveContents absPath
-      else return [absPath]
+      else return$ DL.singleton absPath
 
 separate :: Pattern -> [TypedPattern]
 separate = go [] . unPattern

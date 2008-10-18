@@ -24,6 +24,7 @@ Library
    Build-Depends: base       >= 3 && < 5
                 , containers == 0.*
                 , directory  == 1.*
+                , dlist      == 0.*
                 , filepath   == 1.*
                 , mtl        == 1.*
 

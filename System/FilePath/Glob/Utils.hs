@@ -1,9 +1,20 @@
 -- File created: 2008-10-10 13:40:35
 
-module System.FilePath.Glob.Utils where
+module System.FilePath.Glob.Utils
+   ( isLeft, fromLeft
+   , increasingSeq
+   , addToRange, inRange, overlap
+   , dropLeadingZeroes
+   , pathParts
+   , nubOrd
+   , partitionDL
+   , getRecursiveContents
+   ) where
 
 import Control.Monad     (foldM)
-import Data.List         ((\\), tails)
+import Data.List         ((\\))
+import qualified Data.DList as DL
+import Data.DList        (DList)
 import qualified Data.Set as Set
 import System.Directory  (doesDirectoryExist, getDirectoryContents)
 import System.FilePath   ((</>), isPathSeparator, dropDrive)
@@ -77,21 +88,17 @@ pathParts p = p : let d = dropDrive p
          then xs : f xs
          else      f xs
 
-getRecursiveContents :: FilePath -> IO [FilePath]
-getRecursiveContents dir = flip catch (const $ return []) $ do
+getRecursiveContents :: FilePath -> IO (DList FilePath)
+getRecursiveContents dir = do
    raw <- getDirectoryContents dir
 
-   let entries    = raw \\ [".",".."]
-       absEntries =
-          if dir == "."
-             then entries
-             else map (dir </>) entries
+   let entries = map (dir </>) (raw \\ [".",".."])
 
-   (dirs,files) <- partitionM doesDirectoryExist absEntries
+   (dirs,files) <- partitionM doesDirectoryExist entries
 
    subs <- unsafeInterleaveIO . mapM getRecursiveContents $ dirs
 
-   return$ dir : files ++ concat subs
+   return$ DL.cons dir (DL.fromList files `DL.append` DL.concat subs)
 
 partitionM :: (Monad m) => (a -> m Bool) -> [a] -> m ([a], [a])
 partitionM p_ = foldM (f p_) ([],[])
@@ -100,6 +107,14 @@ partitionM p_ = foldM (f p_) ([],[])
       if b
          then return (x:ts, fs)
          else return (ts, x:fs)
+
+partitionDL :: (a -> Bool) -> DList a -> (DList a, DList a)
+partitionDL p_ = DL.foldr (f p_) (DL.empty,DL.empty)
+ where
+   f p x (ts,fs) =
+      if p x
+         then (DL.cons x ts, fs)
+         else (ts, DL.cons x fs)
 
 nubOrd :: Ord a => [a] -> [a]
 nubOrd = go Set.empty
