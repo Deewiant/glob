@@ -5,7 +5,7 @@ module System.FilePath.Glob.Directory (globDir) where
 import Control.Monad    (forM)
 import qualified Data.DList as DL
 import Data.DList       (DList)
-import Data.List        ((\\), partition)
+import Data.List        ((\\))
 import System.Directory (doesDirectoryExist, getDirectoryContents)
 import System.FilePath  ((</>))
 
