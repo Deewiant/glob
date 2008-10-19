@@ -1,0 +1,19 @@
+0.3, 2008-10-19:
+	Further performance improvements to globDir.
+	Bug fix: handle empty pattern lists correctly in globDir.
+	Added dependency: Win32, for Windows OSs.
+
+0.2, 2008-10-18:
+	Performance improvements to globDir, no functionality changes.
+	Added dependency: dlist.
+
+0.1, 2008-10-17:
+	Initial release.
+
+	Functions:
+		System.FilePath.Glob.tryCompile :: String -> Either String Pattern
+		System.FilePath.Glob.compile    :: String -> Pattern
+		System.FilePath.Glob.match      :: Pattern -> FilePath -> Bool
+		System.FilePath.Glob.globDir    :: [Pattern] -> FilePath -> IO ([[FilePath]], [FilePath])
+	
+	Dependencies: base, containers, directory, filepath, mtl.
