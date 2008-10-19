@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 -- File created: 2008-10-10 13:40:35
 
 module System.FilePath.Glob.Utils
@@ -11,14 +12,26 @@ module System.FilePath.Glob.Utils
    , getRecursiveContents
    ) where
 
-import Control.Monad     (foldM)
-import Data.List         ((\\))
+import Control.Monad    (foldM)
+import Data.List        ((\\))
 import qualified Data.DList as DL
-import Data.DList        (DList)
+import Data.DList       (DList)
 import qualified Data.Set as Set
-import System.Directory  (doesDirectoryExist, getDirectoryContents)
-import System.FilePath   ((</>), isPathSeparator, dropDrive)
-import System.IO.Unsafe  (unsafeInterleaveIO)
+import System.Directory (getDirectoryContents)
+import System.FilePath  ((</>), isPathSeparator, dropDrive)
+import System.IO.Unsafe (unsafeInterleaveIO)
+
+#if mingw32_HOST_OS
+import Data.Bits          ((.&.))
+import System.Win32.Types (withTString)
+import System.Win32.File  (c_GetFileAttributes, fILE_ATTRIBUTE_DIRECTORY)
+#else
+import Foreign.C.String      (withCString)
+import Foreign.Marshal.Alloc (allocaBytes)
+import System.FilePath
+   (isDrive, dropTrailingPathSeparator, addTrailingPathSeparator)
+import System.Posix.Internals (sizeof_stat, lstat, s_isdir, st_mode)
+#endif
 
 inRange :: Ord a => (a,a) -> a -> Bool
 inRange (a,b) c = c >= a && c <= b
@@ -87,6 +100,28 @@ pathParts p = p : let d = dropDrive p
       if isPathSeparator x
          then xs : f xs
          else      f xs
+
+-- Significantly speedier than System.Directory.doesDirectoryExist.
+doesDirectoryExist :: FilePath -> IO Bool
+#if mingw32_HOST_OS
+-- This one allocates more memory since it has to do a UTF-16 conversion, but
+-- that can't really be helped: the below version is locale-dependent.
+doesDirectoryExist = flip withTString $ \s -> do
+   a <- c_GetFileAttributes s
+   return (a /= 0xffffffff && a.&.fILE_ATTRIBUTE_DIRECTORY /= 0)
+#else
+doesDirectoryExist s =
+   allocaBytes sizeof_stat $ \p ->
+      withCString
+         (if isDrive s
+             then addTrailingPathSeparator s
+             else dropTrailingPathSeparator s)
+         $ \c -> do
+            st <- lstat c p
+            if st == 0
+               then fmap s_isdir (st_mode p)
+               else return False
+#endif
 
 getRecursiveContents :: FilePath -> IO (DList FilePath)
 getRecursiveContents dir = do
