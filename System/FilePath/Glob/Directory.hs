@@ -41,6 +41,9 @@ data TypedPattern
 -- Any results deeper than in the given directory are enumerated lazily, using
 -- 'unsafeInterleaveIO'.
 globDir :: [Pattern] -> FilePath -> IO ([[FilePath]], [FilePath])
+globDir []   dir = do
+   c <- getRecursiveContents dir
+   return ([], DL.toList c)
 globDir pats dir = do
    results <- mapM (\p -> globDir' (separate p) dir) pats
 
@@ -53,7 +56,7 @@ globDir pats dir = do
           )
 
 globDir' :: [TypedPattern] -> FilePath -> IO (DList FilePath, DList FilePath)
-globDir' []   _   = return (DL.empty, DL.empty)
+globDir' []   dir = didn'tMatch dir True
 globDir' pats dir = do
    raw <- getDirectoryContents dir
 
