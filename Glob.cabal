@@ -28,6 +28,9 @@ Library
                 , filepath   == 1.*
                 , mtl        == 1.*
 
+   if os(windows)
+      Build-Depends: Win32 == 2.*
+
    Exposed-Modules: System.FilePath.Glob
    Other-Modules:   System.FilePath.Glob.Base
                     System.FilePath.Glob.Compile
