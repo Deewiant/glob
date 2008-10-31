@@ -1,4 +1,4 @@
-Cabal-Version: >= 1.2
+Cabal-Version: >= 1.6
 
 Name:        Glob
 Version:     0.3
