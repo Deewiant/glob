@@ -1,3 +1,6 @@
+0.3.1, 2008-10-31:
+	Corrected the Cabal-Version field.
+
 0.3, 2008-10-19:
 	Further performance improvements to globDir.
 	Bug fix: handle empty pattern lists correctly in globDir.
