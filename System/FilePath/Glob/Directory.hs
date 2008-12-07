@@ -111,7 +111,7 @@ separate = go [] . unPattern
    go [] []                              = []
    go gr []                              = [Any    $ f gr]
    -- ./foo should not be split into [. , foo], it's just foo
-   go gr (ExtSeparator:PathSeparator:ps) = go gr ps
+   go [] (ExtSeparator:PathSeparator:ps) = go [] ps
    go gr (             PathSeparator:ps) = (   Dir $ f gr) : go [] ps
    go gr (              AnyDirectory:ps) = (AnyDir $ f gr) : go [] ps
    go gr (                         p:ps) = go (p:gr) ps
