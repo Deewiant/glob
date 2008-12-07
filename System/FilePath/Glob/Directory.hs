@@ -6,7 +6,8 @@ import Control.Monad    (forM)
 import qualified Data.DList as DL
 import Data.DList       (DList)
 import Data.List        ((\\))
-import System.Directory (doesDirectoryExist, getDirectoryContents)
+import System.Directory (doesDirectoryExist, getDirectoryContents,
+                         getCurrentDirectory )
 import System.FilePath  ((</>))
 
 import System.FilePath.Glob.Base
@@ -61,9 +62,8 @@ globDir pats dir = do
 globDir' :: [TypedPattern] -> FilePath -> IO (DList FilePath, DList FilePath)
 globDir' []   dir = didn'tMatch dir True
 globDir' pats dir = do
-   raw <- getDirectoryContents dir
-
-   let entries = raw \\ [".",".."]
+   entries <- if null dir then getCurrentDirectory >>= getDirectoryContents
+                          else getDirectoryContents dir
 
    results <- forM entries $ \e -> matchTypedAndGo pats e (dir </> e)
 
