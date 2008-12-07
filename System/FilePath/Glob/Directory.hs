@@ -1,6 +1,6 @@
 -- File created: 2008-10-16 12:12:50
 
-module System.FilePath.Glob.Directory (globDir) where
+module System.FilePath.Glob.Directory (globDir, factorPath) where
 
 import Control.Monad    (forM)
 import qualified Data.DList as DL
@@ -9,7 +9,7 @@ import Data.List        ((\\))
 import System.Directory ( doesDirectoryExist, getDirectoryContents
                         , getCurrentDirectory
                         )
-import System.FilePath  ((</>))
+import System.FilePath  ((</>), extSeparator)
 
 import System.FilePath.Glob.Base
 import System.FilePath.Glob.Match (match)
@@ -132,3 +132,23 @@ unseparate = Pattern . foldr f []
    f (AnyDir p) ts = unPattern p ++ AnyDirectory  : ts
    f (   Dir p) ts = unPattern p ++ PathSeparator : ts
    f (Any    p) ts = unPattern p ++ ts
+
+factorPath :: Pattern -> (FilePath, Pattern)
+factorPath pat = (root++baseDir,unseparate rest)
+ where
+   root = case unPattern pat of
+            (PathSeparator:_) -> "/"
+            _ -> ""
+   (baseDir,rest) = splitP $ separate pat
+   splitP (   Dir p:ps) = case fromConst (Just []) $ unPattern p of
+                            Just d  -> let (d',p')=splitP ps
+                                       in (d</>d',p')
+                            Nothing -> ("",Dir p:ps)
+   splitP xs = ("",xs)
+   fromConst Nothing _ = Nothing
+   fromConst (Just d) [] = Just d
+   fromConst (Just d) (Literal c:xs) = add d [c] xs
+   fromConst (Just d) (ExtSeparator:xs) = add d [extSeparator] xs
+   fromConst (Just d) (LongLiteral _ s:xs) = add d s xs
+   fromConst _ _ = Nothing
+   add d cs xs = fromConst (Just $ d++cs) xs

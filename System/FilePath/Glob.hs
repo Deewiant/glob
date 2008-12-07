@@ -9,6 +9,7 @@ module System.FilePath.Glob
    ( -- * Data type
      Pattern
      -- * Functions
+   , factorPath
      -- ** Compilation
    , tryCompile, compile
      -- ** Matching
@@ -18,5 +19,5 @@ module System.FilePath.Glob
 
 import System.FilePath.Glob.Base      (Pattern)
 import System.FilePath.Glob.Compile   (compile, tryCompile)
-import System.FilePath.Glob.Directory (globDir)
+import System.FilePath.Glob.Directory (globDir, factorPath)
 import System.FilePath.Glob.Match     (match)
