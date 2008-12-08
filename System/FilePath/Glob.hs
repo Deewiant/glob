@@ -11,7 +11,7 @@ module System.FilePath.Glob
      -- * Functions
    , factorPath
      -- ** Compilation
-   , tryCompile, compile
+   , tryCompile, compile, simplify
      -- ** Matching
    , match
    , globDir
@@ -21,3 +21,4 @@ import System.FilePath.Glob.Base      (Pattern)
 import System.FilePath.Glob.Compile   (compile, tryCompile)
 import System.FilePath.Glob.Directory (globDir, factorPath)
 import System.FilePath.Glob.Match     (match)
+import System.FilePath.Glob.Optimize  (simplify)

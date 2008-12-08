@@ -1,6 +1,6 @@
 -- File created: 2008-10-10 13:29:17
 
-module System.FilePath.Glob.Optimize (optimize) where
+module System.FilePath.Glob.Optimize (optimize, simplify) where
 
 import Data.List       (find, sortBy)
 import System.FilePath (isPathSeparator)
@@ -11,13 +11,38 @@ import System.FilePath.Glob.Utils
    , increasingSeq
    , addToRange, overlap)
 
-optimize :: Pattern -> Pattern
-optimize = liftP (fin . go . pre)
+simplify :: Pattern -> Pattern
+simplify = liftP (go . pre)
  where
    -- ./ at beginning -> nothing (any number of /'s)
    pre (ExtSeparator:PathSeparator:xs) = pre (dropWhile isSlash xs)
    pre                             xs  = xs
 
+   go [] = []
+
+   -- /./ -> /
+   go (PathSeparator:ExtSeparator:xs@(PathSeparator:_)) = go xs
+
+   go (x:xs) =
+      case find ($ x) compressors of
+           Just c  -> let (compressed,ys) = span c xs
+                       in if null compressed
+                             then x : go ys
+                             else go (x : ys)
+           Nothing -> x : go xs
+
+   compressors = [isStar, isSlash, isStarSlash]
+
+   isStar      AnyNonPathSeparator = True
+   isStar      _                   = False
+   isSlash     PathSeparator       = True
+   isSlash     _                   = False
+   isStarSlash AnyDirectory        = True
+   isStarSlash _                   = False
+
+optimize :: Pattern -> Pattern
+optimize = liftP (fin . go)
+ where
    fin [] = []
 
    -- [.] are ExtSeparators everywhere except at the beginning
@@ -52,9 +77,6 @@ optimize = liftP (fin . go . pre)
            x'@(CharRange _ _) -> x' : go xs
            x'                 -> go (x':xs)
 
-   -- /./ -> /
-   go (PathSeparator:ExtSeparator:xs@(PathSeparator:_)) = go xs
-
    -- <a-a> -> a
    go (OpenRange (Just a) (Just b):xs)
       | a == b = LongLiteral (length a) a : go xs
@@ -65,23 +87,12 @@ optimize = liftP (fin . go . pre)
       | b > a = go $ CharRange True [Right (a,b)] : xs
 
    go (x:xs) =
-      case find ($ x) compressors of
-           Just c  -> let (compressed,ys) = span c xs
-                       in if null compressed
-                             then x : go ys
-                             else go (x : ys)
-           Nothing -> x : go xs
-
-   compressors = [isStar, isSlash, isStarSlash, isAnyNumber]
+      x : if isAnyNumber x
+             then go (dropWhile isAnyNumber xs)
+             else go xs
 
    isLiteral   (Literal _)                 = True
    isLiteral   _                           = False
-   isStar      AnyNonPathSeparator         = True
-   isStar      _                           = False
-   isSlash     PathSeparator               = True
-   isSlash     _                           = False
-   isStarSlash AnyDirectory                = True
-   isStarSlash _                           = False
    isAnyNumber (OpenRange Nothing Nothing) = True
    isAnyNumber _                           = False
 
