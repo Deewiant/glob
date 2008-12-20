@@ -124,16 +124,17 @@ doesDirectoryExist s =
 #endif
 
 getRecursiveContents :: FilePath -> IO (DList FilePath)
-getRecursiveContents dir = do
-   raw <- getDirectoryContents dir
+getRecursiveContents dir =
+   flip Prelude.catch (\_ -> return $ DL.singleton dir) $ do
 
-   let entries = map (dir </>) (raw \\ [".",".."])
+      raw <- getDirectoryContents dir
 
-   (dirs,files) <- partitionM doesDirectoryExist entries
+      let entries = map (dir </>) (raw \\ [".",".."])
+      (dirs,files) <- partitionM doesDirectoryExist entries
 
-   subs <- unsafeInterleaveIO . mapM getRecursiveContents $ dirs
+      subs <- unsafeInterleaveIO . mapM getRecursiveContents $ dirs
 
-   return$ DL.cons dir (DL.fromList files `DL.append` DL.concat subs)
+      return$ DL.cons dir (DL.fromList files `DL.append` DL.concat subs)
 
 partitionM :: (Monad m) => (a -> m Bool) -> [a] -> m ([a], [a])
 partitionM p_ = foldM (f p_) ([],[])

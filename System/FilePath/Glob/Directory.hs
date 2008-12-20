@@ -40,6 +40,9 @@ data TypedPattern
 --
 -- Any results deeper than in the given directory are enumerated lazily, using
 -- 'unsafeInterleaveIO'.
+--
+-- Directories without read permissions are returned as entries but their
+-- contents, of course, are not.
 globDir :: [Pattern] -> FilePath -> IO ([[FilePath]], [FilePath])
 globDir []   dir = do
    c <- getRecursiveContents dir
