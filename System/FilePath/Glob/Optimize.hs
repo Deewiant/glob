@@ -62,7 +62,7 @@ optimize = liftP (fin . go . pre)
       | b > a = go $ CharRange True [Right (a,b)] : xs
 
    go (x:xs) =
-      case find ($x) compressors of
+      case find ($ x) compressors of
            Just c  -> x : go (dropWhile c xs)
            Nothing -> x : go xs
 
