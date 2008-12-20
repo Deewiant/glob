@@ -1,3 +1,9 @@
+0.3.2, 2008-12-20:
+	Regression fix: handle directories without read permissions properly.
+
+	Convenience for developers: -XTemplateHaskell no longer barfs on
+	Compile.hs.
+
 0.3.1, 2008-10-31:
 	Corrected the Cabal-Version field.
 
