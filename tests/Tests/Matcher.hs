@@ -5,16 +5,18 @@ module Tests.Matcher (tests) where
 import Control.Monad (ap)
 import Test.Framework
 import Test.Framework.Providers.QuickCheck
+import Test.QuickCheck ((==>))
 
+import System.FilePath (isExtSeparator, isPathSeparator)
 import System.FilePath.Glob.Compile
 import System.FilePath.Glob.Match
 
 import Tests.Base
 
-tests =
-   [ testGroup "Matcher"
-       [ testProperty "match-1" prop_match1
-       ]
+tests = testGroup "Matcher"
+   [ testProperty "match-1" prop_match1
+   , testProperty "match-2" prop_match2
+   , testProperty "match-3" prop_match3
    ]
 
 -- ./foo should be equivalent to foo in both path and pattern
@@ -28,9 +30,19 @@ prop_match1 p s =
     in and [ isRight ep, isRight ep'
            , ( all (uncurry (==)) . (zip`ap`tail) $
                   [ match pat  pth
-                  , match pat  pth' 
+                  , match pat  pth'
                   , match pat' pth
                   , match pat' pth'
                   ]
              ) || null (unPS p)
            ]
+
+-- [/] shouldn't match anything
+prop_match2 = not . match (compile "[/]")  . take 1 . unP
+
+-- [!/] is like ?
+prop_match3 p_ =
+   let p = unP p_
+       ~(x:_) = p
+    in not (null p || isPathSeparator x || isExtSeparator x)
+       ==> match (compile "[!/]") [x]

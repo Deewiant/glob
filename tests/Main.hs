@@ -18,7 +18,7 @@ main = do
       , args
       ]
 
-tests = concat
+tests =
    [ Regression.tests
    , Matcher.tests
    , Optimizer.tests

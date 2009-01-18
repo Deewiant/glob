@@ -11,12 +11,10 @@ import System.FilePath.Glob.Utils
 
 import Utils
 
-tests =
-   [ testGroup "Utils"
-      [ testProperty "overlapperLosesNoInfo" prop_overlapperLosesNoInfo
-      , testProperty "increasingSeq"         prop_increasingSeq
-      , testProperty "addToRange"            prop_addToRange
-      ]
+tests = testGroup "Utils"
+   [ testProperty "overlapperLosesNoInfo" prop_overlapperLosesNoInfo
+   , testProperty "increasingSeq"         prop_increasingSeq
+   , testProperty "addToRange"            prop_addToRange
    ]
 
 validateRange (a,b) = if b > a then (a,b) else (b,a)

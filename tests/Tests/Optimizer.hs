@@ -11,11 +11,9 @@ import System.FilePath.Glob.Match
 
 import Tests.Base
 
-tests =
-   [ testGroup "Optimizer"
-       [ testProperty "optimize-1" prop_optimize1
-       , testProperty "optimize-2" prop_optimize2
-       ]
+tests = testGroup "Optimizer"
+   [ testProperty "optimize-1" prop_optimize1
+   , testProperty "optimize-2" prop_optimize2
    ]
 
 -- Optimizing twice should give the same result as optimizing once

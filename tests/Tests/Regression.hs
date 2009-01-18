@@ -9,17 +9,29 @@ import Test.HUnit.Base
 import System.FilePath.Glob.Compile
 import System.FilePath.Glob.Match
 
-tests =
-   [ testGroup "Regression" $
-        flip map testCases $ \t@(b,p,s) ->
-            testCase (nameTest t) . assertBool "failed" $
+tests = testGroup "Regression"
+   [ testGroup "Matching/compiling" .
+        flip map matchCases $ \t@(b,p,s) ->
+            tc (nameMatchTest t) $
                match (compile p) s == b
+   , testGroup "Show" .
+        flip map showCases $ \(n,orig,s) ->
+           tc n $ show (compile orig) == s
+   ]
+ where
+   tc n = testCase n . assert
+
+nameMatchTest (True ,p,s) = show p ++ " matches " ++ show s
+nameMatchTest (False,p,s) = show p ++ " doesn't match " ++ show s
+
+showCases =
+   [ ("range-compression-1", "[*]",   "compile \"[*]\"")
+   , ("range-compression-2", "[.]",   "compile \"[.]\"")
+   , ("range-compression-3", "**[/]", "compile \"*[/]\"")
+   , ("range-compression-4", "x[.]",  "compile \"x.\"")
    ]
 
-nameTest (True ,p,s) = show p ++ " matches " ++ show s
-nameTest (False,p,s) = show p ++ " doesn't match " ++ show s
-
-testCases =
+matchCases =
    [ (True , "*"          , "")
    , (True , "**"         , "")
    , (True , "asdf"       , "asdf")

@@ -2,8 +2,11 @@
 
 module System.FilePath.Glob.Base where
 
-import Data.Maybe      (fromMaybe)
-import System.FilePath (pathSeparator, extSeparator, isPathSeparator)
+import Control.Exception (assert)
+import Data.Maybe        (fromMaybe)
+import System.FilePath   ( pathSeparator, extSeparator
+                         , isExtSeparator, isPathSeparator
+                         )
 
 -- Todo? data Options = Options { allow_dots :: Bool }
 
@@ -40,9 +43,9 @@ liftP f (Pattern pat) = Pattern (f pat)
 
 instance Show Token where
    show (Literal c)
-       | c `elem` "*?[</" || isPathSeparator c
+      | c `elem` "*?[<" || isExtSeparator c
                             = ['[',c,']']
-       | otherwise          = [c]
+      | otherwise           = assert (not $ isPathSeparator c) [c]
    show ExtSeparator        = [ extSeparator]
    show PathSeparator       = [pathSeparator]
    show NonPathSeparator    = "?"

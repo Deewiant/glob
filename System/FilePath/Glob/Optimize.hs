@@ -20,6 +20,9 @@ optimize = liftP (fin . go . pre)
 
    fin [] = []
 
+   -- [.] are ExtSeparators everywhere except at the beginning
+   fin (x:Literal '.':xs) = fin (x:ExtSeparator:xs)
+
    -- Literals to LongLiteral
    -- Has to be done here: we can't backtrack in go, but some cases might
    -- result in consecutive Literals being generated.
@@ -82,7 +85,10 @@ optimize = liftP (fin . go . pre)
 optimizeCharRange :: Token -> Token
 optimizeCharRange (CharRange b_ rs) = fin b_ . go . sortCharRange $ rs
  where
-   fin True [Left  c] | not (isPathSeparator c || isExtSeparator c) = Literal c
+   -- [/] is interesting, it actually matches nothing at all
+   -- [.] can be Literalized though, just don't make it into an ExtSeparator so
+   --     that it doesn't match a leading dot
+   fin True [Left  c] | not (isPathSeparator c) = Literal c
    fin True [Right r] | r == (minBound,maxBound) = NonPathSeparator
    fin b x = CharRange b x
 
