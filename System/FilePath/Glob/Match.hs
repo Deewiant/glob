@@ -1,9 +1,9 @@
 -- File created: 2008-10-10 13:29:03
 
-module System.FilePath.Glob.Match (match) where
+module System.FilePath.Glob.Match (match, matchWithOptions) where
 
 import Control.Exception (assert)
-import Data.Char         (isDigit)
+import Data.Char         (isDigit, toLower, isUpper)
 import Data.Monoid       (mappend)
 import System.FilePath   (isPathSeparator, isExtSeparator)
 
@@ -13,7 +13,20 @@ import System.FilePath.Glob.Utils (dropLeadingZeroes, inRange, pathParts)
 -- |Matches the given 'Pattern' against the given 'FilePath', returning 'True'
 -- if the pattern matches and 'False' otherwise.
 match :: Pattern -> FilePath -> Bool
-match = begMatch . unPattern
+match = matchWithOptions execDefault
+
+matchWithOptions :: ExecOptions -> Pattern -> FilePath -> Bool
+matchWithOptions opts p f = begMatch opts (lc' $ unPattern p) (lc f)
+    where lc = if matchCaseless opts then map toLower else id
+          lc' = if matchCaseless opts then map lcTok else id
+          lcTok (Literal c) = Literal $ toLower c
+          lcTok (LongLiteral n s) = LongLiteral n $ map toLower s
+          lcTok (CharRange b s) = CharRange b $ map lcCR s
+          lcTok t = t
+          lcCR (Left c) = Left $ toLower c
+          lcCR (Right (a,b)) | isUpper a && isUpper b
+                                 = Right (toLower a,toLower b)
+          lcCR r = r
 
 -- begMatch takes care of some things at the beginning of a pattern or after /:
 --    - . needs to be matched explicitly
@@ -23,42 +36,50 @@ match = begMatch . unPattern
 -- special case that one
 --
 -- and .**/foo should /not/ match ../foo; more special casing
-begMatch, match' :: [Token] -> FilePath -> Bool
-begMatch (ExtSeparator:AnyDirectory:_) (x:y:_)
+begMatch, match' :: ExecOptions -> [Token] -> FilePath -> Bool
+begMatch _ (ExtSeparator:AnyDirectory:_) (x:y:_)
    | isExtSeparator x && isExtSeparator y = False
 
-begMatch (ExtSeparator:PathSeparator:pat) s =
-   begMatch (dropWhile isSlash pat) s
+begMatch opts (ExtSeparator:PathSeparator:pat) s | matchSimplified opts =
+   begMatch opts (dropWhile isSlash pat) s
  where
    isSlash PathSeparator = True
    isSlash _             = False
 
-begMatch pat (x:y:s) | isExtSeparator x && isPathSeparator y =
-   case pat of
-        ExtSeparator:AnyNonPathSeparator:PathSeparator:pat' -> match' pat' s
-        _                                                   -> begMatch pat s
+begMatch opts pat (x:y:s)
+   | matchSimplified opts && dotSlash = begMatch opts pat s
+   | dotSlash && dotStarSlash         = match' opts pat' s
+ where
+   dotSlash = isExtSeparator x && isPathSeparator y
+   (dotStarSlash, pat') =
+      case pat of
+        ExtSeparator:AnyNonPathSeparator:PathSeparator:rest -> (True, rest)
+        _                                                   -> (False, pat)
 
-begMatch pat s =
-   if not (null s) && isExtSeparator (head s)
+begMatch opts pat s =
+   if not (null s) && isExtSeparator (head s) && not (matchDots opts)
       then case pat of
-                ExtSeparator:pat' -> match' pat' (tail s)
+                ExtSeparator:pat' -> match' opts pat' (tail s)
                 _                 -> False
-      else match' pat s
+      else match' opts pat s
 
-match' []                        s  = null s
-match' (AnyNonPathSeparator:s)   "" = null s
-match' _                         "" = False
-match' (Literal l       :xs) (c:cs) =                 l == c  && match'   xs cs
-match' ( ExtSeparator   :xs) (c:cs) =       isExtSeparator c  && match'   xs cs
-match' (NonPathSeparator:xs) (c:cs) = not (isPathSeparator c) && match'   xs cs
-match' (PathSeparator   :xs) (c:cs) =
-   isPathSeparator c && begMatch xs (dropWhile isPathSeparator cs)
-match' (CharRange b rng :xs) (c:cs) =
+match' _ []                        s  = null s
+match' _ (AnyNonPathSeparator:s)   "" = null s
+match' _ _                         "" = False
+match' o (Literal l       :xs) (c:cs) =           l == c  && match' o xs cs
+match' o ( ExtSeparator   :xs) (c:cs) = isExtSeparator c  && match' o xs cs
+match' o (NonPathSeparator:xs) (c:cs) =
+   not (isPathSeparator c) && match' o xs cs
+
+match' o (PathSeparator   :xs) (c:cs) =
+   isPathSeparator c && begMatch o xs (dropWhile isPathSeparator cs)
+
+match' o (CharRange b rng :xs) (c:cs) =
    not (isPathSeparator c) &&
    any (either (== c) (`inRange` c)) rng == b &&
-   match' xs cs
+   match' o xs cs
 
-match' (OpenRange lo hi :xs) path =
+match' o (OpenRange lo hi :xs) path =
    let
       (lzNum,cs) = span isDigit path
       num        = dropLeadingZeroes lzNum
@@ -75,24 +96,24 @@ match' (OpenRange lo hi :xs) path =
             -- We want to try matching x against each of 123, 12, and 1.
             -- 12 and 1 are in numChoices already, but we need to add (num,"")
             -- manually.
-            any (\(n,rest) -> inOpenRange lo hi n && match' xs (rest ++ cs))
+            any (\(n,rest) -> inOpenRange lo hi n && match' o xs (rest ++ cs))
                 ((num,"") : numChoices)
 
-match' again@(AnyNonPathSeparator:xs) path@(c:cs) =
-   match' xs path || (if isPathSeparator c then False else match' again cs)
+match' o again@(AnyNonPathSeparator:xs) path@(c:cs) =
+   match' o xs path || (if isPathSeparator c then False else match' o again cs)
 
-match' again@(AnyDirectory:xs) path =
+match' o again@(AnyDirectory:xs) path =
    let parts   = pathParts (dropWhile isPathSeparator path)
-       matches = any (match' xs) parts || any (match' again) (tail parts)
-    in if null xs
+       matches = any (match' o xs) parts || any (match' o again) (tail parts)
+    in if null xs && not (matchDots o)
           --  **/ shouldn't match foo/.bar, so check that remaining bits don't
           -- start with .
           then all (not.isExtSeparator.head) (init parts) && matches
           else matches
 
-match' (LongLiteral len s:xs) path =
+match' o (LongLiteral len s:xs) path =
    let (pre,cs) = splitAt len path
-    in pre == s && match' xs cs
+    in pre == s && match' o xs cs
 
 -- Does the actual open range matching: finds whether the third parameter
 -- is between the first two or not.

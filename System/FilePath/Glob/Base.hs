@@ -23,7 +23,7 @@ data CompOptions = CompOptions
     , openRanges         :: Bool -- |Allow open ranges, @<...>@
     , wildcards          :: Bool -- |Allow wildcards, @*@ and @?@
     , recursiveWildcards :: Bool -- |Allow recursive wildcards, @**/@
-    
+
       -- |If the input is invalid, recover by turning any invalid part into
       -- literals. For instance, with 'characterRanges' enabled, @[abc@ is an
       -- error by default (unclosed character range); with 'errorRecovery', the
@@ -59,14 +59,15 @@ compPosix = CompOptions { characterClasses   = True
 
 -- |These are the options that matter at match-time.
 data ExecOptions = ExecOptions {
-      matchDots   :: Bool -- ^allow wildcards to match @.@ at start of names
-    , caseless    :: Bool -- ^case-independent matching (i.e. tolower)
+      matchDots       :: Bool -- ^allow wildcards to match @.@ at start of names
+    , matchCaseless   :: Bool -- ^case-independent matching (i.e. tolower)
+    , matchSimplified :: Bool -- ^match simplified paths (i.e. without @./@'s)
     }
 
-defaultExecOpts :: ExecOptions
-defaultExecOpts = ExecOptions { matchDots = False
-                              , caseless  = False
-                              }
+execDefault :: ExecOptions
+execDefault = ExecOptions { matchDots       = False
+                          , matchCaseless   = False
+                          , matchSimplified = False }
 
 data Token
    -- primitives

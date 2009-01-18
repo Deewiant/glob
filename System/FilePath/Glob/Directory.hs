@@ -13,7 +13,7 @@ import System.Directory ( doesDirectoryExist, getDirectoryContents
 import System.FilePath  ((</>), extSeparator, isExtSeparator, pathSeparator)
 
 import System.FilePath.Glob.Base
-import System.FilePath.Glob.Match (match)
+import System.FilePath.Glob.Match (matchWithOptions)
 import System.FilePath.Glob.Utils
    (getRecursiveContents, nubOrd, pathParts, partitionDL)
 
@@ -59,13 +59,17 @@ data TypedPattern
 -- Directories without read permissions are returned as entries but their
 -- contents, of course, are not.
 globDir :: [Pattern] -> FilePath -> IO ([[FilePath]], [FilePath])
-globDir []   dir = do
+globDir = globDirWithOptions execDefault
+
+globDirWithOptions :: ExecOptions -> [Pattern] -> FilePath
+                   -> IO ([[FilePath]], [FilePath])
+globDirWithOptions _ []   dir = do
    dir' <- if null dir then getCurrentDirectory else return dir
    c <- getRecursiveContents dir'
    return ([], DL.toList c)
 
-globDir pats dir = do
-   results <- mapM (\p -> globDir' (separate p) dir) pats
+globDirWithOptions opts pats dir = do
+   results <- mapM (\p -> globDir' opts (separate p) dir) pats
 
    let (matches, others) = unzip results
        allMatches        = DL.toList . DL.concat $ matches
@@ -75,49 +79,51 @@ globDir pats dir = do
           , nubOrd allOthers \\ allMatches
           )
 
-globDir' :: [TypedPattern] -> FilePath -> IO (DList FilePath, DList FilePath)
-globDir' pats@(_:_) dir = do
+globDir' :: ExecOptions -> [TypedPattern] -> FilePath
+         -> IO (DList FilePath, DList FilePath)
+globDir' opts pats@(_:_) dir = do
    dir' <- if null dir then getCurrentDirectory else return dir
    entries <- getDirectoryContents dir'
 
-   results <- forM entries $ \e -> matchTypedAndGo pats e (dir' </> e)
+   results <- forM entries $ \e -> matchTypedAndGo opts pats e (dir' </> e)
 
    let (matches, others) = unzip results
 
    return (DL.concat matches, DL.concat others)
 
-globDir' [] dir =
+globDir' _ [] dir =
    -- We can only get here from matchTypedAndGo getting a [Dir _]: it means the
    -- original pattern had a trailing PathSeparator. Reproduce it here.
    return (DL.singleton (dir ++ [pathSeparator]), DL.empty)
 
-matchTypedAndGo :: [TypedPattern]
+matchTypedAndGo :: ExecOptions
+                -> [TypedPattern]
                 -> FilePath -> FilePath
                 -> IO (DList FilePath, DList FilePath)
 
 -- (Any p) is always the last element
-matchTypedAndGo [Any p] path absPath =
-   if match p path
+matchTypedAndGo opts [Any p] path absPath =
+   if matchWithOptions opts p path
       then return (DL.singleton absPath, DL.empty)
       else doesDirectoryExist absPath >>= didn'tMatch path absPath
 
-matchTypedAndGo (Dir p:ps) path absPath = do
+matchTypedAndGo opts (Dir p:ps) path absPath = do
    isDir <- doesDirectoryExist absPath
-   if isDir && match p path
-      then globDir' ps absPath
+   if isDir && matchWithOptions opts p path
+      then globDir' opts ps absPath
       else didn'tMatch path absPath isDir
 
-matchTypedAndGo (AnyDir p:ps) path absPath = do
+matchTypedAndGo opts (AnyDir p:ps) path absPath = do
    if path `elem` [".",".."]
       then didn'tMatch path absPath True
       else do
          isDir <- doesDirectoryExist absPath
-         let m = match (unseparate ps)
+         let m = matchWithOptions opts (unseparate ps)
              unconditionalMatch =
                 null (unPattern p) && not (isExtSeparator $ head path)
              p' = Pattern (unPattern p ++ [AnyNonPathSeparator])
 
-         case unconditionalMatch || match p' path of
+         case unconditionalMatch || matchWithOptions opts p' path of
               True | isDir  -> do
                  contents <- getRecursiveContents absPath
                  return $
@@ -130,7 +136,7 @@ matchTypedAndGo (AnyDir p:ps) path absPath = do
               True | m path -> return (DL.singleton absPath, DL.empty)
               _             -> didn'tMatch path absPath isDir
 
-matchTypedAndGo _ _ _ = error "Glob.matchTypedAndGo :: internal error"
+matchTypedAndGo _ _ _ _ = error "Glob.matchTypedAndGo :: internal error"
 
 -- To be called when a pattern didn't match a path: given the path and whether
 -- it was a directory, return all paths which didn't match (i.e. for a file,
