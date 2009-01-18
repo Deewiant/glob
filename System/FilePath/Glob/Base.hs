@@ -10,7 +10,43 @@ import System.FilePath   ( pathSeparator, extSeparator
                          , isExtSeparator, isPathSeparator
                          )
 
--- Todo? data Options = Options { allow_dots :: Bool }
+-- |These are the compilation options.  We could presumably put
+-- locale information in here, too.  (note that some of these options
+-- depend on each other: classes can never occur if ranges aren't allowed)
+data CompOptions = CompOptions {
+      characterClasses   :: Bool -- ^allow character classes @[[:...:]]@
+    , characterRanges    :: Bool -- ^allow character ranges @[...]@
+    , openRanges         :: Bool -- ^allow open ranges @<...>@
+    , recursiveWildcards :: Bool -- ^allow recursive wildcards @**/@
+    , wildcards          :: Bool -- ^allow wildcards at all (@*@ and @?@)
+    , errorRecovery      :: Bool -- ^make special chars literal to recover
+    }
+
+compExtended :: CompOptions
+compExtended = CompOptions { characterClasses = False
+                           , characterRanges  = True
+                           , openRanges = True
+                           , recursiveWildcards = True
+                           , wildcards = True
+                           , errorRecovery = False }
+
+compPosix :: CompOptions
+compPosix = CompOptions { characterClasses = True
+                        , characterRanges = True
+                        , openRanges = False
+                        , recursiveWildcards = False
+                        , wildcards = True
+                        , errorRecovery = True }
+
+-- |These are the options that matter at match-time.
+data ExecOptions = ExecOptions {
+      matchDots   :: Bool -- ^allow wildcards to match @.@ at start of names
+    , caseless    :: Bool -- ^case-independent matching (i.e. tolower)
+    }
+
+defaultExecOpts :: ExecOptions
+defaultExecOpts = ExecOptions { matchDots = False
+                              , caseless  = False }
 
 data Token
    -- primitives
