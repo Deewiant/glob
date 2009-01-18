@@ -15,9 +15,7 @@ optimize :: Pattern -> Pattern
 optimize = liftP (fin . go . pre)
  where
    -- ./ at beginning -> nothing (any number of /'s)
-   pre (ExtSeparator:PathSeparator:PathSeparator:xs)
-       = pre (ExtSeparator:PathSeparator:xs)
-   pre (ExtSeparator:PathSeparator:xs) = pre xs
+   pre (ExtSeparator:PathSeparator:xs) = pre (dropWhile isSlash xs)
    pre                             xs  = xs
 
    fin [] = []
