@@ -5,8 +5,9 @@ module System.FilePath.Glob.Compile
    , tokenize
    ) where
 
-import Control.Monad.Error ()
-import Data.Char           (isDigit)
+import Control.Monad.Error (runErrorT)
+import Control.Monad.Writer (runWriter, tell)
+import Data.Char           (isDigit,isAlpha)
 import System.FilePath     (isPathSeparator, isExtSeparator)
 
 import System.FilePath.Glob.Base
@@ -73,16 +74,7 @@ tokenize = fmap Pattern . sequence . go
       case cs of
            '*':p:xs | isPathSeparator p -> Right AnyDirectory        : go xs
            _                            -> Right AnyNonPathSeparator : go cs
-   go ('[':cs) =
-      let (range, rest) = break (==']') cs
-       in if null rest
-             then err "compile :: unclosed [] in pattern"
-             else if null range
-                     then let (range', rest') = break (==']') (tail rest)
-                           in if null rest'
-                                 then err "compile :: empty [] in pattern"
-                                 else charRange (']':range') : go (tail rest')
-                     else charRange range : go (tail rest)
+   go ('[':cs) = let (range,rest) = charRange cs in range:go rest
    go ('<':cs) =
       let (range, rest) = break (=='>') cs
        in if null rest
@@ -112,17 +104,46 @@ openRange s =
 openRangeNum :: String -> Maybe String
 openRangeNum = Just . dropLeadingZeroes
 
-charRange :: String -> Either String Token
-charRange [x] | x `elem` "^!" = Left ("compile :: empty [" ++ [x]
-                                                           ++ "] in pattern")
-charRange x =
-   if head x `elem` "^!"
-      then Right . CharRange False . f $ tail x
-      else Right . CharRange True  . f $      x
+charRange :: String -> (Either String Token,String)
+charRange xs = case xs of
+                 (x:xs') | x `elem` "^!" -> let (rest,cs) = start xs'
+                                            in (fmap (CharRange False) cs,rest)
+                 _                       -> let (rest,cs) = start xs
+                                            in (fmap (CharRange True) cs,rest)
  where
-   f (']':s) = Left ']' : go s
-   f      s  =            go s
-
-   go [] = []
-   go (a:'-':b:cs) = (if a == b then Left a else Right (a,b)) : go cs
-   go (c:cs)       = Left c : go cs
+   start (']':xs) = run $ char ']' xs -- special chars
+   start ('-':xs) = run $ char '-' xs
+   start xs = run $ go xs
+   run m = case runWriter $ runErrorT m of (Left s,_) -> ("",Left s)
+                                           (Right rest,cs) -> (rest,Right cs)
+   go [] = fail "unclosed [] in pattern"
+   go ('[':':':xs) = readClass xs
+   go (']':xs) = return xs
+   go (c:xs) = char c xs
+   readClass xs = let (name,end) = span isAlpha xs
+                  in case end of
+                       ':':']':rest -> charClass name >> go rest
+                       _ -> tell [Left '[',Left ':'] >> go xs
+   char f ('-':s:cs) | not $ s `elem` "[]" = tell [Right (f,s)] >> go cs
+   char c xs = tell [Left c] >> go xs
+   charClass name = case name of -- this is all the required posix classes
+                 "alnum" -> tell [digit,upper,lower]
+                 "alpha" -> tell [upper,lower]
+                 "blank" -> tell blanks
+                 "cntrl" -> tell [Left '\x7f',Right ('\x00','\x1f')]
+                 "digit" -> tell [digit]
+                 "graph" -> tell [Right ('\x21','\x7e')]
+                 "lower" -> tell [lower]
+                 "print" -> tell [Right ('\x20','\x7e')]
+                 "punct" -> tell punct
+                 "space" -> tell spaces
+                 "upper" -> tell [upper]
+                 "xdigit" -> tell $ digit:[Right ('A','F'),Right ('a','f')]
+                 _ -> fail $ "unknown character class: "++name
+   digit = Right ('0','9')
+   upper = Right ('A','Z')
+   lower = Right ('a','z')
+   punct = [Right ('\x21','\x2f'),Right ('\x3a','\x40'),
+            Right ('\x5b','\x60'),Right ('\x7b','\x7e')]
+   blanks = [Left ' ',Left '\t']
+   spaces = [Left ' ',Right ('\x09','\x0d')]
