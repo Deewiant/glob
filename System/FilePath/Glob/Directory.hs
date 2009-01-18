@@ -2,6 +2,7 @@
 
 module System.FilePath.Glob.Directory (globDir, factorPath) where
 
+import Control.Arrow    (first)
 import Control.Monad    (forM)
 import qualified Data.DList as DL
 import Data.DList       (DList)
@@ -134,21 +135,26 @@ unseparate = Pattern . foldr f []
    f (Any    p) ts = unPattern p ++ ts
 
 factorPath :: Pattern -> (FilePath, Pattern)
-factorPath pat = (root++baseDir,unseparate rest)
+factorPath pat =
+   -- root is Dir (compile "") in TypedPattern form, special case that because
+   -- "" </> "foo" is "foo" and not "/foo"
+   let root = case unPattern pat of
+                   (PathSeparator:_) -> "/"
+                   _                 -> ""
+
+       (baseDir, rest) = splitP $ separate pat
+
+    in (root++baseDir, unseparate rest)
  where
-   root = case unPattern pat of
-            (PathSeparator:_) -> "/"
-            _ -> ""
-   (baseDir,rest) = splitP $ separate pat
-   splitP (   Dir p:ps) = case fromConst (Just []) $ unPattern p of
-                            Just d  -> let (d',p')=splitP ps
-                                       in (d</>d',p')
-                            Nothing -> ("",Dir p:ps)
-   splitP xs = ("",xs)
-   fromConst Nothing _ = Nothing
-   fromConst (Just d) [] = Just d
-   fromConst (Just d) (Literal c:xs) = add d [c] xs
-   fromConst (Just d) (ExtSeparator:xs) = add d [extSeparator] xs
-   fromConst (Just d) (LongLiteral _ s:xs) = add d s xs
-   fromConst _ _ = Nothing
-   add d cs xs = fromConst (Just $ d++cs) xs
+   splitP pt@(Dir p:ps) =
+      case fromConst "" (unPattern p) of
+           Just d  -> first (d </>) (splitP ps)
+           Nothing -> ("", pt)
+
+   splitP pt = ("", pt)
+
+   fromConst d []                   = Just d
+   fromConst d (Literal c      :xs) = fromConst (d++[c]) xs
+   fromConst d (ExtSeparator   :xs) = fromConst (d++[extSeparator]) xs
+   fromConst d (LongLiteral _ s:xs) = fromConst (d++s) xs
+   fromConst _ _                    = Nothing
