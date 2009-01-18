@@ -6,8 +6,9 @@ import Control.Monad    (forM)
 import qualified Data.DList as DL
 import Data.DList       (DList)
 import Data.List        ((\\))
-import System.Directory (doesDirectoryExist, getDirectoryContents,
-                         getCurrentDirectory )
+import System.Directory ( doesDirectoryExist, getDirectoryContents
+                        , getCurrentDirectory
+                        )
 import System.FilePath  ((</>))
 
 import System.FilePath.Glob.Base
@@ -38,6 +39,11 @@ data TypedPattern
 --
 -- If @dir@ is @\"foo\"@ the pattern should be @\"foo/*\"@ to get the same
 -- results with a plain 'filter'.
+-- 
+-- If the given 'FilePath' is @[]@, @getCurrentDirectory@ will be used.
+--
+-- Note that in some cases results outside the given directory may be returned:
+-- for instance the @.*@ pattern matches the @..@ directory.
 --
 -- Any results deeper than in the given directory are enumerated lazily, using
 -- 'unsafeInterleaveIO'.
@@ -46,8 +52,10 @@ data TypedPattern
 -- contents, of course, are not.
 globDir :: [Pattern] -> FilePath -> IO ([[FilePath]], [FilePath])
 globDir []   dir = do
-   c <- getRecursiveContents dir
+   dir' <- if null dir then getCurrentDirectory else return dir
+   c <- getRecursiveContents dir'
    return ([], DL.toList c)
+
 globDir pats dir = do
    results <- mapM (\p -> globDir' (separate p) dir) pats
 
@@ -62,10 +70,10 @@ globDir pats dir = do
 globDir' :: [TypedPattern] -> FilePath -> IO (DList FilePath, DList FilePath)
 globDir' []   dir = didn'tMatch dir True
 globDir' pats dir = do
-   entries <- if null dir then getCurrentDirectory >>= getDirectoryContents
-                          else getDirectoryContents dir
+   dir' <- if null dir then getCurrentDirectory else return dir
+   entries <- getDirectoryContents dir'
 
-   results <- forM entries $ \e -> matchTypedAndGo pats e (dir </> e)
+   results <- forM entries $ \e -> matchTypedAndGo pats e (dir' </> e)
 
    let (matches, others) = unzip results
 
