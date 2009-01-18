@@ -88,4 +88,5 @@ matchCases =
    , (False, "[/]"        , "/")
    , (True , "a[^x]"      , "a.")
    , (True , "a[.]"       , "a.")
+   , (False, ".//a"       , "/a")
    ]
