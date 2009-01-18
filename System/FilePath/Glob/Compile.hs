@@ -1,7 +1,8 @@
 -- File created: 2008-10-10 13:29:13
 
 module System.FilePath.Glob.Compile
-   ( compile, tryCompile
+   ( compile, compileWithOptions
+   , tryCompile, tryCompileWithOptions
    , tokenize
    ) where
 
@@ -17,7 +18,10 @@ import System.FilePath.Glob.Utils    (dropLeadingZeroes)
 
 -- |Like 'tryCompile', but calls 'error' if an error results.
 compile :: String -> Pattern
-compile = either error id . tryCompile
+compile = compileWithOptions compExtended
+
+compileWithOptions :: CompOptions -> String -> Pattern
+compileWithOptions opts = either error id . tryCompileWithOptions opts
 
 -- |Compiles a glob pattern from its textual representation into a 'Pattern'
 -- object, giving an error message in a 'Left' if the pattern is erroneous.
@@ -61,30 +65,44 @@ compile = either error id . tryCompile
 --
 -- * A malformed @\<>@: e.g. nonnumeric characters or no hyphen
 tryCompile :: String -> Either String Pattern
-tryCompile = fmap optimize . tokenize
+tryCompile = tryCompileWithOptions compExtended
 
-tokenize :: String -> Either String Pattern
-tokenize = fmap Pattern . sequence . go
+tryCompileWithOptions :: CompOptions -> String -> Either String Pattern
+tryCompileWithOptions opts = fmap optimize . tokenize opts
+
+tokenize :: CompOptions -> String -> Either String Pattern
+tokenize opts = fmap Pattern . sequence . go
  where
-   err s = [Left s]
+   err _ c cs | errorRecovery opts = Right (Literal c) : go cs
+   err s _ _ = [Left s]
 
    go :: String -> [Either String Token]
    go [] = []
-   go ('?':cs) = Right NonPathSeparator : go cs
-   go ('*':cs) =
+   go ('?':cs) | wcs = Right NonPathSeparator : go cs
+   go ('*':cs) | wcs =
       case cs of
-           '*':p:xs | isPathSeparator p -> Right AnyDirectory        : go xs
-           _                            -> Right AnyNonPathSeparator : go cs
-   go ('[':cs) = let (range,rest) = charRange cs in range : go rest
-   go ('<':cs) =
+           '*':p:xs | rwcs && isPathSeparator p
+              -> Right AnyDirectory        : go xs
+           _  -> Right AnyNonPathSeparator : go cs
+   go ('[':cs) | crs = let (range,rest) = charRange opts cs
+                        in case range of
+                                Left s -> err s '[' cs
+                                r      -> r : go rest
+   go ('<':cs) | ors =
       let (range, rest) = break (=='>') cs
        in if null rest
-             then err "compile :: unclosed <> in pattern"
-             else openRange range : go (tail rest)
+             then err "compile :: unclosed <> in pattern" '<' cs
+             else case openRange range of
+                       Left s -> err s '<' cs
+                       r      -> r : go (tail rest)
    go (c:cs)
       | isPathSeparator c = Right PathSeparator : go cs
       | isExtSeparator  c = Right  ExtSeparator : go cs
       | otherwise         = Right (Literal c)   : go cs
+   wcs = wildcards opts
+   rwcs = recursiveWildcards opts
+   crs = characterRanges opts
+   ors = openRanges opts
 
 -- <a-b> where a > b can never match anything; this is not considered an error
 openRange :: String -> Either String Token
@@ -107,8 +125,8 @@ openRangeNum = Just . dropLeadingZeroes
 
 type CharRange = [Either Char (Char,Char)]
 
-charRange :: String -> (Either String Token, String)
-charRange xs_ =
+charRange :: CompOptions -> String -> (Either String Token, String)
+charRange opts xs_ =
    case xs_ of
         (x:xs') | x `elem` "^!" -> first (fmap (CharRange False)) (start xs')
         _                       -> first (fmap (CharRange  True)) (start xs_)
@@ -126,7 +144,7 @@ charRange xs_ =
 
    go :: String -> ErrorT String (Writer CharRange) String
    go []           = throwError "compile :: unclosed [] in pattern"
-   go ('[':':':xs) = readClass xs
+   go ('[':':':xs) | characterClasses opts = readClass xs
    go (    ']':xs) = return xs
    go (      c:xs) = char c xs
 
