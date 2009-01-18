@@ -1,4 +1,7 @@
 0.4, 2009-??-??:
+	New function:
+		System.FilePath.Glob.factorPath :: Pattern -> (FilePath, Pattern)
+
 	Change: ".." can now be matched, by patterns such as ".*".
 	Change: globDir, given "" as the directory, uses getCurrentDirectory.
 
@@ -6,6 +9,7 @@
 	Bug fix: the Show instance used to show "[?]" as the very different "?" (and
 	         a few similar cases).
 	Bug fix: "//./" wasn't getting optimized properly.
+	Bug fix: ".//a" matched "/a".
 
 0.3.2, 2008-12-20:
 	Regression fix: handle directories without read permissions properly.
