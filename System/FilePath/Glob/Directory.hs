@@ -134,6 +134,8 @@ unseparate = Pattern . foldr f []
    f (   Dir p) ts = unPattern p ++ PathSeparator : ts
    f (Any    p) ts = unPattern p ++ ts
 
+-- |Factors out the directory component of a 'Pattern'. Useful in conjunction
+-- with 'globDir'.
 factorPath :: Pattern -> (FilePath, Pattern)
 factorPath pat =
    -- root is Dir (compile "") in TypedPattern form, special case that because
