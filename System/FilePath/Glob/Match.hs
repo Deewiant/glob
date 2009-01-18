@@ -20,7 +20,6 @@ match = begMatch . unPattern
 --    - ./foo is equivalent to foo
 begMatch, match' :: [Token] -> FilePath -> Bool
 begMatch _ "." = False
-begMatch _ ".." = False
 begMatch (ExtSeparator:PathSeparator:pat) s                  = begMatch pat s
 begMatch pat (x:y:s) | isExtSeparator x && isPathSeparator y = begMatch pat s
 begMatch pat s =
