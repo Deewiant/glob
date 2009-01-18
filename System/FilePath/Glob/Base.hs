@@ -1,9 +1,12 @@
 -- File created: 2008-10-10 13:29:26
 
+{-# LANGUAGE PatternGuards #-}
+
 module System.FilePath.Glob.Base where
 
 import Control.Exception (assert)
 import Data.Maybe        (fromMaybe)
+import Data.Monoid       (Monoid, mappend, mempty)
 import System.FilePath   ( pathSeparator, extSeparator
                          , isExtSeparator, isPathSeparator
                          )
@@ -64,3 +67,23 @@ instance Show Token where
 instance Show Pattern where
    showsPrec d (Pattern ts) =
       showParen (d > 10) $ showString "compile " . shows ts
+
+-- it might be better to write mconcat instead?  and then just use
+-- optimize somehow?  (this is problemmatic because we'd probably
+-- end up with a floating instance)
+-- Shouldn't `mappend` be infixr?
+instance Monoid Pattern where
+   mempty = Pattern []
+   mappend (Pattern []) b = b
+   mappend (Pattern a) (Pattern (b:bs)) | Just b' <- fromLiteral b
+       = case splitLast a of
+           (a',l) | Just l' <- fromLiteral l
+                            -> Pattern $ a'++(longLiteral $ l'++b'):bs
+                  | otherwise -> Pattern (a++(b:bs))
+       where splitLast [a] = ([],a)
+             splitLast (a:as) = let (bs,b) = splitLast as in (a:bs,b)
+             fromLiteral (Literal c) = Just [c]
+             fromLiteral (LongLiteral _ s) = Just s
+             fromLiteral _ = Nothing
+             longLiteral s = LongLiteral (length s) s
+   mappend (Pattern a) (Pattern b) = Pattern $ a++b
