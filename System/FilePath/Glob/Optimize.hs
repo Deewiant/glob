@@ -3,7 +3,7 @@
 module System.FilePath.Glob.Optimize (optimize) where
 
 import Data.List       (find, sortBy)
-import System.FilePath (isPathSeparator, isExtSeparator)
+import System.FilePath (isPathSeparator)
 
 import System.FilePath.Glob.Base
 import System.FilePath.Glob.Utils
@@ -66,7 +66,10 @@ optimize = liftP (fin . go . pre)
 
    go (x:xs) =
       case find ($ x) compressors of
-           Just c  -> x : go (dropWhile c xs)
+           Just c  -> let (compressed,ys) = span c xs
+                       in if null compressed
+                             then x : go ys
+                             else go (x : ys)
            Nothing -> x : go xs
 
    compressors = [isStar, isSlash, isStarSlash, isAnyNumber]
