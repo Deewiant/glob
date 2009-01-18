@@ -27,7 +27,7 @@ data TypedPattern
 -- |Matches each given 'Pattern' against the contents of the given 'FilePath',
 -- recursively. The result pair\'s first component contains the matched paths,
 -- grouped for each given 'Pattern', and the second contains all paths which
--- were not matched by any 'Pattern'.
+-- were not matched by any 'Pattern'. The results are not in any defined order.
 --
 -- If multiple 'Pattern's match a single 'FilePath', that path will be included
 -- in multiple groups.
