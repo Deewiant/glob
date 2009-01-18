@@ -89,4 +89,13 @@ matchCases =
    , (True , "a[^x]"      , "a.")
    , (True , "a[.]"       , "a.")
    , (False, ".//a"       , "/a")
+   , (True , ".*/a"       , "./a")
+   , (True , ".*/a"       , "../a")
+   , (True , ".*/a"       , ".foo/a")
+   , (True , ".**/a"      , ".foo/a")
+   , (False, ".**/a"      , "../a")
+   , (False, ".**/a"      , "./a")
+   , (False, ".**/a"      , "a")
+   , (True , ".**/a"      , ".foo/a")
+   , (True , "f**/a"      , "foo/a")
    ]

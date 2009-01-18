@@ -10,7 +10,7 @@ import Data.List        ((\\))
 import System.Directory ( doesDirectoryExist, getDirectoryContents
                         , getCurrentDirectory
                         )
-import System.FilePath  ((</>), extSeparator)
+import System.FilePath  ((</>), extSeparator, isExtSeparator)
 
 import System.FilePath.Glob.Base
 import System.FilePath.Glob.Match (match)
@@ -100,11 +100,17 @@ matchTypedAndGo (AnyDir p:ps) path absPath = do
    isDir <- doesDirectoryExist absPath
    let m = match (unseparate ps)
 
-   case null (unPattern p) || match p path of
-        True | isDir  -> fmap (partitionDL (any m . pathParts))
-                              (getRecursiveContents absPath)
-        True | m path -> return (DL.singleton absPath, DL.empty)
-        _             -> didn'tMatch absPath isDir
+   if path `elem` [".",".."]
+      then didn'tMatch absPath isDir
+      else let unconditionalMatch =
+                  null (unPattern p) && not (isExtSeparator $ head path)
+               p' = Pattern (unPattern p ++ [AnyNonPathSeparator])
+
+            in case unconditionalMatch || match p' path of
+                    True | isDir  -> fmap (partitionDL (any m . pathParts))
+                                          (getRecursiveContents absPath)
+                    True | m path -> return (DL.singleton absPath, DL.empty)
+                    _             -> didn'tMatch absPath isDir
 
 matchTypedAndGo _ _ _ = error "Glob.matchTypedAndGo :: internal error"
 
