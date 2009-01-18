@@ -147,14 +147,14 @@ factorPath pat =
     in (root++baseDir, unseparate rest)
  where
    splitP pt@(Dir p:ps) =
-      case fromConst "" (unPattern p) of
+      case fromConst DL.empty (unPattern p) of
            Just d  -> first (d </>) (splitP ps)
            Nothing -> ("", pt)
 
    splitP pt = ("", pt)
 
-   fromConst d []                   = Just d
-   fromConst d (Literal c      :xs) = fromConst (d++[c]) xs
-   fromConst d (ExtSeparator   :xs) = fromConst (d++[extSeparator]) xs
-   fromConst d (LongLiteral _ s:xs) = fromConst (d++s) xs
+   fromConst d []                   = Just (DL.toList d)
+   fromConst d (Literal c      :xs) = fromConst (d `DL.snoc` c) xs
+   fromConst d (ExtSeparator   :xs) = fromConst (d `DL.snoc` extSeparator) xs
+   fromConst d (LongLiteral _ s:xs) = fromConst (d `DL.append` DL.fromList s) xs
    fromConst _ _                    = Nothing
