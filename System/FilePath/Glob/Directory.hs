@@ -10,7 +10,7 @@ import Data.List        ((\\))
 import System.Directory ( doesDirectoryExist, getDirectoryContents
                         , getCurrentDirectory
                         )
-import System.FilePath  ((</>), extSeparator, isExtSeparator)
+import System.FilePath  ((</>), extSeparator, isExtSeparator, pathSeparator)
 
 import System.FilePath.Glob.Base
 import System.FilePath.Glob.Match (match)
@@ -76,8 +76,7 @@ globDir pats dir = do
           )
 
 globDir' :: [TypedPattern] -> FilePath -> IO (DList FilePath, DList FilePath)
-globDir' []   dir = didn'tMatch dir dir True
-globDir' pats dir = do
+globDir' pats@(_:_) dir = do
    dir' <- if null dir then getCurrentDirectory else return dir
    entries <- getDirectoryContents dir'
 
@@ -86,6 +85,11 @@ globDir' pats dir = do
    let (matches, others) = unzip results
 
    return (DL.concat matches, DL.concat others)
+
+globDir' [] dir =
+   -- We can only get here from matchTypedAndGo getting a [Dir _]: it means the
+   -- original pattern had a trailing PathSeparator. Reproduce it here.
+   return (DL.singleton (dir ++ [pathSeparator]), DL.empty)
 
 matchTypedAndGo :: [TypedPattern]
                 -> FilePath -> FilePath
