@@ -170,5 +170,5 @@ factorPath pat =
    fromConst d []                   = Just (DL.toList d)
    fromConst d (Literal c      :xs) = fromConst (d `DL.snoc` c) xs
    fromConst d (ExtSeparator   :xs) = fromConst (d `DL.snoc` extSeparator) xs
-   fromConst d (LongLiteral _ s:xs) = fromConst (d `DL.append` DL.fromList s) xs
+   fromConst d (LongLiteral _ s:xs) = fromConst (d `DL.append`DL.fromList s) xs
    fromConst _ _                    = Nothing
