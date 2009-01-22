@@ -11,6 +11,23 @@ import System.FilePath.Glob.Utils
    , increasingSeq
    , addToRange, overlap)
 
+-- |Simplifies a 'Pattern' object: removes redundant @\"./\"@, for instance.
+-- The resulting 'Pattern' matches the exact same input as the original one,
+-- with some differences:
+--
+-- * 'globDir'\'s output will differ: globbing for @\"./*\"@ gives @\"./foo\"@,
+--   but after simplification this'll be only @\"foo\"@.
+--
+--   TODO: not sure if this is actually the case currently: ./foo probably does
+--   but what about foo///bar
+--
+-- * 'show'ing the simplified 'Pattern' will obviously not give the original.
+--
+-- * The simplified 'Pattern' is a bit faster to match with and uses less
+--   memory, since some redundant data is removed.
+--
+-- For the last of the above reasons, if you're performance-conscious and not
+-- using 'globDir', you should always 'simplify' after calling 'compile'.
 simplify :: Pattern -> Pattern
 simplify = liftP (go . pre)
  where
