@@ -40,7 +40,7 @@ data TypedPattern
 --
 -- If @dir@ is @\"foo\"@ the pattern should be @\"foo/*\"@ to get the same
 -- results with a plain 'filter'.
--- 
+--
 -- If the given 'FilePath' is @[]@, @getCurrentDirectory@ will be used.
 --
 -- Note that in some cases results outside the given directory may be returned:
@@ -69,7 +69,7 @@ globDir pats dir = do
           )
 
 globDir' :: [TypedPattern] -> FilePath -> IO (DList FilePath, DList FilePath)
-globDir' []   dir = didn'tMatch dir True
+globDir' []   dir = didn'tMatch dir dir True
 globDir' pats dir = do
    dir' <- if null dir then getCurrentDirectory else return dir
    entries <- getDirectoryContents dir'
@@ -88,20 +88,20 @@ matchTypedAndGo :: [TypedPattern]
 matchTypedAndGo [Any p] path absPath =
    if match p path
       then return (DL.singleton absPath, DL.empty)
-      else doesDirectoryExist absPath >>= didn'tMatch absPath
+      else doesDirectoryExist absPath >>= didn'tMatch path absPath
 
 matchTypedAndGo (Dir p:ps) path absPath = do
    isDir <- doesDirectoryExist absPath
    if isDir && match p path
       then globDir' ps absPath
-      else didn'tMatch absPath isDir
+      else didn'tMatch path absPath isDir
 
 matchTypedAndGo (AnyDir p:ps) path absPath = do
    isDir <- doesDirectoryExist absPath
    let m = match (unseparate ps)
 
    if path `elem` [".",".."]
-      then didn'tMatch absPath isDir
+      then didn'tMatch path absPath isDir
       else let unconditionalMatch =
                   null (unPattern p) && not (isExtSeparator $ head path)
                p' = Pattern (unPattern p ++ [AnyNonPathSeparator])
@@ -110,14 +110,20 @@ matchTypedAndGo (AnyDir p:ps) path absPath = do
                     True | isDir  -> fmap (partitionDL (any m . pathParts))
                                           (getRecursiveContents absPath)
                     True | m path -> return (DL.singleton absPath, DL.empty)
-                    _             -> didn'tMatch absPath isDir
+                    _             -> didn'tMatch path absPath isDir
 
 matchTypedAndGo _ _ _ = error "Glob.matchTypedAndGo :: internal error"
 
-didn'tMatch :: FilePath -> Bool -> IO (DList FilePath, DList FilePath)
-didn'tMatch absPath isDir = (fmap $ (,) DL.empty) $
+-- To be called when a pattern didn't match a path: given the path and whether
+-- it was a directory, return all paths which didn't match (i.e. for a file,
+-- just the file, and for a directory, everything inside it).
+didn'tMatch :: FilePath -> FilePath -> Bool
+            -> IO (DList FilePath, DList FilePath)
+didn'tMatch path absPath isDir = (fmap $ (,) DL.empty) $
    if isDir
-      then getRecursiveContents absPath
+      then if path `elem` [".",".."]
+              then return DL.empty
+              else getRecursiveContents absPath
       else return$ DL.singleton absPath
 
 separate :: Pattern -> [TypedPattern]
