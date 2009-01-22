@@ -32,11 +32,18 @@ data TypedPattern
 -- If multiple 'Pattern's match a single 'FilePath', that path will be included
 -- in multiple groups.
 --
+-- Two 'FilePath's which can be canonicalized to the same file (e.g. @\"foo\"@
+-- and @\"./foo\"@) may appear separately if explicit matching on paths
+-- beginning with @\".\"@ is done. Looking for @\".*/*\"@, for instance, will
+-- cause @\"./foo\"@ to return as a match but @\"foo\"@ to not be matched.
+--
 -- This function is different from a simple 'filter' over all the contents of
 -- the directory: the matching is performed relative to the directory, so that
 -- for instance the following is true:
 --
 -- > fmap (head.fst) (globDir [compile "*"] dir) == getDirectoryContents dir
+--
+-- (With the exception that that glob won't match anything beginning with @.@.)
 --
 -- If @dir@ is @\"foo\"@ the pattern should be @\"foo/*\"@ to get the same
 -- results with a plain 'filter'.
