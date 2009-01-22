@@ -10,6 +10,11 @@
 	         a few similar cases).
 	Bug fix: "//./" wasn't getting optimized properly.
 	Bug fix: ".//a" matched "/a".
+	Bug fix: "f**/a" didn't match "foo/a".
+	Bug fix: ".**/a" didn't match ".foo/a".
+	Bug fix: ".**/a" matched "../a".
+	Bug fixes: globDir and match, in general, handled patterns starting with
+	           ".*" or ".**/" quite differently.
 
 0.3.2, 2008-12-20:
 	Regression fix: handle directories without read permissions properly.
