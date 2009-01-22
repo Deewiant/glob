@@ -41,21 +41,15 @@ simplify = liftP (go . pre)
    go (PathSeparator:ExtSeparator:xs@(PathSeparator:_)) = go xs
 
    go (x:xs) =
-      case find ($ x) compressors of
-           Just c  -> let (compressed,ys) = span c xs
-                       in if null compressed
-                             then x : go ys
-                             else go (x : ys)
-           Nothing -> x : go xs
+      if isSlash x
+         then let (compressed,ys) = span isSlash xs
+               in if null compressed
+                     then x : go ys
+                     else go (x : ys)
+         else x : go xs
 
-   compressors = [isStar, isSlash, isStarSlash]
-
-   isStar      AnyNonPathSeparator = True
-   isStar      _                   = False
-   isSlash     PathSeparator       = True
-   isSlash     _                   = False
-   isStarSlash AnyDirectory        = True
-   isStarSlash _                   = False
+   isSlash PathSeparator = True
+   isSlash _             = False
 
 optimize :: Pattern -> Pattern
 optimize = liftP (fin . go)
@@ -104,12 +98,21 @@ optimize = liftP (fin . go)
       | b > a = go $ CharRange True [Right (a,b)] : xs
 
    go (x:xs) =
-      x : if isAnyNumber x
-             then go (dropWhile isAnyNumber xs)
-             else go xs
+      case find ($ x) compressors of
+           Just c  -> let (compressed,ys) = span c xs
+                       in if null compressed
+                             then x : go ys
+                             else go (x : ys)
+           Nothing -> x : go xs
+
+   compressors = [isStar, isStarSlash, isAnyNumber]
 
    isLiteral   (Literal _)                 = True
    isLiteral   _                           = False
+   isStar      AnyNonPathSeparator         = True
+   isStar      _                           = False
+   isStarSlash AnyDirectory                = True
+   isStarSlash _                           = False
    isAnyNumber (OpenRange Nothing Nothing) = True
    isAnyNumber _                           = False
 
