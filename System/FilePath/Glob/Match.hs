@@ -17,7 +17,7 @@ match = begMatch . unPattern
 
 -- begMatch takes care of some things at the beginning of a pattern or after /:
 --    - . needs to be matched explicitly
---    - ./foo is equivalent to foo
+--    - ./foo is equivalent to foo (for any number of /)
 --
 -- .*/foo still needs to match ./foo though, and it won't match plain foo;
 -- special case that one
@@ -27,7 +27,11 @@ begMatch, match' :: [Token] -> FilePath -> Bool
 begMatch (ExtSeparator:AnyDirectory:_) (x:y:_)
    | isExtSeparator x && isExtSeparator y = False
 
-begMatch (ExtSeparator:PathSeparator:pat) s = begMatch pat s
+begMatch (ExtSeparator:PathSeparator:pat) s =
+   begMatch (dropWhile isSlash pat) s
+ where
+   isSlash PathSeparator = True
+   isSlash _             = False
 
 begMatch pat (x:y:s) | isExtSeparator x && isPathSeparator y =
    case pat of

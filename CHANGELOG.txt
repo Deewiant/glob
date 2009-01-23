@@ -9,7 +9,7 @@
 	Bug fix: the Show instance used to show "[?]" as the very different "?" (and
 	         a few similar cases).
 	Bug fix: "//./" wasn't getting optimized properly.
-	Bug fix: ".//a" matched "/a".
+	Bug fix: ".//a" matched "/a" and not "a" or "./a".
 	Bug fix: "f**/a" didn't match "foo/a".
 	Bug fix: ".**/a" didn't match ".foo/a".
 	Bug fix: ".**/a" matched "../a".
@@ -43,5 +43,5 @@
 		System.FilePath.Glob.compile    :: String -> Pattern
 		System.FilePath.Glob.match      :: Pattern -> FilePath -> Bool
 		System.FilePath.Glob.globDir    :: [Pattern] -> FilePath -> IO ([[FilePath]], [FilePath])
-	
+
 	Dependencies: base, containers, directory, filepath, mtl.
