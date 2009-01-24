@@ -36,7 +36,7 @@ compile = either error id . tryCompile
 --
 -- [@[^..\]@ or @[!..\]@] Like [..], but matches any character /not/ listed.
 --
--- [@\<m-n>@]  Matches any integer in the range m to n, inclusive. The range may
+-- [@\<m-n>@] Matches any integer in the range m to n, inclusive. The range may
 --            be open-ended by leaving out either number: \"\<->\", for
 --            instance, matches any integer.
 --
@@ -121,8 +121,9 @@ charRange xs_ =
 
    run :: ErrorT String (Writer CharRange) String
        -> (String, Either String CharRange)
-   run m = case runWriter $ runErrorT m of (Left s,_) -> ("",Left s)
-                                           (Right rest,cs) -> (rest,Right cs)
+   run m = case runWriter.runErrorT $ m of
+                (Left s,     _)  -> ("",   Left s)
+                (Right rest, cs) -> (rest, Right cs)
 
    go :: String -> ErrorT String (Writer CharRange) String
    go []           = throwError "unclosed [] in pattern"
@@ -130,15 +131,19 @@ charRange xs_ =
    go (    ']':xs) = return xs
    go (      c:xs) = char c xs
 
+   char :: Char -> String -> ErrorT String (Writer CharRange) String
+   char c ('-':x:xs) =
+      if x == ']'
+         then tell [Left c, Left '-'] >> return xs
+         else tell [Right (c,x)]      >>     go xs
+
+   char c xs = tell [Left c] >> go xs
+
    readClass :: String -> ErrorT String (Writer CharRange) String
    readClass xs = let (name,end) = span isAlpha xs
-                  in case end of
-                       ':':']':rest -> charClass name >> go rest
-                       _ -> tell [Left '[',Left ':'] >> go xs
-
-   char :: Char -> String -> ErrorT String (Writer CharRange) String
-   char f ('-':s:cs) | s /= ']' = tell [Right (f,s)] >> go cs
-   char c xs = tell [Left c] >> go xs
+                   in case end of
+                           ':':']':rest -> charClass name           >> go rest
+                           _            -> tell [Left '[',Left ':'] >> go xs
 
    charClass :: String -> ErrorT String (Writer CharRange) ()
    charClass name =
