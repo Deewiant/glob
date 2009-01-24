@@ -1,11 +1,9 @@
 -- File created: 2008-10-10 13:29:26
 
-{-# LANGUAGE PatternGuards #-}
-
 module System.FilePath.Glob.Base where
 
 import Control.Exception (assert)
-import Data.Maybe        (fromMaybe)
+import Data.Maybe        (fromMaybe, isJust)
 import Data.Monoid       (Monoid, mappend, mempty)
 import System.FilePath   ( pathSeparator, extSeparator
                          , isExtSeparator, isPathSeparator
@@ -74,12 +72,15 @@ instance Show Pattern where
 -- Shouldn't `mappend` be infixr?
 instance Monoid Pattern where
    mempty = Pattern []
+
    mappend (Pattern []) b = b
-   mappend (Pattern a) (Pattern (b:bs)) | Just b' <- fromLiteral b
-       = case splitLast a of
-           (a',l) | Just l' <- fromLiteral l
-                            -> Pattern $ a'++(longLiteral $ l'++b'):bs
-                  | otherwise -> Pattern (a++(b:bs))
+   mappend (Pattern a) (Pattern (b:bs)) | isJust (fromLiteral b) =
+      let Just b' = fromLiteral b
+          (a',l) = splitLast a
+       in case fromLiteral l of
+               Just l' -> Pattern $ a'++(longLiteral $ l'++b'):bs
+               _       -> Pattern (a++(b:bs))
+
        where splitLast [a] = ([],a)
              splitLast (a:as) = let (bs,b) = splitLast as in (a:bs,b)
              fromLiteral (Literal c) = Just [c]
