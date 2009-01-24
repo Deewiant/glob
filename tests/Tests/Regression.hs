@@ -100,4 +100,9 @@ matchCases =
    , (False, ".**/a"      , "a")
    , (True , ".**/a"      , ".foo/a")
    , (True , "f**/a"      , "foo/a")
+   , (True , "f**/"       , "f/")
+   , (True , "f**/"       , "f///")
+   , (True , "f**/x"      , "f///x")
+   , (True , "f/"         , "f///")
+   , (True , "f/x"        , "f///x")
    ]

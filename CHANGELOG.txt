@@ -16,6 +16,7 @@
 	Bug fixes: globDir and match, in general, handled patterns starting with
 	           ".*" or ".**/" quite differently.
 	Bug fix: globDir never matched "foo/" to the directory "foo".
+	Bug fix: globDir never matched "foo**/" to the directory "foo".
 
 0.3.2, 2008-12-20:
 	Regression fix: handle directories without read permissions properly.

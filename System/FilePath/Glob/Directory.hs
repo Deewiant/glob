@@ -108,20 +108,27 @@ matchTypedAndGo (Dir p:ps) path absPath = do
       else didn'tMatch path absPath isDir
 
 matchTypedAndGo (AnyDir p:ps) path absPath = do
-   isDir <- doesDirectoryExist absPath
-   let m = match (unseparate ps)
-
    if path `elem` [".",".."]
-      then didn'tMatch path absPath isDir
-      else let unconditionalMatch =
-                  null (unPattern p) && not (isExtSeparator $ head path)
-               p' = Pattern (unPattern p ++ [AnyNonPathSeparator])
+      then didn'tMatch path absPath True
+      else do
+         isDir <- doesDirectoryExist absPath
+         let m = match (unseparate ps)
+             unconditionalMatch =
+                null (unPattern p) && not (isExtSeparator $ head path)
+             p' = Pattern (unPattern p ++ [AnyNonPathSeparator])
 
-            in case unconditionalMatch || match p' path of
-                    True | isDir  -> fmap (partitionDL (any m . pathParts))
-                                          (getRecursiveContents absPath)
-                    True | m path -> return (DL.singleton absPath, DL.empty)
-                    _             -> didn'tMatch path absPath isDir
+         case unconditionalMatch || match p' path of
+              True | isDir  -> do
+                 contents <- getRecursiveContents absPath
+                 return $
+                    -- foo**/ should match foo/ and nothing below it
+                    -- relies on head contents == absPath
+                    if null ps
+                       then (DL.singleton $ DL.head contents, DL.tail contents)
+                       else partitionDL (any m . pathParts) contents
+
+              True | m path -> return (DL.singleton absPath, DL.empty)
+              _             -> didn'tMatch path absPath isDir
 
 matchTypedAndGo _ _ _ = error "Glob.matchTypedAndGo :: internal error"
 
@@ -144,11 +151,16 @@ separate = go [] . unPattern
    go gr []                              = [Any    $ f gr]
    -- ./foo should not be split into [. , foo], it's just foo
    go [] (ExtSeparator:PathSeparator:ps) = go [] ps
-   go gr (             PathSeparator:ps) = (   Dir $ f gr) : go [] ps
-   go gr (              AnyDirectory:ps) = (AnyDir $ f gr) : go [] ps
+   go gr (             PathSeparator:ps) = (   Dir $ f gr) : go [] (dropSls ps)
+   go gr (              AnyDirectory:ps) = (AnyDir $ f gr) : go [] (dropSls ps)
    go gr (                         p:ps) = go (p:gr) ps
 
    f = Pattern . reverse
+
+   dropSls = dropWhile isSlash
+    where
+      isSlash PathSeparator = True
+      isSlash _             = False
 
 unseparate :: [TypedPattern] -> Pattern
 unseparate = Pattern . foldr f []

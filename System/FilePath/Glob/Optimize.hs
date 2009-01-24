@@ -18,9 +18,6 @@ import System.FilePath.Glob.Utils
 -- * 'globDir'\'s output will differ: globbing for @\"./*\"@ gives @\"./foo\"@,
 --   but after simplification this'll be only @\"foo\"@.
 --
---   TODO: not sure if this is actually the case currently: ./foo probably does
---   but what about foo///bar
---
 -- * 'show'ing the simplified 'Pattern' will obviously not give the original.
 --
 -- * The simplified 'Pattern' is a bit faster to match with and uses less

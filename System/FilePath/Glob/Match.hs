@@ -50,8 +50,9 @@ match' (AnyNonPathSeparator:s)   "" = null s
 match' _                         "" = False
 match' (Literal l       :xs) (c:cs) =                 l == c  && match'   xs cs
 match' ( ExtSeparator   :xs) (c:cs) =       isExtSeparator c  && match'   xs cs
-match' (PathSeparator   :xs) (c:cs) =      isPathSeparator c  && begMatch xs cs
 match' (NonPathSeparator:xs) (c:cs) = not (isPathSeparator c) && match'   xs cs
+match' (PathSeparator   :xs) (c:cs) =
+   isPathSeparator c && begMatch xs (dropWhile isPathSeparator cs)
 match' (CharRange b rng :xs) (c:cs) =
    not (isPathSeparator c) &&
    any (either (== c) (`inRange` c)) rng == b &&
@@ -81,7 +82,7 @@ match' again@(AnyNonPathSeparator:xs) path@(c:cs) =
    match' xs path || (if isPathSeparator c then False else match' again cs)
 
 match' again@(AnyDirectory:xs) path =
-   let parts   = pathParts path
+   let parts   = pathParts (dropWhile isPathSeparator path)
        matches = any (match' xs) parts || any (match' again) (tail parts)
     in if null xs
           --  **/ shouldn't match foo/.bar, so check that remaining bits don't
