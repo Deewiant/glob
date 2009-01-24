@@ -147,19 +147,16 @@ didn'tMatch path absPath isDir = (fmap $ (,) DL.empty) $
 separate :: Pattern -> [TypedPattern]
 separate = go [] . unPattern
  where
-   go [] []                              = []
-   go gr []                              = [Any    $ f gr]
-   -- ./foo should not be split into [. , foo], it's just foo
-   go gr (             PathSeparator:ps) = (   Dir $ f gr) : go [] (dropSls ps)
-   go gr (              AnyDirectory:ps) = (AnyDir $ f gr) : go [] (dropSls ps)
-   go gr (                         p:ps) = go (p:gr) ps
+   go [] []                 = []
+   go gr []                 = [Any    $ f gr]
+   go gr (PathSeparator:ps) = (   Dir $ f gr) : go [] (dropWhile isSlash ps)
+   go gr ( AnyDirectory:ps) = (AnyDir $ f gr) : go [] (dropWhile isSlash ps)
+   go gr (            p:ps) = go (p:gr) ps
 
    f = Pattern . reverse
 
-   dropSls = dropWhile isSlash
-    where
-      isSlash PathSeparator = True
-      isSlash _             = False
+   isSlash PathSeparator = True
+   isSlash _             = False
 
 unseparate :: [TypedPattern] -> Pattern
 unseparate = Pattern . foldr f []
