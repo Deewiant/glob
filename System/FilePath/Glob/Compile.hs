@@ -25,21 +25,21 @@ compile = either error id . tryCompile
 -- follows:
 --
 -- [@?@]      Matches any character except path separators.
--- 
+--
 -- [@*@]      Matches any number of characters except path separators,
 --            including the empty string.
--- 
+--
 -- [@[..\]@]  Matches any of the enclosed characters. Ranges of characters can
 --            be specified by separating the endpoints with a \'-'. \'-' or ']'
 --            can be matched by including them as the first character(s) in the
 --            list.
--- 
+--
 -- [@[^..\]@ or @[!..\]@] Like [..], but matches any character /not/ listed.
--- 
+--
 -- [@\<m-n>@]  Matches any integer in the range m to n, inclusive. The range may
 --            be open-ended by leaving out either number: \"\<->\", for
 --            instance, matches any integer.
--- 
+--
 -- [@**/@]    Matches any number of characters, including path separators,
 --            excluding the empty string.
 --
@@ -105,27 +105,32 @@ openRangeNum :: String -> Maybe String
 openRangeNum = Just . dropLeadingZeroes
 
 charRange :: String -> (Either String Token,String)
-charRange xs = case xs of
-                 (x:xs') | x `elem` "^!" -> let (rest,cs) = start xs'
-                                            in (fmap (CharRange False) cs,rest)
-                 _                       -> let (rest,cs) = start xs
-                                            in (fmap (CharRange True) cs,rest)
+charRange xs =
+   case xs of
+        (x:xs') | x `elem` "^!" -> let (rest,cs) = start xs'
+                                    in (fmap (CharRange False) cs,rest)
+        _                       -> let (rest,cs) = start xs
+                                    in (fmap (CharRange True) cs,rest)
  where
    start (']':xs) = run $ char ']' xs -- special chars
    start ('-':xs) = run $ char '-' xs
    start xs = run $ go xs
+
    run m = case runWriter $ runErrorT m of (Left s,_) -> ("",Left s)
                                            (Right rest,cs) -> (rest,Right cs)
    go [] = fail "unclosed [] in pattern"
    go ('[':':':xs) = readClass xs
    go (']':xs) = return xs
    go (c:xs) = char c xs
+
    readClass xs = let (name,end) = span isAlpha xs
                   in case end of
                        ':':']':rest -> charClass name >> go rest
                        _ -> tell [Left '[',Left ':'] >> go xs
+
    char f ('-':s:cs) | not $ s `elem` "[]" = tell [Right (f,s)] >> go cs
    char c xs = tell [Left c] >> go xs
+
    charClass name = case name of -- this is all the required posix classes
                  "alnum" -> tell [digit,upper,lower]
                  "alpha" -> tell [upper,lower]
@@ -140,10 +145,11 @@ charRange xs = case xs of
                  "upper" -> tell [upper]
                  "xdigit" -> tell $ digit:[Right ('A','F'),Right ('a','f')]
                  _ -> fail $ "unknown character class: "++name
-   digit = Right ('0','9')
-   upper = Right ('A','Z')
-   lower = Right ('a','z')
-   punct = [Right ('\x21','\x2f'),Right ('\x3a','\x40'),
-            Right ('\x5b','\x60'),Right ('\x7b','\x7e')]
+
+   digit  = Right ('0','9')
+   upper  = Right ('A','Z')
+   lower  = Right ('a','z')
+   punct  = [Right ('\x21','\x2f'),Right ('\x3a','\x40'),
+             Right ('\x5b','\x60'),Right ('\x7b','\x7e')]
    blanks = [Left ' ',Left '\t']
    spaces = [Left ' ',Right ('\x09','\x0d')]
