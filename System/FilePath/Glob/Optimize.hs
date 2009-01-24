@@ -15,8 +15,8 @@ import System.FilePath.Glob.Utils
 -- The resulting 'Pattern' matches the exact same input as the original one,
 -- with some differences:
 --
--- * 'globDir'\'s output will differ: globbing for @\"./*\"@ gives @\"./foo\"@,
---   but after simplification this'll be only @\"foo\"@.
+-- * 'globDir'\'s output will differ: for example, globbing for @\"./*\"@ gives
+--   @\"./foo\"@, but after simplification this'll be only @\"foo\"@.
 --
 -- * 'show'ing the simplified 'Pattern' will obviously not give the original.
 --
