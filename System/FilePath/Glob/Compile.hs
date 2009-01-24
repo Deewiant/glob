@@ -137,7 +137,7 @@ charRange xs_ =
                        _ -> tell [Left '[',Left ':'] >> go xs
 
    char :: Char -> String -> ErrorT String (Writer CharRange) String
-   char f ('-':s:cs) | not $ s `elem` "[]" = tell [Right (f,s)] >> go cs
+   char f ('-':s:cs) | s /= ']' = tell [Right (f,s)] >> go cs
    char c xs = tell [Left c] >> go xs
 
    charClass :: String -> ErrorT String (Writer CharRange) ()
