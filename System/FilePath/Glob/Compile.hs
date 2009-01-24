@@ -5,10 +5,10 @@ module System.FilePath.Glob.Compile
    , tokenize
    ) where
 
-import Control.Monad.Error (runErrorT)
-import Control.Monad.Writer (runWriter, tell)
-import Data.Char           (isDigit,isAlpha)
-import System.FilePath     (isPathSeparator, isExtSeparator)
+import Control.Monad.Error  (ErrorT, runErrorT, throwError)
+import Control.Monad.Writer (Writer, runWriter, tell)
+import Data.Char            (isDigit,isAlpha)
+import System.FilePath      (isPathSeparator, isExtSeparator)
 
 import System.FilePath.Glob.Base
 import System.FilePath.Glob.Optimize (optimize)
@@ -104,6 +104,8 @@ openRange s =
 openRangeNum :: String -> Maybe String
 openRangeNum = Just . dropLeadingZeroes
 
+type CharRange = [Either Char (Char,Char)]
+
 charRange :: String -> (Either String Token,String)
 charRange xs_ =
    case xs_ of
@@ -112,22 +114,29 @@ charRange xs_ =
         _                       -> let (rest,cs) = start xs_
                                     in (fmap (CharRange True) cs,rest)
  where
+   start :: String -> (String, Either String CharRange)
    start (']':xs) = run $ char ']' xs
    start ('-':xs) = run $ char '-' xs
-   start xs = run $ go xs
+   start xs       = run $ go xs
 
+   run :: ErrorT String (Writer CharRange) String
+       -> (String, Either String CharRange)
    run m = case runWriter $ runErrorT m of (Left s,_) -> ("",Left s)
                                            (Right rest,cs) -> (rest,Right cs)
-   go [] = fail "unclosed [] in pattern"
+
+   go :: String -> ErrorT String (Writer CharRange) String
+   go [] = throwError "unclosed [] in pattern"
    go ('[':':':xs) = readClass xs
    go (']':xs) = return xs
    go (c:xs) = char c xs
 
+   readClass :: String -> ErrorT String (Writer CharRange) String
    readClass xs = let (name,end) = span isAlpha xs
                   in case end of
                        ':':']':rest -> charClass name >> go rest
                        _ -> tell [Left '[',Left ':'] >> go xs
 
+   char :: Char -> String -> ErrorT String (Writer CharRange) String
    char f ('-':s:cs) | not $ s `elem` "[]" = tell [Right (f,s)] >> go cs
    char c xs = tell [Left c] >> go xs
 
