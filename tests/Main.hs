@@ -8,6 +8,7 @@ import Test.Framework
 import qualified Tests.Matcher    as Matcher
 import qualified Tests.Optimizer  as Optimizer
 import qualified Tests.Regression as Regression
+import qualified Tests.Simplifier as Simplifier
 import qualified Tests.Utils      as Utils
 
 main = do
@@ -20,7 +21,8 @@ main = do
 
 tests =
    [ Regression.tests
+   , Utils.tests
    , Matcher.tests
    , Optimizer.tests
-   , Utils.tests
+   , Simplifier.tests
    ]
