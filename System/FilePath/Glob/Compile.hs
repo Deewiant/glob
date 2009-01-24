@@ -125,10 +125,10 @@ charRange xs_ =
                                            (Right rest,cs) -> (rest,Right cs)
 
    go :: String -> ErrorT String (Writer CharRange) String
-   go [] = throwError "unclosed [] in pattern"
+   go []           = throwError "unclosed [] in pattern"
    go ('[':':':xs) = readClass xs
-   go (']':xs) = return xs
-   go (c:xs) = char c xs
+   go (    ']':xs) = return xs
+   go (      c:xs) = char c xs
 
    readClass :: String -> ErrorT String (Writer CharRange) String
    readClass xs = let (name,end) = span isAlpha xs
