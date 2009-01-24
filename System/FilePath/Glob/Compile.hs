@@ -5,10 +5,11 @@ module System.FilePath.Glob.Compile
    , tokenize
    ) where
 
-import Control.Monad.Error  (ErrorT, runErrorT, throwError)
-import Control.Monad.Writer (Writer, runWriter, tell)
-import Data.Char            (isDigit,isAlpha)
-import System.FilePath      (isPathSeparator, isExtSeparator)
+import Control.Arrow               (first)
+import Control.Monad.Error         (ErrorT, runErrorT, throwError)
+import Control.Monad.Writer.Strict (Writer, runWriter, tell)
+import Data.Char                   (isDigit,isAlpha)
+import System.FilePath             (isPathSeparator, isExtSeparator)
 
 import System.FilePath.Glob.Base
 import System.FilePath.Glob.Optimize (optimize)
@@ -106,24 +107,22 @@ openRangeNum = Just . dropLeadingZeroes
 
 type CharRange = [Either Char (Char,Char)]
 
-charRange :: String -> (Either String Token,String)
+charRange :: String -> (Either String Token, String)
 charRange xs_ =
    case xs_ of
-        (x:xs') | x `elem` "^!" -> let (rest,cs) = start xs'
-                                    in (fmap (CharRange False) cs,rest)
-        _                       -> let (rest,cs) = start xs_
-                                    in (fmap (CharRange True) cs,rest)
+        (x:xs') | x `elem` "^!" -> first (fmap (CharRange False)) (start xs')
+        _                       -> first (fmap (CharRange  True)) (start xs_)
  where
-   start :: String -> (String, Either String CharRange)
+   start :: String -> (Either String CharRange, String)
    start (']':xs) = run $ char ']' xs
    start ('-':xs) = run $ char '-' xs
    start xs       = run $ go xs
 
    run :: ErrorT String (Writer CharRange) String
-       -> (String, Either String CharRange)
+       -> (Either String CharRange, String)
    run m = case runWriter.runErrorT $ m of
-                (Left s,     _)  -> ("",   Left s)
-                (Right rest, cs) -> (rest, Right cs)
+                (Left   err,  _) -> (Left err, [])
+                (Right rest, cs) -> (Right cs, rest)
 
    go :: String -> ErrorT String (Writer CharRange) String
    go []           = throwError "unclosed [] in pattern"
