@@ -2,6 +2,7 @@
 
 module System.FilePath.Glob.Base where
 
+import Control.Arrow     (first)
 import Control.Exception (assert)
 import Data.Maybe        (fromMaybe, isJust)
 import Data.Monoid       (Monoid, mappend, mempty)
@@ -81,10 +82,16 @@ instance Monoid Pattern where
                Just l' -> Pattern $ a'++(longLiteral $ l'++b'):bs
                _       -> Pattern (a++(b:bs))
 
-       where splitLast [a] = ([],a)
-             splitLast (a:as) = let (bs,b) = splitLast as in (a:bs,b)
-             fromLiteral (Literal c) = Just [c]
-             fromLiteral (LongLiteral _ s) = Just s
-             fromLiteral _ = Nothing
-             longLiteral s = LongLiteral (length s) s
+    where
+      splitLast [x]    = ([],x)
+      splitLast (x:xs) = first (x:) (splitLast xs)
+      splitLast _      =
+         error "System.FilePath.Glob.Pattern.mappend :: internal error"
+
+      fromLiteral (Literal c)       = Just [c]
+      fromLiteral (LongLiteral _ s) = Just s
+      fromLiteral _                 = Nothing
+
+      longLiteral s = LongLiteral (length s) s
+
    mappend (Pattern a) (Pattern b) = Pattern $ a++b
