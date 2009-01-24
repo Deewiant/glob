@@ -105,14 +105,14 @@ openRangeNum :: String -> Maybe String
 openRangeNum = Just . dropLeadingZeroes
 
 charRange :: String -> (Either String Token,String)
-charRange xs =
-   case xs of
+charRange xs_ =
+   case xs_ of
         (x:xs') | x `elem` "^!" -> let (rest,cs) = start xs'
                                     in (fmap (CharRange False) cs,rest)
-        _                       -> let (rest,cs) = start xs
+        _                       -> let (rest,cs) = start xs_
                                     in (fmap (CharRange True) cs,rest)
  where
-   start (']':xs) = run $ char ']' xs -- special chars
+   start (']':xs) = run $ char ']' xs
    start ('-':xs) = run $ char '-' xs
    start xs = run $ go xs
 
