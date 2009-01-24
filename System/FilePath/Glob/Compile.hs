@@ -140,25 +140,30 @@ charRange xs_ =
    char f ('-':s:cs) | not $ s `elem` "[]" = tell [Right (f,s)] >> go cs
    char c xs = tell [Left c] >> go xs
 
-   charClass name = case name of -- this is all the required posix classes
-                 "alnum" -> tell [digit,upper,lower]
-                 "alpha" -> tell [upper,lower]
-                 "blank" -> tell blanks
-                 "cntrl" -> tell [Left '\x7f',Right ('\x00','\x1f')]
-                 "digit" -> tell [digit]
-                 "graph" -> tell [Right ('\x21','\x7e')]
-                 "lower" -> tell [lower]
-                 "print" -> tell [Right ('\x20','\x7e')]
-                 "punct" -> tell punct
-                 "space" -> tell spaces
-                 "upper" -> tell [upper]
-                 "xdigit" -> tell $ digit:[Right ('A','F'),Right ('a','f')]
-                 _ -> fail $ "unknown character class: "++name
+   charClass :: String -> ErrorT String (Writer CharRange) ()
+   charClass name =
+      -- The POSIX classes
+      --
+      -- TODO: this is ASCII-only, not sure how this should be extended
+      --       Unicode, or with a locale as input, or something else?
+      case name of
+           "alnum"  -> tell [digit,upper,lower]
+           "alpha"  -> tell [upper,lower]
+           "blank"  -> tell blanks
+           "cntrl"  -> tell [Right ('\0','\x1f'), Left '\x7f']
+           "digit"  -> tell [digit]
+           "graph"  -> tell [Right ('!','~')]
+           "lower"  -> tell [lower]
+           "print"  -> tell [Right (' ','~')]
+           "punct"  -> tell punct
+           "space"  -> tell spaces
+           "upper"  -> tell [upper]
+           "xdigit" -> tell [digit, Right ('A','F'), Right ('a','f')]
+           _        -> throwError $ "unknown character class: "++name
 
    digit  = Right ('0','9')
    upper  = Right ('A','Z')
    lower  = Right ('a','z')
-   punct  = [Right ('\x21','\x2f'),Right ('\x3a','\x40'),
-             Right ('\x5b','\x60'),Right ('\x7b','\x7e')]
-   blanks = [Left ' ',Left '\t']
-   spaces = [Left ' ',Right ('\x09','\x0d')]
+   punct  = map Right [('!','/'), (':','@'), ('[','`'), ('{','~')]
+   blanks = [Left '\t',         Left ' ']
+   spaces = [Right ('\t','\r'), Left ' ']
