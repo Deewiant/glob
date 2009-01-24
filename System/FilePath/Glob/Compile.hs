@@ -75,7 +75,7 @@ tokenize = fmap Pattern . sequence . go
       case cs of
            '*':p:xs | isPathSeparator p -> Right AnyDirectory        : go xs
            _                            -> Right AnyNonPathSeparator : go cs
-   go ('[':cs) = let (range,rest) = charRange cs in range:go rest
+   go ('[':cs) = let (range,rest) = charRange cs in range : go rest
    go ('<':cs) =
       let (range, rest) = break (=='>') cs
        in if null rest
@@ -125,7 +125,7 @@ charRange xs_ =
                 (Right rest, cs) -> (Right cs, rest)
 
    go :: String -> ErrorT String (Writer CharRange) String
-   go []           = throwError "unclosed [] in pattern"
+   go []           = throwError "compile :: unclosed [] in pattern"
    go ('[':':':xs) = readClass xs
    go (    ']':xs) = return xs
    go (      c:xs) = char c xs
@@ -163,7 +163,8 @@ charRange xs_ =
            "space"  -> tell spaces
            "upper"  -> tell [upper]
            "xdigit" -> tell [digit, Right ('A','F'), Right ('a','f')]
-           _        -> throwError $ "unknown character class: "++name
+           _        ->
+              throwError ("compile :: unknown character class '" ++name++ "'")
 
    digit  = Right ('0','9')
    upper  = Right ('A','Z')
