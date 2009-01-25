@@ -74,7 +74,7 @@ tokenize :: CompOptions -> String -> Either String Pattern
 tokenize opts = fmap Pattern . sequence . go
  where
    err _ c cs | errorRecovery opts = Right (Literal c) : go cs
-   err s _ _ = [Left s]
+   err s _ _                       = [Left s]
 
    go :: String -> [Either String Token]
    go [] = []
@@ -84,10 +84,12 @@ tokenize opts = fmap Pattern . sequence . go
            '*':p:xs | rwcs && isPathSeparator p
               -> Right AnyDirectory        : go xs
            _  -> Right AnyNonPathSeparator : go cs
+
    go ('[':cs) | crs = let (range,rest) = charRange opts cs
                         in case range of
                                 Left s -> err s '[' cs
                                 r      -> r : go rest
+
    go ('<':cs) | ors =
       let (range, rest) = break (=='>') cs
        in if null rest
@@ -99,10 +101,11 @@ tokenize opts = fmap Pattern . sequence . go
       | isPathSeparator c = Right PathSeparator : go cs
       | isExtSeparator  c = Right  ExtSeparator : go cs
       | otherwise         = Right (Literal c)   : go cs
-   wcs = wildcards opts
+
+   wcs  = wildcards          opts
    rwcs = recursiveWildcards opts
-   crs = characterRanges opts
-   ors = openRanges opts
+   crs  = characterRanges    opts
+   ors  = openRanges         opts
 
 -- <a-b> where a > b can never match anything; this is not considered an error
 openRange :: String -> Either String Token
@@ -143,10 +146,10 @@ charRange opts xs_ =
                 (Right rest, cs) -> (Right cs, rest)
 
    go :: String -> ErrorT String (Writer CharRange) String
-   go []           = throwError "compile :: unclosed [] in pattern"
    go ('[':':':xs) | characterClasses opts = readClass xs
-   go (    ']':xs) = return xs
-   go (      c:xs) = char c xs
+   go (    ']':xs)                         = return xs
+   go (      c:xs)                         = char c xs
+   go []           = throwError "compile :: unclosed [] in pattern"
 
    char :: Char -> String -> ErrorT String (Writer CharRange) String
    char c ('-':x:xs) =
