@@ -67,7 +67,8 @@ data ExecOptions = ExecOptions {
 execDefault :: ExecOptions
 execDefault = ExecOptions { matchDots       = False
                           , matchCaseless   = False
-                          , matchSimplified = False }
+                          , matchSimplified = True
+                          }
 
 data Token
    -- primitives
