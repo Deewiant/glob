@@ -1,8 +1,8 @@
 -- File created: 2008-10-10 13:29:13
 
 module System.FilePath.Glob.Compile
-   (    compile,    compileWith
-   , tryCompile, tryCompileWith
+   ( compile
+   , compileWith, tryCompileWith
    , tokenize
    ) where
 
@@ -16,12 +16,8 @@ import System.FilePath.Glob.Base
 import System.FilePath.Glob.Optimize (optimize)
 import System.FilePath.Glob.Utils    (dropLeadingZeroes)
 
--- |Like 'tryCompile', but calls 'error' if an error results.
-compile :: String -> Pattern
-compile = compileWith compExtended
-
 -- |Compiles a glob pattern from its textual representation into a 'Pattern'
--- object, giving an error message in a 'Left' if the pattern is erroneous.
+-- object.
 --
 -- For the most part, a character matches itself. Recognized operators are as
 -- follows:
@@ -54,23 +50,30 @@ compile = compileWith compExtended
 -- any of them. For instance, on Windows, @\'/\'@ will match itself as well as
 -- @\'\\\'@.
 --
--- Erroneous patterns include:
+-- Error recovery will be performed: erroneous operators will not be considered
+-- operators, but matched as literal strings. Such operators include:
 --
 -- * An empty @[]@ or @[^]@ or @[!]@
 --
 -- * A @[@ or @\<@ without a matching @]@ or @>@
 --
 -- * A malformed @\<>@: e.g. nonnumeric characters or no hyphen
-tryCompile :: String -> Either String Pattern
-tryCompile = tryCompileWith compExtended
+--
+-- So, e.g. @[]@ will match the string @\"[]\"@.
+compile :: String -> Pattern
+compile = compileWith compExtended
 
 -- |Like 'compile', but recognizes operators according to the 'CompOptions'
 -- given.
+--
+-- If an error occurs and 'errorRecovery' is disabled, 'error' will be called.
 compileWith :: CompOptions -> String -> Pattern
 compileWith opts = either error id . tryCompileWith opts
 
--- |Like 'tryCompile', but recognizes operators according to the 'CompOptions'
--- given.
+-- |A safe version of 'compileWith'.
+--
+-- If an error occurs and 'errorRecovery' is disabled, the error message will
+-- be returned in a 'Left'.
 tryCompileWith :: CompOptions -> String -> Either String Pattern
 tryCompileWith opts = fmap optimize . tokenize opts
 
