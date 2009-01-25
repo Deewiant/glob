@@ -1,8 +1,8 @@
 -- File created: 2008-10-10 13:29:13
 
 module System.FilePath.Glob.Compile
-   ( compile, compileWithOptions
-   , tryCompile, tryCompileWithOptions
+   (    compile,    compileWith
+   , tryCompile, tryCompileWith
    , tokenize
    ) where
 
@@ -18,10 +18,10 @@ import System.FilePath.Glob.Utils    (dropLeadingZeroes)
 
 -- |Like 'tryCompile', but calls 'error' if an error results.
 compile :: String -> Pattern
-compile = compileWithOptions compExtended
+compile = compileWith compExtended
 
-compileWithOptions :: CompOptions -> String -> Pattern
-compileWithOptions opts = either error id . tryCompileWithOptions opts
+compileWith :: CompOptions -> String -> Pattern
+compileWith opts = either error id . tryCompileWith opts
 
 -- |Compiles a glob pattern from its textual representation into a 'Pattern'
 -- object, giving an error message in a 'Left' if the pattern is erroneous.
@@ -65,10 +65,10 @@ compileWithOptions opts = either error id . tryCompileWithOptions opts
 --
 -- * A malformed @\<>@: e.g. nonnumeric characters or no hyphen
 tryCompile :: String -> Either String Pattern
-tryCompile = tryCompileWithOptions compExtended
+tryCompile = tryCompileWith compExtended
 
-tryCompileWithOptions :: CompOptions -> String -> Either String Pattern
-tryCompileWithOptions opts = fmap optimize . tokenize opts
+tryCompileWith :: CompOptions -> String -> Either String Pattern
+tryCompileWith opts = fmap optimize . tokenize opts
 
 tokenize :: CompOptions -> String -> Either String Pattern
 tokenize opts = fmap Pattern . sequence . go

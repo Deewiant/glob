@@ -11,14 +11,16 @@ module System.FilePath.Glob
      -- * Functions
    , factorPath
      -- ** Compilation
-   , tryCompile, compile, simplify
+   , tryCompile, compile, tryCompileWith, compileWith, simplify
      -- ** Matching
    , match
    , globDir
    ) where
 
 import System.FilePath.Glob.Base      (Pattern)
-import System.FilePath.Glob.Compile   (compile, tryCompile)
+import System.FilePath.Glob.Compile   ( compile, tryCompile
+                                      , compileWith, tryCompileWith
+                                      )
 import System.FilePath.Glob.Directory (globDir, factorPath)
 import System.FilePath.Glob.Match     (match)
 import System.FilePath.Glob.Optimize  (simplify)
