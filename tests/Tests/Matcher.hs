@@ -20,9 +20,11 @@ tests = testGroup "Matcher"
    ]
 
 -- ./foo should be equivalent to foo in both path and pattern
-prop_match1 o p s =
-   let ep   = tryCompileWith (unCOpts o) (unPS p)
-       ep'  = tryCompileWith (unCOpts o) ("./" ++ unPS p)
+-- ... but not for the pattern if it starts with /
+prop_match1 o p_ s =
+   let p    = dropWhile isPathSeparator (unPS p_)
+       ep   = tryCompileWith (unCOpts o) p
+       ep'  = tryCompileWith (unCOpts o) ("./" ++ p)
        pat  = fromRight ep
        pat' = fromRight ep'
        pth  = unP s
@@ -34,7 +36,7 @@ prop_match1 o p s =
                   , match pat' pth
                   , match pat' pth'
                   ]
-             ) || null (unPS p)
+             ) || null p
            ]
 
 -- [/] shouldn't match anything
