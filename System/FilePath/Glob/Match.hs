@@ -47,8 +47,8 @@ begMatch opts (ExtSeparator:PathSeparator:pat) s | matchSimplified opts =
    isSlash _             = False
 
 begMatch opts pat (x:y:s)
-   | matchSimplified opts && dotSlash = begMatch opts pat s
    | dotSlash && dotStarSlash         = match' opts pat' s
+   | matchSimplified opts && dotSlash = begMatch opts pat s
  where
    dotSlash = isExtSeparator x && isPathSeparator y
    (dotStarSlash, pat') =
