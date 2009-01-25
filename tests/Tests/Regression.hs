@@ -108,4 +108,10 @@ matchCases =
    , (True , "f**/x"      , "f///x")
    , (True , "f/"         , "f///")
    , (True , "f/x"        , "f///x")
+   , (True , "[]"         , "[]")
+   , (True , "[!]"        , "[!]")
+   , (True , "[^]"        , "[^]")
+   , (True , "[abc"       , "[abc")
+   , (True , "<abc"       , "<abc")
+   , (True , "<1-"        , "<1-")
    ]
