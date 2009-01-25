@@ -30,7 +30,7 @@ data CompOptions = CompOptions
       -- @[@ is turned into a literal match, as though 'characterRanges' were
       -- disabled.
     , errorRecovery      :: Bool
-    }
+    } deriving (Show,Read,Eq)
 
 -- |The default set of compilation options: closest to the behaviour of the
 -- @zsh@ shell.
