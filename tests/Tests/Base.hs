@@ -1,15 +1,19 @@
 -- File created: 2008-10-10 22:03:00
 
-module Tests.Base (PString(unPS), Path(unP), fromRight, isRight) where
-
-import Test.QuickCheck
+module Tests.Base ( PString(unPS), Path(unP), COpts(unCOpts)
+                  , fromRight, isRight
+                  ) where
 
 import System.FilePath (extSeparator, pathSeparators)
+import Test.QuickCheck
+
+import System.FilePath.Glob.Base (CompOptions(..))
 
 import Utils (fromRight, isRight)
 
-newtype PString = PatString { unPS :: String } deriving Show
-newtype Path    = Path      { unP  :: String } deriving Show
+newtype PString = PatString { unPS    :: String } deriving Show
+newtype Path    = Path      { unP     :: String } deriving Show
+newtype COpts   = COpts     { unCOpts :: CompOptions } deriving Show
 
 alpha = extSeparator : pathSeparators ++ "-^!" ++ ['a'..'z'] ++ ['0'..'9']
 
@@ -32,6 +36,11 @@ instance Arbitrary Path where
    arbitrary = sized $ \size -> do
       s <- mapM (const plain) [1..size `mod` 16]
       return.Path $ concat s
+
+instance Arbitrary COpts where
+   arbitrary = do
+      [a,b,c,d,e] <- vector 5
+      return.COpts $ CompOptions a b c d e False
 
 plain = sized $ \size -> do
    s <- mapM (const $ elements alpha) [0..size `mod` 3]

@@ -20,9 +20,9 @@ tests = testGroup "Matcher"
    ]
 
 -- ./foo should be equivalent to foo in both path and pattern
-prop_match1 p s =
-   let ep   = tryCompile (unPS p)
-       ep'  = tryCompile ("./" ++ unPS p)
+prop_match1 o p s =
+   let ep   = tryCompileWith (unCOpts o) (unPS p)
+       ep'  = tryCompileWith (unCOpts o) ("./" ++ unPS p)
        pat  = fromRight ep
        pat' = fromRight ep'
        pth  = unP s

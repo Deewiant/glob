@@ -5,7 +5,7 @@ module Tests.Simplifier (tests) where
 import Test.Framework
 import Test.Framework.Providers.QuickCheck
 
-import System.FilePath.Glob.Compile  (tryCompile)
+import System.FilePath.Glob.Compile  (tryCompileWith)
 import System.FilePath.Glob.Optimize (simplify)
 import System.FilePath.Glob.Match
 
@@ -17,14 +17,14 @@ tests = testGroup "Simplifier"
    ]
 
 -- Simplifying twice should give the same result as simplifying once
-prop_simplify1 s =
-   let pat = tryCompile (unPS s)
+prop_simplify1 o s =
+   let pat = tryCompileWith (unCOpts o) (unPS s)
        xs = iterate simplify (fromRight pat)
     in isRight pat && xs !! 1 == xs !! 2
 
 -- Simplifying shouldn't affect whether a match succeeds
-prop_simplify2 p s =
-   let x   = tryCompile (unPS p)
+prop_simplify2 p o s =
+   let x   = tryCompileWith (unCOpts o) (unPS p)
        pat = fromRight x
        pth = unP s
     in isRight x && match pat pth == match (simplify pat) pth
