@@ -10,33 +10,52 @@ import System.FilePath   ( pathSeparator, extSeparator
                          , isExtSeparator, isPathSeparator
                          )
 
--- |These are the compilation options.  We could presumably put
--- locale information in here, too.  (note that some of these options
--- depend on each other: classes can never occur if ranges aren't allowed)
-data CompOptions = CompOptions {
-      characterClasses   :: Bool -- ^allow character classes @[[:...:]]@
-    , characterRanges    :: Bool -- ^allow character ranges @[...]@
-    , openRanges         :: Bool -- ^allow open ranges @<...>@
-    , recursiveWildcards :: Bool -- ^allow recursive wildcards @**/@
-    , wildcards          :: Bool -- ^allow wildcards at all (@*@ and @?@)
-    , errorRecovery      :: Bool -- ^make special chars literal to recover
+-- |Options which can be passed to the 'tryCompileWith' or 'compileWith'
+-- functions: with these you can selectively toggle certain features.
+--
+-- Note that some of these options depend on each other: classes can never
+-- occur if ranges aren't allowed.
+
+-- We could presumably put locale information in here, too.
+data CompOptions = CompOptions
+    { characterClasses   :: Bool -- |Allow character classes, @[[:...:]]@
+    , characterRanges    :: Bool -- |Allow character ranges, @[...]@
+    , openRanges         :: Bool -- |Allow open ranges, @<...>@
+    , wildcards          :: Bool -- |Allow wildcards, @*@ and @?@
+    , recursiveWildcards :: Bool -- |Allow recursive wildcards, @**/@
+    
+      -- |If the input is invalid, recover by turning any invalid part into
+      -- literals. For instance, with 'characterRanges' enabled, @[abc@ is an
+      -- error by default (unclosed character range); with 'errorRecovery', the
+      -- @[@ is turned into a literal match, as though 'characterRanges' were
+      -- disabled.
+    , errorRecovery      :: Bool
     }
 
+-- |The default set of compilation options: closest to the behaviour of the
+-- @zsh@ shell.
+--
+-- All options are enabled.
 compExtended :: CompOptions
-compExtended = CompOptions { characterClasses = False
-                           , characterRanges  = True
-                           , openRanges = True
+compExtended = CompOptions { characterClasses   = True
+                           , characterRanges    = True
+                           , openRanges         = True
+                           , wildcards          = True
                            , recursiveWildcards = True
-                           , wildcards = True
-                           , errorRecovery = False }
+                           , errorRecovery      = True
+                           }
 
+-- |Options for POSIX-compliance, as described in @man 7 glob@.
+--
+-- 'openRanges' and 'recursiveWildcards' are disabled.
 compPosix :: CompOptions
-compPosix = CompOptions { characterClasses = True
-                        , characterRanges = True
-                        , openRanges = False
+compPosix = CompOptions { characterClasses   = True
+                        , characterRanges    = True
+                        , openRanges         = False
+                        , wildcards          = True
                         , recursiveWildcards = False
-                        , wildcards = True
-                        , errorRecovery = True }
+                        , errorRecovery      = True
+                        }
 
 -- |These are the options that matter at match-time.
 data ExecOptions = ExecOptions {
@@ -46,7 +65,8 @@ data ExecOptions = ExecOptions {
 
 defaultExecOpts :: ExecOptions
 defaultExecOpts = ExecOptions { matchDots = False
-                              , caseless  = False }
+                              , caseless  = False
+                              }
 
 data Token
    -- primitives
@@ -64,7 +84,7 @@ data Token
    deriving (Eq)
 
 -- |An abstract data type representing a compiled pattern.
--- 
+--
 -- The 'Show' instance is essentially the inverse of @'compile'@. Though it may
 -- not return exactly what was given to @'compile'@ it will return code which
 -- produces the same 'Pattern'.

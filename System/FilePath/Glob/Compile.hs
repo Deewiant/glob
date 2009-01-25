@@ -20,9 +20,6 @@ import System.FilePath.Glob.Utils    (dropLeadingZeroes)
 compile :: String -> Pattern
 compile = compileWith compExtended
 
-compileWith :: CompOptions -> String -> Pattern
-compileWith opts = either error id . tryCompileWith opts
-
 -- |Compiles a glob pattern from its textual representation into a 'Pattern'
 -- object, giving an error message in a 'Left' if the pattern is erroneous.
 --
@@ -67,6 +64,13 @@ compileWith opts = either error id . tryCompileWith opts
 tryCompile :: String -> Either String Pattern
 tryCompile = tryCompileWith compExtended
 
+-- |Like 'compile', but recognizes operators according to the 'CompOptions'
+-- given.
+compileWith :: CompOptions -> String -> Pattern
+compileWith opts = either error id . tryCompileWith opts
+
+-- |Like 'tryCompile', but recognizes operators according to the 'CompOptions'
+-- given.
 tryCompileWith :: CompOptions -> String -> Either String Pattern
 tryCompileWith opts = fmap optimize . tokenize opts
 

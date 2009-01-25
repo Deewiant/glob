@@ -11,13 +11,20 @@ module System.FilePath.Glob
      -- * Functions
    , factorPath
      -- ** Compilation
-   , tryCompile, compile, tryCompileWith, compileWith, simplify
+   , tryCompile, compile, simplify
+     -- *** Options
+   , CompOptions(..)
+   , tryCompileWith, compileWith
+     -- **** Predefined option sets
+   , compExtended, compPosix
      -- ** Matching
    , match
    , globDir
    ) where
 
-import System.FilePath.Glob.Base      (Pattern)
+import System.FilePath.Glob.Base      ( Pattern, CompOptions(..)
+                                      , compExtended, compPosix
+                                      )
 import System.FilePath.Glob.Compile   ( compile, tryCompile
                                       , compileWith, tryCompileWith
                                       )
