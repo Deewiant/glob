@@ -11,7 +11,8 @@ import System.FilePath   ( pathSeparator, extSeparator
                          )
 
 -- |Options which can be passed to the 'tryCompileWith' or 'compileWith'
--- functions: with these you can selectively toggle certain features.
+-- functions: with these you can selectively toggle certain features at compile
+-- time.
 --
 -- Note that some of these options depend on each other: classes can never
 -- occur if ranges aren't allowed.
@@ -58,11 +59,18 @@ compPosix = CompOptions { characterClasses   = True
                         , errorRecovery      = True
                         }
 
--- |These are the options that matter at match-time.
+-- |Options which can be passed to the 'matchWith' or 'globDirWith' functions:
+-- with these you can selectively toggle certain features at matching time.
 data MatchOptions = MatchOptions
-    { matchDots       :: Bool -- ^allow wildcards to match @.@ at start of names
-    , matchCaseless   :: Bool -- ^case-independent matching (i.e. tolower)
-    , matchSimplified :: Bool -- ^match simplified paths (i.e. without @./@'s)
+    { -- |Allow @*@, @?@, and @**/@ to match @.@ at the beginning of paths
+      matchDotsImplicitly :: Bool
+    , ignoreCase          :: Bool -- |Case-independent matching
+
+      -- |Treat @./@ as a no-op in both paths and patterns.
+      --
+      -- (Of course e.g. @../@ means something different and will not be
+      -- ignored.)
+    , ignoreDotSlash :: Bool
     }
 
 -- |The default set of execution options: closest to the behaviour of the @zsh@
@@ -74,12 +82,12 @@ matchDefault = matchPosix
 
 -- |Options for POSIX-compliance, as described in @man 7 glob@.
 --
--- 'matchDots' and 'matchCaseless' are disabled, 'matchSimplified' is enabled.
+-- 'ignoreDotSlash' is enabled, the rest are disabled.
 matchPosix :: MatchOptions
 matchPosix = MatchOptions
-   { matchDots       = False
-   , matchCaseless   = False
-   , matchSimplified = True
+   { matchDotsImplicitly = False
+   , ignoreCase          = False
+   , ignoreDotSlash      = True
    }
 
 data Token

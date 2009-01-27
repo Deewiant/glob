@@ -17,8 +17,8 @@ match = matchWith matchDefault
 
 matchWith :: MatchOptions -> Pattern -> FilePath -> Bool
 matchWith opts p f = begMatch opts (lc' $ unPattern p) (lc f)
-    where lc = if matchCaseless opts then map toLower else id
-          lc' = if matchCaseless opts then map lcTok else id
+    where lc = if ignoreCase opts then map toLower else id
+          lc' = if ignoreCase opts then map lcTok else id
           lcTok (Literal c) = Literal $ toLower c
           lcTok (LongLiteral n s) = LongLiteral n $ map toLower s
           lcTok (CharRange b s) = CharRange b $ map lcCR s
@@ -40,15 +40,15 @@ begMatch, match' :: MatchOptions -> [Token] -> FilePath -> Bool
 begMatch _ (ExtSeparator:AnyDirectory:_) (x:y:_)
    | isExtSeparator x && isExtSeparator y = False
 
-begMatch opts (ExtSeparator:PathSeparator:pat) s | matchSimplified opts =
+begMatch opts (ExtSeparator:PathSeparator:pat) s | ignoreDotSlash opts =
    begMatch opts (dropWhile isSlash pat) s
  where
    isSlash PathSeparator = True
    isSlash _             = False
 
 begMatch opts pat (x:y:s)
-   | dotSlash && dotStarSlash         = match' opts pat' s
-   | matchSimplified opts && dotSlash = begMatch opts pat s
+   | dotSlash && dotStarSlash        = match' opts pat' s
+   | ignoreDotSlash opts && dotSlash = begMatch opts pat s
  where
    dotSlash = isExtSeparator x && isPathSeparator y
    (dotStarSlash, pat') =
@@ -57,7 +57,7 @@ begMatch opts pat (x:y:s)
         _                                                   -> (False, pat)
 
 begMatch opts pat s =
-   if not (null s) && isExtSeparator (head s) && not (matchDots opts)
+   if not (null s) && isExtSeparator (head s) && not (matchDotsImplicitly opts)
       then case pat of
                 ExtSeparator:pat' -> match' opts pat' (tail s)
                 _                 -> False
@@ -105,7 +105,7 @@ match' o again@(AnyNonPathSeparator:xs) path@(c:cs) =
 match' o again@(AnyDirectory:xs) path =
    let parts   = pathParts (dropWhile isPathSeparator path)
        matches = any (match' o xs) parts || any (match' o again) (tail parts)
-    in if null xs && not (matchDots o)
+    in if null xs && not (matchDotsImplicitly o)
           --  **/ shouldn't match foo/.bar, so check that remaining bits don't
           -- start with .
           then all (not.isExtSeparator.head) (init parts) && matches
