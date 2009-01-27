@@ -9,6 +9,7 @@
 module System.FilePath.Glob.Primitive
    ( literal
    , singleWildcard, wildcard, recursiveWildcard
+   , charRange, numberRange
    ) where
 
 import System.FilePath (isPathSeparator, isExtSeparator)
@@ -26,17 +27,32 @@ literal = optimize . Pattern . map f
        | isExtSeparator c  = ExtSeparator
        | otherwise         = Literal c
 
--- |Matches any single character except a path separator: currently corresponds
--- to the @?@ operator.
+-- |Matches any single character except a path separator: corresponds to the
+-- @?@ operator.
 singleWildcard :: Pattern
 singleWildcard = Pattern [NonPathSeparator]
 
--- |Matches any number of characters up to a path separator: currently
--- corresponds to the @*@ operator.
+-- |Matches any number of characters up to a path separator: corresponds to the
+-- @*@ operator.
 wildcard :: Pattern
 wildcard = Pattern [AnyNonPathSeparator]
 
--- |Matches any number of characters including path separators: currently
--- corresponds to the @**/@ operator.
+-- |Matches any number of characters including path separators: corresponds to
+-- the @**/@ operator.
 recursiveWildcard :: Pattern
 recursiveWildcard = Pattern [AnyDirectory]
+
+-- |Matches a single character if it is within the (inclusive) range in any
+-- 'Right' or if it is equal to the character in any 'Left'. Corresponds to the
+-- @[]@, @[^]@ and @[!]@ operators.
+--
+-- If the given 'Bool' is 'False', the result of the match is inverted: the
+-- match succeeds if the character does /not/ match according to the above
+-- rules.
+charRange :: Bool -> [Either Char (Char,Char)] -> Pattern
+charRange b rs = optimize $ Pattern [CharRange b rs]
+
+-- |Matches a number in the given range, which may be open, half-open, or
+-- closed. Corresponds to the @\<\>@ operator.
+numberRange :: Maybe Integer -> Maybe Integer -> Pattern
+numberRange a b = Pattern [OpenRange (fmap show a) (fmap show b)]
