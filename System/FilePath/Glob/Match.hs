@@ -3,7 +3,7 @@
 module System.FilePath.Glob.Match (match, matchWith) where
 
 import Control.Exception (assert)
-import Data.Char         (isDigit, toLower, isUpper)
+import Data.Char         (isDigit, toLower, toUpper)
 import Data.Monoid       (mappend)
 import System.FilePath   (isPathSeparator, isExtSeparator)
 
@@ -17,17 +17,10 @@ match = matchWith matchDefault
 
 -- |Like 'match', but applies the given 'MatchOptions' instead of the defaults.
 matchWith :: MatchOptions -> Pattern -> FilePath -> Bool
-matchWith opts p f = begMatch opts (lc' $ unPattern p) (lc f)
-    where lc = if ignoreCase opts then map toLower else id
-          lc' = if ignoreCase opts then map lcTok else id
-          lcTok (Literal c) = Literal $ toLower c
-          lcTok (LongLiteral n s) = LongLiteral n $ map toLower s
-          lcTok (CharRange b s) = CharRange b $ map lcCR s
-          lcTok t = t
-          lcCR (Left c) = Left $ toLower c
-          lcCR (Right (a,b)) | isUpper a && isUpper b
-                                 = Right (toLower a,toLower b)
-          lcCR r = r
+matchWith opts p f = begMatch opts (lcPat $ unPattern p) (lcPath f)
+ where
+   lcPath = if ignoreCase opts then map    toLower else id
+   lcPat  = if ignoreCase opts then map tokToLower else id
 
 -- begMatch takes care of some things at the beginning of a pattern or after /:
 --    - . needs to be matched explicitly
@@ -76,9 +69,16 @@ match' o (PathSeparator   :xs) (c:cs) =
    isPathSeparator c && begMatch o xs (dropWhile isPathSeparator cs)
 
 match' o (CharRange b rng :xs) (c:cs) =
-   not (isPathSeparator c) &&
-   any (either (== c) (`inRange` c)) rng == b &&
-   match' o xs cs
+   let rangeMatch r =
+          either (== c) (`inRange` c) r ||
+             -- See comment near Base.tokToLower for an explanation of why we
+             -- do this
+             if ignoreCase o
+                then either (== toUpper c) (`inRange` toUpper c) r
+                else False
+    in not (isPathSeparator c) &&
+       any rangeMatch rng == b &&
+       match' o xs cs
 
 match' o (OpenRange lo hi :xs) path =
    let

@@ -4,6 +4,7 @@ module System.FilePath.Glob.Base where
 
 import Control.Arrow     (first)
 import Control.Exception (assert)
+import Data.Char         (toLower)
 import Data.Maybe        (fromMaybe, isJust)
 import Data.Monoid       (Monoid, mappend, mempty)
 import System.FilePath   ( pathSeparator, extSeparator
@@ -104,6 +105,31 @@ data Token
    -- after optimization only
    | LongLiteral !Int String
    deriving (Eq)
+
+-- Note: CharRanges aren't converted, because this is tricky in general.
+-- Consider for instance [@-[], which includes the range A-Z. This would need
+-- to become [@[a-z]: so essentially we'd need to either:
+--
+--    1) Have a list of ranges of uppercase Unicode. Check if our range
+--       overlaps with any of them and if it does, take the non-overlapping
+--       part and combine it with the toLower of the overlapping part.
+--
+--    2) Simply expand the entire range to a list and map toLower over it.
+--
+-- In either case we'd need to re-optimize the CharRange—we can't assume that
+-- if the uppercase characters are consecutive, so are the lowercase.
+--
+-- 1) might be feasible if someone bothered to get the latest data.
+--
+-- 2) obviously isn't since you might have 'Right (minBound, maxBound)' in
+-- there somewhere.
+--
+-- The current solution is to just check both the toUpper of the character and
+-- the toLower.
+tokToLower :: Token -> Token
+tokToLower (Literal     c)   = Literal       (toLower c)
+tokToLower (LongLiteral n s) = LongLiteral n (map toLower s)
+tokToLower tok               = tok
 
 -- |An abstract data type representing a compiled pattern.
 --
