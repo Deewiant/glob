@@ -11,86 +11,6 @@ import System.FilePath   ( pathSeparator, extSeparator
                          , isExtSeparator, isPathSeparator
                          )
 
--- |Options which can be passed to the 'tryCompileWith' or 'compileWith'
--- functions: with these you can selectively toggle certain features at compile
--- time.
---
--- Note that some of these options depend on each other: classes can never
--- occur if ranges aren't allowed.
-
--- We could presumably put locale information in here, too.
-data CompOptions = CompOptions
-    { characterClasses   :: Bool -- |Allow character classes, @[[:...:]]@
-    , characterRanges    :: Bool -- |Allow character ranges, @[...]@
-    , openRanges         :: Bool -- |Allow open ranges, @<...>@
-    , wildcards          :: Bool -- |Allow wildcards, @*@ and @?@
-    , recursiveWildcards :: Bool -- |Allow recursive wildcards, @**/@
-
-      -- |If the input is invalid, recover by turning any invalid part into
-      -- literals. For instance, with 'characterRanges' enabled, @[abc@ is an
-      -- error by default (unclosed character range); with 'errorRecovery', the
-      -- @[@ is turned into a literal match, as though 'characterRanges' were
-      -- disabled.
-    , errorRecovery      :: Bool
-    } deriving (Show,Read,Eq)
-
--- |The default set of compilation options: closest to the behaviour of the
--- @zsh@ shell.
---
--- All options are enabled.
-compDefault :: CompOptions
-compDefault = CompOptions
-   { characterClasses   = True
-   , characterRanges    = True
-   , openRanges         = True
-   , wildcards          = True
-   , recursiveWildcards = True
-   , errorRecovery      = True
-   }
-
--- |Options for POSIX-compliance, as described in @man 7 glob@.
---
--- 'openRanges' and 'recursiveWildcards' are disabled.
-compPosix :: CompOptions
-compPosix = CompOptions { characterClasses   = True
-                        , characterRanges    = True
-                        , openRanges         = False
-                        , wildcards          = True
-                        , recursiveWildcards = False
-                        , errorRecovery      = True
-                        }
-
--- |Options which can be passed to the 'matchWith' or 'globDirWith' functions:
--- with these you can selectively toggle certain features at matching time.
-data MatchOptions = MatchOptions
-    { -- |Allow @*@, @?@, and @**/@ to match @.@ at the beginning of paths
-      matchDotsImplicitly :: Bool
-    , ignoreCase          :: Bool -- |Case-independent matching
-
-      -- |Treat @./@ as a no-op in both paths and patterns.
-      --
-      -- (Of course e.g. @../@ means something different and will not be
-      -- ignored.)
-    , ignoreDotSlash :: Bool
-    }
-
--- |The default set of execution options: closest to the behaviour of the @zsh@
--- shell.
---
--- Currently identical to 'matchPosix'.
-matchDefault :: MatchOptions
-matchDefault = matchPosix
-
--- |Options for POSIX-compliance, as described in @man 7 glob@.
---
--- 'ignoreDotSlash' is enabled, the rest are disabled.
-matchPosix :: MatchOptions
-matchPosix = MatchOptions
-   { matchDotsImplicitly = False
-   , ignoreCase          = False
-   , ignoreDotSlash      = True
-   }
-
 data Token
    -- primitives
    = Literal !Char
@@ -199,3 +119,83 @@ instance Monoid Pattern where
       longLiteral s = LongLiteral (length s) s
 
    mappend (Pattern a) (Pattern b) = Pattern $ a++b
+
+-- |Options which can be passed to the 'tryCompileWith' or 'compileWith'
+-- functions: with these you can selectively toggle certain features at compile
+-- time.
+--
+-- Note that some of these options depend on each other: classes can never
+-- occur if ranges aren't allowed.
+
+-- We could presumably put locale information in here, too.
+data CompOptions = CompOptions
+    { characterClasses   :: Bool -- |Allow character classes, @[[:...:]]@
+    , characterRanges    :: Bool -- |Allow character ranges, @[...]@
+    , openRanges         :: Bool -- |Allow open ranges, @<...>@
+    , wildcards          :: Bool -- |Allow wildcards, @*@ and @?@
+    , recursiveWildcards :: Bool -- |Allow recursive wildcards, @**/@
+
+      -- |If the input is invalid, recover by turning any invalid part into
+      -- literals. For instance, with 'characterRanges' enabled, @[abc@ is an
+      -- error by default (unclosed character range); with 'errorRecovery', the
+      -- @[@ is turned into a literal match, as though 'characterRanges' were
+      -- disabled.
+    , errorRecovery      :: Bool
+    } deriving (Show,Read,Eq)
+
+-- |The default set of compilation options: closest to the behaviour of the
+-- @zsh@ shell.
+--
+-- All options are enabled.
+compDefault :: CompOptions
+compDefault = CompOptions
+   { characterClasses   = True
+   , characterRanges    = True
+   , openRanges         = True
+   , wildcards          = True
+   , recursiveWildcards = True
+   , errorRecovery      = True
+   }
+
+-- |Options for POSIX-compliance, as described in @man 7 glob@.
+--
+-- 'openRanges' and 'recursiveWildcards' are disabled.
+compPosix :: CompOptions
+compPosix = CompOptions { characterClasses   = True
+                        , characterRanges    = True
+                        , openRanges         = False
+                        , wildcards          = True
+                        , recursiveWildcards = False
+                        , errorRecovery      = True
+                        }
+
+-- |Options which can be passed to the 'matchWith' or 'globDirWith' functions:
+-- with these you can selectively toggle certain features at matching time.
+data MatchOptions = MatchOptions
+    { -- |Allow @*@, @?@, and @**/@ to match @.@ at the beginning of paths
+      matchDotsImplicitly :: Bool
+    , ignoreCase          :: Bool -- |Case-independent matching
+
+      -- |Treat @./@ as a no-op in both paths and patterns.
+      --
+      -- (Of course e.g. @../@ means something different and will not be
+      -- ignored.)
+    , ignoreDotSlash :: Bool
+    }
+
+-- |The default set of execution options: closest to the behaviour of the @zsh@
+-- shell.
+--
+-- Currently identical to 'matchPosix'.
+matchDefault :: MatchOptions
+matchDefault = matchPosix
+
+-- |Options for POSIX-compliance, as described in @man 7 glob@.
+--
+-- 'ignoreDotSlash' is enabled, the rest are disabled.
+matchPosix :: MatchOptions
+matchPosix = MatchOptions
+   { matchDotsImplicitly = False
+   , ignoreCase          = False
+   , ignoreDotSlash      = True
+   }
