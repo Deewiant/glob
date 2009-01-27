@@ -30,6 +30,8 @@ matchWith opts p f = begMatch opts (lcPat $ unPattern p) (lcPath f)
 -- special case that one
 --
 -- and .**/foo should /not/ match ../foo; more special casing
+--
+-- (All of the above is modulo options, of course)
 begMatch, match' :: MatchOptions -> [Token] -> FilePath -> Bool
 begMatch _ (ExtSeparator:AnyDirectory:_) (x:y:_)
    | isExtSeparator x && isExtSeparator y = False
