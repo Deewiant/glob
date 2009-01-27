@@ -21,17 +21,17 @@ module System.FilePath.Glob
    , match
    , globDir
      -- *** Options
-   , ExecOptions(..)
+   , MatchOptions(..)
    , matchWith
    , globDirWith
      -- **** Predefined option sets
-   , execDefault, execPosix
+   , matchDefault, matchPosix
    ) where
 
 import System.FilePath.Glob.Base      ( Pattern
-                                      , CompOptions(..), ExecOptions(..)
+                                      , CompOptions(..), MatchOptions(..)
                                       , compExtended, compPosix
-                                      , execDefault,  execPosix
+                                      , matchDefault, matchPosix
                                       )
 import System.FilePath.Glob.Compile   (compile, compileWith, tryCompileWith)
 import System.FilePath.Glob.Directory (globDir, globDirWith, factorPath)

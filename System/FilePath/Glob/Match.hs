@@ -13,9 +13,9 @@ import System.FilePath.Glob.Utils (dropLeadingZeroes, inRange, pathParts)
 -- |Matches the given 'Pattern' against the given 'FilePath', returning 'True'
 -- if the pattern matches and 'False' otherwise.
 match :: Pattern -> FilePath -> Bool
-match = matchWith execDefault
+match = matchWith matchDefault
 
-matchWith :: ExecOptions -> Pattern -> FilePath -> Bool
+matchWith :: MatchOptions -> Pattern -> FilePath -> Bool
 matchWith opts p f = begMatch opts (lc' $ unPattern p) (lc f)
     where lc = if matchCaseless opts then map toLower else id
           lc' = if matchCaseless opts then map lcTok else id
@@ -36,7 +36,7 @@ matchWith opts p f = begMatch opts (lc' $ unPattern p) (lc f)
 -- special case that one
 --
 -- and .**/foo should /not/ match ../foo; more special casing
-begMatch, match' :: ExecOptions -> [Token] -> FilePath -> Bool
+begMatch, match' :: MatchOptions -> [Token] -> FilePath -> Bool
 begMatch _ (ExtSeparator:AnyDirectory:_) (x:y:_)
    | isExtSeparator x && isExtSeparator y = False
 

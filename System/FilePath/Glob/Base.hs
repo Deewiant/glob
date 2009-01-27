@@ -37,13 +37,14 @@ data CompOptions = CompOptions
 --
 -- All options are enabled.
 compExtended :: CompOptions
-compExtended = CompOptions { characterClasses   = True
-                           , characterRanges    = True
-                           , openRanges         = True
-                           , wildcards          = True
-                           , recursiveWildcards = True
-                           , errorRecovery      = True
-                           }
+compExtended = CompOptions
+   { characterClasses   = True
+   , characterRanges    = True
+   , openRanges         = True
+   , wildcards          = True
+   , recursiveWildcards = True
+   , errorRecovery      = True
+   }
 
 -- |Options for POSIX-compliance, as described in @man 7 glob@.
 --
@@ -58,8 +59,8 @@ compPosix = CompOptions { characterClasses   = True
                         }
 
 -- |These are the options that matter at match-time.
-data ExecOptions = ExecOptions {
-      matchDots       :: Bool -- ^allow wildcards to match @.@ at start of names
+data MatchOptions = MatchOptions
+    { matchDots       :: Bool -- ^allow wildcards to match @.@ at start of names
     , matchCaseless   :: Bool -- ^case-independent matching (i.e. tolower)
     , matchSimplified :: Bool -- ^match simplified paths (i.e. without @./@'s)
     }
@@ -67,18 +68,19 @@ data ExecOptions = ExecOptions {
 -- |The default set of execution options: closest to the behaviour of the @zsh@
 -- shell.
 --
--- Currently identical to 'execPosix'.
-execDefault :: ExecOptions
-execDefault = execPosix
+-- Currently identical to 'matchPosix'.
+matchDefault :: MatchOptions
+matchDefault = matchPosix
 
 -- |Options for POSIX-compliance, as described in @man 7 glob@.
 --
 -- 'matchDots' and 'matchCaseless' are disabled, 'matchSimplified' is enabled.
-execPosix :: ExecOptions
-execPosix = ExecOptions { matchDots       = False
-                        , matchCaseless   = False
-                        , matchSimplified = True
-                        }
+matchPosix :: MatchOptions
+matchPosix = MatchOptions
+   { matchDots       = False
+   , matchCaseless   = False
+   , matchSimplified = True
+   }
 
 data Token
    -- primitives

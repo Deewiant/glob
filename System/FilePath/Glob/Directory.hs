@@ -59,9 +59,9 @@ data TypedPattern
 -- Directories without read permissions are returned as entries but their
 -- contents, of course, are not.
 globDir :: [Pattern] -> FilePath -> IO ([[FilePath]], [FilePath])
-globDir = globDirWith execDefault
+globDir = globDirWith matchDefault
 
-globDirWith :: ExecOptions -> [Pattern] -> FilePath
+globDirWith :: MatchOptions -> [Pattern] -> FilePath
             -> IO ([[FilePath]], [FilePath])
 globDirWith _ []   dir = do
    dir' <- if null dir then getCurrentDirectory else return dir
@@ -79,7 +79,7 @@ globDirWith opts pats dir = do
           , nubOrd allOthers \\ allMatches
           )
 
-globDir' :: ExecOptions -> [TypedPattern] -> FilePath
+globDir' :: MatchOptions -> [TypedPattern] -> FilePath
          -> IO (DList FilePath, DList FilePath)
 globDir' opts pats@(_:_) dir = do
    dir' <- if null dir then getCurrentDirectory else return dir
@@ -96,7 +96,7 @@ globDir' _ [] dir =
    -- original pattern had a trailing PathSeparator. Reproduce it here.
    return (DL.singleton (dir ++ [pathSeparator]), DL.empty)
 
-matchTypedAndGo :: ExecOptions
+matchTypedAndGo :: MatchOptions
                 -> [TypedPattern]
                 -> FilePath -> FilePath
                 -> IO (DList FilePath, DList FilePath)
