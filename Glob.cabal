@@ -33,6 +33,7 @@ Library
       Build-Depends: Win32 == 2.*
 
    Exposed-Modules: System.FilePath.Glob
+                    System.FilePath.Glob.Primitive
    Other-Modules:   System.FilePath.Glob.Base
                     System.FilePath.Glob.Compile
                     System.FilePath.Glob.Directory
