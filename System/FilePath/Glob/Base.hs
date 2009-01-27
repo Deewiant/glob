@@ -64,11 +64,21 @@ data ExecOptions = ExecOptions {
     , matchSimplified :: Bool -- ^match simplified paths (i.e. without @./@'s)
     }
 
+-- |The default set of execution options: closest to the behaviour of the @zsh@
+-- shell.
+--
+-- Currently identical to 'execPosix'.
 execDefault :: ExecOptions
-execDefault = ExecOptions { matchDots       = False
-                          , matchCaseless   = False
-                          , matchSimplified = True
-                          }
+execDefault = execPosix
+
+-- |Options for POSIX-compliance, as described in @man 7 glob@.
+--
+-- 'matchDots' and 'matchCaseless' are disabled, 'matchSimplified' is enabled.
+execPosix :: ExecOptions
+execPosix = ExecOptions { matchDots       = False
+                        , matchCaseless   = False
+                        , matchSimplified = True
+                        }
 
 data Token
    -- primitives
