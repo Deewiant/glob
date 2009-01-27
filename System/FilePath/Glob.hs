@@ -20,12 +20,20 @@ module System.FilePath.Glob
      -- ** Matching
    , match
    , globDir
+     -- *** Options
+   , ExecOptions(..)
+   , matchWith
+   , globDirWith
+     -- **** Predefined option sets
+   , execDefault, execPosix
    ) where
 
-import System.FilePath.Glob.Base      ( Pattern, CompOptions(..)
+import System.FilePath.Glob.Base      ( Pattern
+                                      , CompOptions(..), ExecOptions(..)
                                       , compExtended, compPosix
+                                      , execDefault,  execPosix
                                       )
 import System.FilePath.Glob.Compile   (compile, compileWith, tryCompileWith)
-import System.FilePath.Glob.Directory (globDir, factorPath)
-import System.FilePath.Glob.Match     (match)
+import System.FilePath.Glob.Directory (globDir, globDirWith, factorPath)
+import System.FilePath.Glob.Match     (match, matchWith)
 import System.FilePath.Glob.Optimize  (simplify)

@@ -1,6 +1,6 @@
 -- File created: 2008-10-16 12:12:50
 
-module System.FilePath.Glob.Directory (globDir, factorPath) where
+module System.FilePath.Glob.Directory (globDir, globDirWith, factorPath) where
 
 import Control.Arrow    (first)
 import Control.Monad    (forM)
