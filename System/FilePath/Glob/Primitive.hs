@@ -14,6 +14,7 @@ module System.FilePath.Glob.Primitive
 import System.FilePath (isPathSeparator, isExtSeparator)
 
 import System.FilePath.Glob.Base
+import System.FilePath.Glob.Optimize
 
 -- |A 'Pattern' which matches the given 'String' literally.
 --
@@ -27,15 +28,15 @@ literal = optimize . Pattern . map f
 
 -- |Matches any single character except a path separator: currently corresponds
 -- to the @?@ operator.
-singleWildcard :: Pattern -- ^ @?@
-singleWildcard = Pattern NonPathSeparator
+singleWildcard :: Pattern
+singleWildcard = Pattern [NonPathSeparator]
 
 -- |Matches any number of characters up to a path separator: currently
 -- corresponds to the @*@ operator.
 wildcard :: Pattern
-wildcard = Pattern AnyNonPathSeparator
+wildcard = Pattern [AnyNonPathSeparator]
 
 -- |Matches any number of characters including path separators: currently
 -- corresponds to the @**/@ operator.
 recursiveWildcard :: Pattern
-recursiveWildcard = Pattern AnyDirectory
+recursiveWildcard = Pattern [AnyDirectory]
