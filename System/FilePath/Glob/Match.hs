@@ -15,6 +15,7 @@ import System.FilePath.Glob.Utils (dropLeadingZeroes, inRange, pathParts)
 match :: Pattern -> FilePath -> Bool
 match = matchWith matchDefault
 
+-- |Like 'match', but applies the given 'MatchOptions' instead of the defaults.
 matchWith :: MatchOptions -> Pattern -> FilePath -> Bool
 matchWith opts p f = begMatch opts (lc' $ unPattern p) (lc f)
     where lc = if ignoreCase opts then map toLower else id

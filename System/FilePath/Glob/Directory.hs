@@ -61,6 +61,8 @@ data TypedPattern
 globDir :: [Pattern] -> FilePath -> IO ([[FilePath]], [FilePath])
 globDir = globDirWith matchDefault
 
+-- |Like 'globDir', but applies the given 'MatchOptions' instead of the
+-- defaults when matching.
 globDirWith :: MatchOptions -> [Pattern] -> FilePath
             -> IO ([[FilePath]], [FilePath])
 globDirWith _ []   dir = do

@@ -63,8 +63,8 @@ import System.FilePath.Glob.Utils    (dropLeadingZeroes)
 compile :: String -> Pattern
 compile = compileWith compDefault
 
--- |Like 'compile', but recognizes operators according to the 'CompOptions'
--- given.
+-- |Like 'compile', but recognizes operators according to the given
+-- 'CompOptions' instead of the defaults.
 --
 -- If an error occurs and 'errorRecovery' is disabled, 'error' will be called.
 compileWith :: CompOptions -> String -> Pattern
