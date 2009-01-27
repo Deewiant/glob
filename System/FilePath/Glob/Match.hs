@@ -1,6 +1,6 @@
 -- File created: 2008-10-10 13:29:03
 
-module System.FilePath.Glob.Match (match, matchWithOptions) where
+module System.FilePath.Glob.Match (match, matchWith) where
 
 import Control.Exception (assert)
 import Data.Char         (isDigit, toLower, isUpper)
@@ -13,10 +13,10 @@ import System.FilePath.Glob.Utils (dropLeadingZeroes, inRange, pathParts)
 -- |Matches the given 'Pattern' against the given 'FilePath', returning 'True'
 -- if the pattern matches and 'False' otherwise.
 match :: Pattern -> FilePath -> Bool
-match = matchWithOptions execDefault
+match = matchWith execDefault
 
-matchWithOptions :: ExecOptions -> Pattern -> FilePath -> Bool
-matchWithOptions opts p f = begMatch opts (lc' $ unPattern p) (lc f)
+matchWith :: ExecOptions -> Pattern -> FilePath -> Bool
+matchWith opts p f = begMatch opts (lc' $ unPattern p) (lc f)
     where lc = if matchCaseless opts then map toLower else id
           lc' = if matchCaseless opts then map lcTok else id
           lcTok (Literal c) = Literal $ toLower c

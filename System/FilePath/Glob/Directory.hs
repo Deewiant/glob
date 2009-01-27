@@ -13,7 +13,7 @@ import System.Directory ( doesDirectoryExist, getDirectoryContents
 import System.FilePath  ((</>), extSeparator, isExtSeparator, pathSeparator)
 
 import System.FilePath.Glob.Base
-import System.FilePath.Glob.Match (matchWithOptions)
+import System.FilePath.Glob.Match (matchWith)
 import System.FilePath.Glob.Utils
    (getRecursiveContents, nubOrd, pathParts, partitionDL)
 
@@ -59,16 +59,16 @@ data TypedPattern
 -- Directories without read permissions are returned as entries but their
 -- contents, of course, are not.
 globDir :: [Pattern] -> FilePath -> IO ([[FilePath]], [FilePath])
-globDir = globDirWithOptions execDefault
+globDir = globDirWith execDefault
 
-globDirWithOptions :: ExecOptions -> [Pattern] -> FilePath
-                   -> IO ([[FilePath]], [FilePath])
-globDirWithOptions _ []   dir = do
+globDirWith :: ExecOptions -> [Pattern] -> FilePath
+            -> IO ([[FilePath]], [FilePath])
+globDirWith _ []   dir = do
    dir' <- if null dir then getCurrentDirectory else return dir
    c <- getRecursiveContents dir'
    return ([], DL.toList c)
 
-globDirWithOptions opts pats dir = do
+globDirWith opts pats dir = do
    results <- mapM (\p -> globDir' opts (separate p) dir) pats
 
    let (matches, others) = unzip results
@@ -103,13 +103,13 @@ matchTypedAndGo :: ExecOptions
 
 -- (Any p) is always the last element
 matchTypedAndGo opts [Any p] path absPath =
-   if matchWithOptions opts p path
+   if matchWith opts p path
       then return (DL.singleton absPath, DL.empty)
       else doesDirectoryExist absPath >>= didn'tMatch path absPath
 
 matchTypedAndGo opts (Dir p:ps) path absPath = do
    isDir <- doesDirectoryExist absPath
-   if isDir && matchWithOptions opts p path
+   if isDir && matchWith opts p path
       then globDir' opts ps absPath
       else didn'tMatch path absPath isDir
 
@@ -118,12 +118,12 @@ matchTypedAndGo opts (AnyDir p:ps) path absPath = do
       then didn'tMatch path absPath True
       else do
          isDir <- doesDirectoryExist absPath
-         let m = matchWithOptions opts (unseparate ps)
+         let m = matchWith opts (unseparate ps)
              unconditionalMatch =
                 null (unPattern p) && not (isExtSeparator $ head path)
              p' = Pattern (unPattern p ++ [AnyNonPathSeparator])
 
-         case unconditionalMatch || matchWithOptions opts p' path of
+         case unconditionalMatch || matchWith opts p' path of
               True | isDir  -> do
                  contents <- getRecursiveContents absPath
                  return $
