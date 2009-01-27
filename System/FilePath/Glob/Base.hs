@@ -36,8 +36,8 @@ data CompOptions = CompOptions
 -- @zsh@ shell.
 --
 -- All options are enabled.
-compExtended :: CompOptions
-compExtended = CompOptions
+compDefault :: CompOptions
+compDefault = CompOptions
    { characterClasses   = True
    , characterRanges    = True
    , openRanges         = True

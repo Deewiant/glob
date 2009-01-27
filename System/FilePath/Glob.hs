@@ -16,7 +16,7 @@ module System.FilePath.Glob
    , CompOptions(..)
    , tryCompileWith, compileWith
      -- **** Predefined option sets
-   , compExtended, compPosix
+   , compDefault, compPosix
      -- ** Matching
    , match
    , globDir
@@ -30,7 +30,7 @@ module System.FilePath.Glob
 
 import System.FilePath.Glob.Base      ( Pattern
                                       , CompOptions(..), MatchOptions(..)
-                                      , compExtended, compPosix
+                                      , compDefault, compPosix
                                       , matchDefault, matchPosix
                                       )
 import System.FilePath.Glob.Compile   (compile, compileWith, tryCompileWith)

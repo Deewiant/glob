@@ -61,7 +61,7 @@ import System.FilePath.Glob.Utils    (dropLeadingZeroes)
 --
 -- So, e.g. @[]@ will match the string @\"[]\"@.
 compile :: String -> Pattern
-compile = compileWith compExtended
+compile = compileWith compDefault
 
 -- |Like 'compile', but recognizes operators according to the 'CompOptions'
 -- given.
