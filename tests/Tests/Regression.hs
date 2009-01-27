@@ -6,6 +6,7 @@ import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit.Base
 
+import System.FilePath.Glob.Base    (MatchOptions(..), matchDefault)
 import System.FilePath.Glob.Compile
 import System.FilePath.Glob.Match
 
@@ -14,6 +15,10 @@ tests = testGroup "Regression"
         flip map matchCases $ \t@(b,p,s) ->
             tc (nameMatchTest t) $
                match (compile p) s == b
+   , testGroup "Specific options" .
+        flip map matchWithCases $ \t@(b,o,p,s) ->
+           tc (nameMatchTest (b,p,s)) $
+              matchWith o (compile p) s == b
    , testGroup "Show" .
         flip map showCases $ \(n,orig,s) ->
            tc n $ show (compile orig) == s
@@ -114,4 +119,8 @@ matchCases =
    , (True , "[abc"       , "[abc")
    , (True , "<abc"       , "<abc")
    , (True , "<1-"        , "<1-")
+   ]
+
+matchWithCases =
+   [ (True , matchDefault { ignoreCase = True }, "[@-[]", "a")
    ]
