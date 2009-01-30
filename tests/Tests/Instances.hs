@@ -5,6 +5,7 @@ module Tests.Instances (tests) where
 import Data.Monoid (mempty, mappend)
 import Test.Framework
 import Test.Framework.Providers.QuickCheck
+import Test.QuickCheck ((==>))
 
 import System.FilePath.Glob.Base (tryCompileWith)
 import System.FilePath.Glob.Match
@@ -42,10 +43,14 @@ prop_monoidLaw3 opt x =
 
 -- mappending two Patterns should be equivalent to appending the original
 -- strings they came from and compiling that
+--
+-- (notice: relies on the fact that our Arbitrary instance doesn't generate
+-- unclosed [] or <>; we only check for **/)
 prop_monoid4 opt x y =
    let o     = unCOpts opt
        es    = map (tryCompileWith o . unPS) [x,y]
        [a,b] = map fromRight es
        cat1  = mappend a b
        cat2  = tryCompileWith o (unPS x ++ unPS y)
-    in all isRight es && isRight cat2 && cat1 == fromRight cat2
+    in     take 2 (reverse . unPS $ x) /= "**" && take 1 (unPS y) /= "/"
+       ==> all isRight es && isRight cat2 && cat1 == fromRight cat2
