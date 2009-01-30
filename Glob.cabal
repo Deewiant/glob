@@ -36,8 +36,7 @@ Library
    Exposed-Modules: System.FilePath.Glob
                     System.FilePath.Glob.Primitive
    Other-Modules:   System.FilePath.Glob.Base
-                    System.FilePath.Glob.Compile
                     System.FilePath.Glob.Directory
                     System.FilePath.Glob.Match
-                    System.FilePath.Glob.Optimize
+                    System.FilePath.Glob.Simplify
                     System.FilePath.Glob.Utils
