@@ -83,10 +83,6 @@ tokToLower tok               = tok
 
 -- |An abstract data type representing a compiled pattern.
 --
--- The 'Show' instance is essentially the inverse of @'compile'@. Though it may
--- not return exactly what was given to @'compile'@ it will return code which
--- produces the same 'Pattern'.
---
 -- Note that the 'Eq' instance cannot tell you whether two patterns behave in
 -- the same way; only whether they compile to the same 'Pattern'. For instance,
 -- @'compile' \"x\"@ and @'compile' \"[x]\"@ may or may not compare equal,
@@ -252,10 +248,17 @@ matchPosix = MatchOptions
    , ignoreDotSlash      = True
    }
 
--- |Decompiles a 'Pattern' object into its textual representation.
+-- |Decompiles a 'Pattern' object into its textual representation: essentially
+-- the inverse of 'compile'.
 --
--- Note that due to internal optimization, @decompile . compile@ is not the
--- identity function. @compile . decompile . compile@, however, is.
+-- Note, however, that due to internal optimization, @decompile . compile@ is
+-- not the identity function. Instead, @compile . decompile@ is.
+--
+-- Be careful with 'CompOptions': 'decompile' always produces a 'String' which
+-- can be passed to 'compile' to get back the same 'Pattern'. @compileWith
+-- options . decompile . compileWith options@ will very likely produce a
+-- different result than @compileWith options@ (unless @options@ is
+-- 'compDefault').
 decompile :: Pattern -> String
 decompile = concatMap show . unPattern
 
