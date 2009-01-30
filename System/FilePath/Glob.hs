@@ -34,7 +34,7 @@ import System.FilePath.Glob.Base      ( Pattern
                                       , matchDefault, matchPosix
                                       , compile, compileWith, tryCompileWith
                                       , decompile
-                                      , simplify
                                       )
 import System.FilePath.Glob.Directory (globDir, globDirWith, factorPath)
 import System.FilePath.Glob.Match     (match, matchWith)
+import System.FilePath.Glob.Simplify  (simplify)
