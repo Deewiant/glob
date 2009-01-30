@@ -489,7 +489,7 @@ optimize = liftP (fin . go)
    fin (x:y:xs) | isLiteral x && isLiteral y =
       let (ls,rest) = span isLiteral xs
        in fin $ LongLiteral (length ls + 2)
-                      (foldr (\(Literal a) -> (a:)) [] (x:y:ls))
+                            (foldr (\(Literal a) -> (a:)) [] (x:y:ls))
                 : rest
 
    -- concatenate LongLiterals
@@ -502,6 +502,11 @@ optimize = liftP (fin . go)
 
    fin (LongLiteral l s : Literal c : xs) =
       fin $ LongLiteral (l+1) (s++[c]) : xs
+
+   fin (LongLiteral 1 s : xs) = Literal (head s) : fin xs
+
+   fin (Literal c : LongLiteral l s : xs) =
+      fin $ LongLiteral (l+1) (c:s) : xs
 
    fin (x:xs) = x : fin xs
 
