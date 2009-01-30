@@ -25,8 +25,8 @@ import Control.Monad.Writer.Strict (Writer, runWriter, tell)
 import Control.Exception           (assert)
 import Data.Char                   (isDigit, isAlpha, toLower)
 import Data.List                   (find, sortBy)
-import Data.Maybe                  (fromMaybe, isJust)
-import Data.Monoid                 (Monoid, mappend, mempty)
+import Data.Maybe                  (fromMaybe)
+import Data.Monoid                 (Monoid, mappend, mempty, mconcat)
 import System.FilePath             ( pathSeparator, extSeparator
                                    , isExtSeparator, isPathSeparator
                                    )
@@ -139,34 +139,10 @@ instance Read Pattern where
       [(compile xs, rest)]
 #endif
 
--- it might be better to write mconcat instead?  and then just use
--- optimize somehow?  (this is problemmatic because we'd probably
--- end up with a floating instance)
--- Shouldn't `mappend` be infixr?
 instance Monoid Pattern where
-   mempty = Pattern []
-
-   mappend (Pattern []) b = b
-   mappend (Pattern a) (Pattern (b:bs)) | isJust (fromLiteral b) =
-      let Just b' = fromLiteral b
-          (a',l) = splitLast a
-       in case fromLiteral l of
-               Just l' -> Pattern $ a'++(longLiteral $ l'++b'):bs
-               _       -> Pattern (a++(b:bs))
-
-    where
-      splitLast [x]    = ([],x)
-      splitLast (x:xs) = first (x:) (splitLast xs)
-      splitLast _      =
-         error "System.FilePath.Glob.Pattern.mappend :: internal error"
-
-      fromLiteral (Literal c)       = Just [c]
-      fromLiteral (LongLiteral _ s) = Just s
-      fromLiteral _                 = Nothing
-
-      longLiteral s = LongLiteral (length s) s
-
-   mappend (Pattern a) (Pattern b) = Pattern $ a++b
+   mempty                          = Pattern []
+   mappend (Pattern a) (Pattern b) = optimize $ Pattern (a ++ b)
+   mconcat                         = optimize . Pattern . concat . map unPattern
 
 -- |Options which can be passed to the 'tryCompileWith' or 'compileWith'
 -- functions: with these you can selectively toggle certain features at compile
