@@ -155,7 +155,7 @@ instance Monoid Pattern where
 data CompOptions = CompOptions
     { characterClasses   :: Bool -- |Allow character classes, @[[:...:]]@
     , characterRanges    :: Bool -- |Allow character ranges, @[...]@
-    , openRanges         :: Bool -- |Allow open ranges, @<...>@
+    , numberRanges       :: Bool -- |Allow open ranges, @<...>@
     , wildcards          :: Bool -- |Allow wildcards, @*@ and @?@
     , recursiveWildcards :: Bool -- |Allow recursive wildcards, @**/@
 
@@ -175,7 +175,7 @@ compDefault :: CompOptions
 compDefault = CompOptions
    { characterClasses   = True
    , characterRanges    = True
-   , openRanges         = True
+   , numberRanges       = True
    , wildcards          = True
    , recursiveWildcards = True
    , errorRecovery      = True
@@ -183,11 +183,11 @@ compDefault = CompOptions
 
 -- |Options for POSIX-compliance, as described in @man 7 glob@.
 --
--- 'openRanges' and 'recursiveWildcards' are disabled.
+-- 'numberRanges' and 'recursiveWildcards' are disabled.
 compPosix :: CompOptions
 compPosix = CompOptions { characterClasses   = True
                         , characterRanges    = True
-                        , openRanges         = False
+                        , numberRanges       = False
                         , wildcards          = True
                         , recursiveWildcards = False
                         , errorRecovery      = True
@@ -339,7 +339,7 @@ tokenize opts = fmap Pattern . sequence . go
    wcs  = wildcards          opts
    rwcs = recursiveWildcards opts
    crs  = characterRanges    opts
-   ors  = openRanges         opts
+   ors  = numberRanges       opts
 
 -- <a-b> where a > b can never match anything; this is not considered an error
 openRange :: String -> Either String Token
