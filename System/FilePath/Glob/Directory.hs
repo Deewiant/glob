@@ -1,6 +1,9 @@
 -- File created: 2008-10-16 12:12:50
 
-module System.FilePath.Glob.Directory (globDir, globDirWith, factorPath) where
+module System.FilePath.Glob.Directory
+   ( globDir, globDirWith
+   , commonDirectory
+   ) where
 
 import Control.Arrow    (first, second)
 import Control.Monad    (forM)
@@ -193,10 +196,10 @@ unseparate = Pattern . foldr f []
 -- |Factors out the directory component of a 'Pattern'. Useful in conjunction
 -- with 'globDir'.
 --
--- Preserves the number of path separators: @factorPath (compile
+-- Preserves the number of path separators: @commonDirectory (compile
 -- \"foo///bar\")@ becomes @(\"foo///\"@, compile \"bar\")@.
-factorPath :: Pattern -> (FilePath, Pattern)
-factorPath = second unseparate . splitP . separate
+commonDirectory :: Pattern -> (FilePath, Pattern)
+commonDirectory = second unseparate . splitP . separate
  where
    splitP pt@(Dir n p:ps) =
       case fromConst DL.empty (unPattern p) of

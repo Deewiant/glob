@@ -9,7 +9,7 @@ module System.FilePath.Glob
    ( -- * Data type
      Pattern
      -- * Functions
-   , factorPath
+   , commonDirectory
      -- ** Compilation
    , compile, simplify, decompile
      -- *** Options
@@ -35,6 +35,6 @@ import System.FilePath.Glob.Base      ( Pattern
                                       , compile, compileWith, tryCompileWith
                                       , decompile
                                       )
-import System.FilePath.Glob.Directory (globDir, globDirWith, factorPath)
+import System.FilePath.Glob.Directory (globDir, globDirWith, commonDirectory)
 import System.FilePath.Glob.Match     (match, matchWith)
 import System.FilePath.Glob.Simplify  (simplify)

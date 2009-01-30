@@ -1,20 +1,19 @@
 0.4, 2009-??-??:
 	New functions:
-		System.FilePath.Glob.factorPath     :: Pattern -> (FilePath, Pattern)
+		System.FilePath.Glob.commonDirectory :: Pattern -> (FilePath, Pattern)
 
-		System.FilePath.Glob.simplify       :: Pattern -> Pattern
-
-		System.FilePath.Glob.decompile      :: Pattern -> String
+		System.FilePath.Glob.simplify  :: Pattern -> Pattern
+		System.FilePath.Glob.decompile :: Pattern -> String
 
 		System.FilePath.Glob.tryCompileWith :: CompOptions -> String -> Either String Pattern
 		System.FilePath.Glob.compileWith    :: CompOptions -> String -> Pattern
 		System.FilePath.Glob.compDefault    :: CompOptions
 		System.FilePath.Glob.compPosix      :: CompOptions
 
-		System.FilePath.Glob.matchWith      :: MatchOptions -> Pattern -> FilePath -> Bool
-		System.FilePath.Glob.globDirWith    :: MatchOptions -> [Pattern] -> FilePath -> IO ([[FilePath]], [FilePath])
-		System.FilePath.Glob.matchDefault   :: MatchOptions
-		System.FilePath.Glob.matchPosix     :: MatchOptions
+		System.FilePath.Glob.matchWith     :: MatchOptions -> Pattern -> FilePath -> Bool
+		System.FilePath.Glob.globDirWith   :: MatchOptions -> [Pattern] -> FilePath -> IO ([[FilePath]], [FilePath])
+		System.FilePath.Glob.matchDefault  :: MatchOptions
+		System.FilePath.Glob.matchPosix    :: MatchOptions
 
 		System.FilePath.Glob.Primitives.literal           :: String -> Pattern
 		System.FilePath.Glob.Primitives.singleWildcard    :: Pattern
