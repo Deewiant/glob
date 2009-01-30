@@ -32,8 +32,8 @@ import System.FilePath.Glob.Base      ( Pattern
                                       , CompOptions(..), MatchOptions(..)
                                       , compDefault, compPosix
                                       , matchDefault, matchPosix
+                                      , compile, compileWith, tryCompileWith
+                                      , simplify
                                       )
-import System.FilePath.Glob.Compile   (compile, compileWith, tryCompileWith)
 import System.FilePath.Glob.Directory (globDir, globDirWith, factorPath)
 import System.FilePath.Glob.Match     (match, matchWith)
-import System.FilePath.Glob.Optimize  (simplify)

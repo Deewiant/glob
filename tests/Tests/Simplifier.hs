@@ -5,8 +5,7 @@ module Tests.Simplifier (tests) where
 import Test.Framework
 import Test.Framework.Providers.QuickCheck
 
-import System.FilePath.Glob.Compile  (tryCompileWith)
-import System.FilePath.Glob.Optimize (simplify)
+import System.FilePath.Glob.Base  (tryCompileWith, simplify)
 import System.FilePath.Glob.Match
 
 import Tests.Base

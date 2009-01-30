@@ -6,8 +6,7 @@ import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.HUnit.Base
 
-import System.FilePath.Glob.Base    (MatchOptions(..), matchDefault)
-import System.FilePath.Glob.Compile
+import System.FilePath.Glob.Base
 import System.FilePath.Glob.Match
 
 tests = testGroup "Regression"

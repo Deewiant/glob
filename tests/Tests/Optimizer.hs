@@ -5,8 +5,7 @@ module Tests.Optimizer (tests) where
 import Test.Framework
 import Test.Framework.Providers.QuickCheck
 
-import System.FilePath.Glob.Compile  (tokenize)
-import System.FilePath.Glob.Optimize (optimize)
+import System.FilePath.Glob.Base  (tokenize, optimize)
 import System.FilePath.Glob.Match
 
 import Tests.Base

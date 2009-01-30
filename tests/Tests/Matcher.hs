@@ -8,7 +8,7 @@ import Test.Framework.Providers.QuickCheck
 import Test.QuickCheck ((==>))
 
 import System.FilePath (isExtSeparator, isPathSeparator)
-import System.FilePath.Glob.Compile
+import System.FilePath.Glob.Base
 import System.FilePath.Glob.Match
 
 import Tests.Base
