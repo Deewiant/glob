@@ -5,6 +5,7 @@ module Main (main) where
 import System.Environment (getArgs)
 import Test.Framework
 
+import qualified Tests.Compiler   as Compiler
 import qualified Tests.Matcher    as Matcher
 import qualified Tests.Optimizer  as Optimizer
 import qualified Tests.Regression as Regression
@@ -22,6 +23,7 @@ main = do
 tests =
    [ Regression.tests
    , Utils.tests
+   , Compiler.tests
    , Matcher.tests
    , Optimizer.tests
    , Simplifier.tests
