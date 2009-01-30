@@ -11,7 +11,7 @@ module System.FilePath.Glob
      -- * Functions
    , factorPath
      -- ** Compilation
-   , compile, simplify
+   , compile, simplify, decompile
      -- *** Options
    , CompOptions(..)
    , tryCompileWith, compileWith
@@ -33,6 +33,7 @@ import System.FilePath.Glob.Base      ( Pattern
                                       , compDefault, compPosix
                                       , matchDefault, matchPosix
                                       , compile, compileWith, tryCompileWith
+                                      , decompile
                                       , simplify
                                       )
 import System.FilePath.Glob.Directory (globDir, globDirWith, factorPath)

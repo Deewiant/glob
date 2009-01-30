@@ -2,8 +2,11 @@
 
 module System.FilePath.Glob.Base
    ( Token(..), Pattern(..)
+
    , CompOptions(..), MatchOptions(..)
    , compDefault, compPosix, matchDefault, matchPosix
+
+   , decompile
 
    , compile
    , compileWith, tryCompileWith
@@ -106,11 +109,9 @@ instance Show Token where
       '<' : fromMaybe "" a ++ "-" ++
             fromMaybe "" b ++ ">"
 
-   showList = showList . concatMap show
-
 instance Show Pattern where
-   showsPrec d (Pattern ts) =
-      showParen (d > 10) $ showString "compile " . shows ts
+   showsPrec d p = showParen (d > 10) $
+      showString "compile " . showsPrec (d+1) (decompile p)
 
 -- it might be better to write mconcat instead?  and then just use
 -- optimize somehow?  (this is problemmatic because we'd probably
@@ -221,6 +222,12 @@ matchPosix = MatchOptions
    , ignoreDotSlash      = True
    }
 
+-- |Decompiles a 'Pattern' object into its textual representation.
+--
+-- Note that due to internal optimization, @decompile . compile@ is not the
+-- identity function. @compile . decompile . compile@, however, is.
+decompile :: Pattern -> String
+decompile = concatMap show . unPattern
 
 ------------------------------------------
 -- COMPILATION
