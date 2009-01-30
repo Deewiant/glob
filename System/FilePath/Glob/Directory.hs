@@ -92,7 +92,7 @@ globDir' opts pats@(_:_) dir = do
    dir' <- if null dir then getCurrentDirectory else return dir
    entries <- getDirectoryContents dir' `catch` const (return [])
 
-   results <- forM entries $ \e -> matchTypedAndGo opts pats e (dir' </> e)
+   results <- forM entries $ \e -> matchTypedAndGo opts pats e (dir </> e)
 
    let (matches, others) = unzip results
 
