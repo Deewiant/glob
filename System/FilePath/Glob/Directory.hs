@@ -90,7 +90,7 @@ globDir' :: MatchOptions -> [TypedPattern] -> FilePath
          -> IO (DList FilePath, DList FilePath)
 globDir' opts pats@(_:_) dir = do
    dir' <- if null dir then getCurrentDirectory else return dir
-   entries <- getDirectoryContents dir'
+   entries <- getDirectoryContents dir' `catch` const (return [])
 
    results <- forM entries $ \e -> matchTypedAndGo opts pats e (dir' </> e)
 
