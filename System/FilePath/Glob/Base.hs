@@ -439,9 +439,6 @@ optimize = liftP (fin . go)
  where
    fin [] = []
 
-   -- [.] are ExtSeparators everywhere except at the beginning
-   fin (x:Literal '.':xs) = fin (x:ExtSeparator:xs)
-
    -- Literals to LongLiteral
    -- Has to be done here: we can't backtrack in go, but some cases might
    -- result in consecutive Literals being generated.

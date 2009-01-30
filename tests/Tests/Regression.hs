@@ -18,9 +18,9 @@ tests = testGroup "Regression"
         flip map matchWithCases $ \t@(b,o,p,s) ->
            tc (nameMatchTest (b,p,s)) $
               matchWith o (compile p) s == b
-   , testGroup "Show" .
-        flip map showCases $ \(n,orig,s) ->
-           tc n $ show (compile orig) == s
+   , testGroup "Decompilation" .
+        flip map decompileCases $ \(n,orig,s) ->
+           tc n $ decompile (compile orig) == s
    ]
  where
    tc n = testCase n . assert
@@ -28,11 +28,11 @@ tests = testGroup "Regression"
 nameMatchTest (True ,p,s) = show p ++ " matches " ++ show s
 nameMatchTest (False,p,s) = show p ++ " doesn't match " ++ show s
 
-showCases =
-   [ ("range-compression-1", "[*]",   "compile \"[*]\"")
-   , ("range-compression-2", "[.]",   "compile \"[.]\"")
-   , ("range-compression-3", "**[/]", "compile \"*[/]\"")
-   , ("range-compression-4", "x[.]",  "compile \"x.\"")
+decompileCases =
+   [ ("range-compression-1", "[*]",   "[*]")
+   , ("range-compression-2", "[.]",   "[.]")
+   , ("range-compression-3", "**[/]", "*[/]")
+   , ("range-compression-4", "x[.]",  "x[.]")
    ]
 
 matchCases =
