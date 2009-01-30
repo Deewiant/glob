@@ -101,13 +101,25 @@ instance Show Token where
    show NonPathSeparator    = "?"
    show AnyNonPathSeparator = "*"
    show AnyDirectory        = "**/"
-   show (LongLiteral _ s)   = s
-   show (CharRange b r)     =
-      '[' : (if b then "" else "^") ++
-            concatMap (either (:[]) (\(x,y) -> [x,'-',y])) r ++ "]"
+   show (LongLiteral _ s)   = concatMap (show . Literal) s
    show (OpenRange a b)     =
       '<' : fromMaybe "" a ++ "-" ++
             fromMaybe "" b ++ ">"
+
+   -- We have to be careful here with ^ and ! lest [a!b] become [!ab]
+   -- So we just put them at the end
+   show (CharRange b r)     =
+      let f = either (:[]) (\(x,y) -> [x,'-',y])
+          (caret,exclamation,s) =
+             foldr (\c (ca,ex,ss) ->
+                case c of
+                     Left '^' -> ("^",ex,ss)
+                     Left '!' -> (ca,"!",ss)
+                     _        -> (ca,  ex,(f c ++) . ss)
+                   )
+                   ("", "", id)
+                   r
+       in concat ["[", if b then "" else "^", s [], caret, exclamation, "]"]
 
 instance Show Pattern where
    showsPrec d p = showParen (d > 10) $
