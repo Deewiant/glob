@@ -33,6 +33,9 @@
 	Change: ".." can now be matched, by patterns such as ".*".
 	Change: globDir, given "" as the directory, uses getCurrentDirectory.
 
+	Regression fix: handle directories without read permissions even more
+	                properly.
+
 	Bug fix: globDir doesn't convert patterns like "a./b" to "ab".
 	Bug fix: the Show instance used to show "[?]" as the very different "?" (and
 	         a few similar cases).
