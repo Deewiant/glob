@@ -2,7 +2,7 @@
 
 module System.FilePath.Glob.Directory (globDir, globDirWith, factorPath) where
 
-import Control.Arrow    (first)
+import Control.Arrow    (first, second)
 import Control.Monad    (forM)
 import qualified Data.DList as DL
 import Data.DList       (DList)
@@ -23,10 +23,16 @@ import System.FilePath.Glob.Utils ( getRecursiveContents
                                   )
 
 -- The Patterns in TypedPattern don't contain PathSeparator or AnyDirectory
+--
+-- We store the number of PathSeparators that Dir and AnyDir were followed by
+-- so that "foo////*" can match "foo/bar" but return "foo////bar". It's the
+-- exact number for convenience: (</>) doesn't add a path separator if one is
+-- already there. This way, '\(Dir n _) -> replicate n pathSeparator </> "bar"'
+-- results in the correct amount of slashes.
 data TypedPattern
-   = Any Pattern    -- pattern
-   | Dir Pattern    -- pattern/
-   | AnyDir Pattern -- pattern**/
+   = Any Pattern        -- pattern
+   | Dir Int Pattern    -- pattern/
+   | AnyDir Int Pattern -- pattern**/
    deriving Show
 
 -- |Matches each given 'Pattern' against the contents of the given 'FilePath',
@@ -114,13 +120,13 @@ matchTypedAndGo opts [Any p] path absPath =
       then return (DL.singleton absPath, DL.empty)
       else doesDirectoryExist absPath >>= didn'tMatch path absPath
 
-matchTypedAndGo opts (Dir p:ps) path absPath = do
+matchTypedAndGo opts (Dir n p:ps) path absPath = do
    isDir <- doesDirectoryExist absPath
    if isDir && matchWith opts p path
-      then globDir' opts ps absPath
+      then globDir' opts ps (absPath ++ replicate n pathSeparator)
       else didn'tMatch path absPath isDir
 
-matchTypedAndGo opts (AnyDir p:ps) path absPath = do
+matchTypedAndGo opts (AnyDir n p:ps) path absPath = do
    if path `elem` [".",".."]
       then didn'tMatch path absPath True
       else do
@@ -132,7 +138,8 @@ matchTypedAndGo opts (AnyDir p:ps) path absPath = do
 
          case unconditionalMatch || matchWith opts p' path of
               True | isDir  -> do
-                 contents <- getRecursiveContents absPath
+                 contents <- getRecursiveContents
+                                (absPath ++ replicate n pathSeparator)
                  return $
                     -- foo**/ should match foo/ and nothing below it
                     -- relies on head contents == absPath
@@ -158,15 +165,18 @@ didn'tMatch path absPath isDir = (fmap $ (,) DL.empty) $
       else return$ DL.singleton absPath
 
 separate :: Pattern -> [TypedPattern]
-separate = go [] . unPattern
+separate = go DL.empty . unPattern
  where
-   go [] []                 = []
-   go gr []                 = [Any    $ f gr]
-   go gr (PathSeparator:ps) = (   Dir $ f gr) : go [] (dropWhile isSlash ps)
-   go gr ( AnyDirectory:ps) = (AnyDir $ f gr) : go [] (dropWhile isSlash ps)
-   go gr (            p:ps) = go (p:gr) ps
+   go gr [] | null (DL.toList gr) = []
+   go gr []                       = [Any (pat gr)]
+   go gr (PathSeparator:ps)       = slash gr Dir ps
+   go gr ( AnyDirectory:ps)       = slash gr AnyDir ps
+   go gr (            p:ps)       = go (gr `DL.snoc` p) ps
 
-   f = Pattern . reverse
+   pat = Pattern . DL.toList
+
+   slash gr f ps = let (n,ps') = first length . span isSlash $ ps
+                    in f (n+1) (pat gr) : go DL.empty ps'
 
    isSlash PathSeparator = True
    isSlash _             = False
@@ -174,27 +184,23 @@ separate = go [] . unPattern
 unseparate :: [TypedPattern] -> Pattern
 unseparate = Pattern . foldr f []
  where
-   f (AnyDir p) ts = unPattern p ++ AnyDirectory  : ts
-   f (   Dir p) ts = unPattern p ++ PathSeparator : ts
-   f (Any    p) ts = unPattern p ++ ts
+   f (AnyDir n p) ts = u p ++ AnyDirectory  : replicate n PathSeparator ++ ts
+   f (   Dir n p) ts = u p ++ PathSeparator : replicate n PathSeparator ++ ts
+   f (Any      p) ts = u p ++ ts
+
+   u = unPattern
 
 -- |Factors out the directory component of a 'Pattern'. Useful in conjunction
 -- with 'globDir'.
+--
+-- Preserves the number of path separators: @factorPath (compile
+-- \"foo///bar\")@ becomes @(\"foo///\"@, compile \"bar\")@.
 factorPath :: Pattern -> (FilePath, Pattern)
-factorPath pat =
-   -- root is Dir (compile "") in TypedPattern form, special case that because
-   -- "" </> "foo" is "foo" and not "/foo"
-   let root = case unPattern pat of
-                   (PathSeparator:_) -> "/"
-                   _                 -> ""
-
-       (baseDir, rest) = splitP $ separate pat
-
-    in (root++baseDir, unseparate rest)
+factorPath = second unseparate . splitP . separate
  where
-   splitP pt@(Dir p:ps) =
+   splitP pt@(Dir n p:ps) =
       case fromConst DL.empty (unPattern p) of
-           Just d  -> first (d </>) (splitP ps)
+           Just d  -> first ((d ++ replicate n pathSeparator) </>) (splitP ps)
            Nothing -> ("", pt)
 
    splitP pt = ("", pt)
