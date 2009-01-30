@@ -1,5 +1,7 @@
 -- File created: 2008-10-10 13:29:26
 
+{-# LANGUAGE CPP #-}
+
 module System.FilePath.Glob.Base
    ( Token(..), Pattern(..)
 
@@ -34,6 +36,10 @@ import System.FilePath.Glob.Utils ( dropLeadingZeroes
                                   , increasingSeq
                                   , addToRange, overlap
                                   )
+
+#if __GLASGOW_HASKELL__
+import Text.Read (readPrec, lexP, parens, prec, Lexeme(Ident))
+#endif
 
 data Token
    -- primitives
@@ -124,6 +130,18 @@ instance Show Token where
 instance Show Pattern where
    showsPrec d p = showParen (d > 10) $
       showString "compile " . showsPrec (d+1) (decompile p)
+
+instance Read Pattern where
+#if __GLASGOW_HASKELL__
+   readPrec = parens . prec 10 $ do
+      Ident "compile" <- lexP
+      fmap compile readPrec
+#else
+   readsPrec d = readParen (d > 10) $ \r -> do
+      ("compile",string) <- lex r
+      (xs,rest) <- readsPrec (d+1) string
+      [(compile xs, rest)]
+#endif
 
 -- it might be better to write mconcat instead?  and then just use
 -- optimize somehow?  (this is problemmatic because we'd probably
@@ -441,8 +459,8 @@ charRange opts xs_ =
 -- The resulting 'Pattern' matches the exact same input as the original one,
 -- with some differences:
 --
--- * 'globDir'\'s output will differ: for example, globbing for @\"./*\"@ gives
---   @\"./foo\"@, but after simplification this'll be only @\"foo\"@.
+-- * 'globDir'\'s output will differ: for example, globbing for @\"./\*\"@
+--   gives @\"./foo\"@, but after simplification this'll be only @\"foo\"@.
 --
 -- * 'show'ing the simplified 'Pattern' will obviously not give the original.
 --
