@@ -6,6 +6,7 @@ import System.Environment (getArgs)
 import Test.Framework
 
 import qualified Tests.Compiler   as Compiler
+import qualified Tests.Instances  as Instances
 import qualified Tests.Matcher    as Matcher
 import qualified Tests.Optimizer  as Optimizer
 import qualified Tests.Regression as Regression
@@ -27,4 +28,5 @@ tests =
    , Matcher.tests
    , Optimizer.tests
    , Simplifier.tests
+   , Instances.tests
    ]

@@ -13,6 +13,7 @@ tests = testGroup "Compiler"
    [ testProperty "compile-decompile-1" prop_compileDecompile1
    ]
 
+-- compile . decompile should be the identity function
 prop_compileDecompile1 o s =
    let opt   = unCOpts o
        epat1 = tryCompileWith opt (unPS s)
