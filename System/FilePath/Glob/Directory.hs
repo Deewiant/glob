@@ -12,10 +12,15 @@ import System.Directory ( doesDirectoryExist, getDirectoryContents
                         )
 import System.FilePath  ((</>), extSeparator, isExtSeparator, pathSeparator)
 
-import System.FilePath.Glob.Base
+import System.FilePath.Glob.Base  ( Pattern(..), Token(..)
+                                  , MatchOptions, matchDefault
+                                  )
 import System.FilePath.Glob.Match (matchWith)
-import System.FilePath.Glob.Utils
-   (getRecursiveContents, nubOrd, pathParts, partitionDL)
+import System.FilePath.Glob.Utils ( getRecursiveContents
+                                  , nubOrd
+                                  , pathParts
+                                  , partitionDL
+                                  )
 
 -- The Patterns in TypedPattern don't contain PathSeparator or AnyDirectory
 data TypedPattern

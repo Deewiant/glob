@@ -14,8 +14,7 @@ module System.FilePath.Glob.Primitive
 
 import System.FilePath (isPathSeparator, isExtSeparator)
 
-import System.FilePath.Glob.Base
-import System.FilePath.Glob.Optimize
+import System.FilePath.Glob.Base (Pattern(..), Token(..), optimize)
 
 -- |A 'Pattern' which matches the given 'String' literally.
 --

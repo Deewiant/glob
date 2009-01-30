@@ -7,7 +7,10 @@ import Data.Char         (isDigit, toLower, toUpper)
 import Data.Monoid       (mappend)
 import System.FilePath   (isPathSeparator, isExtSeparator)
 
-import System.FilePath.Glob.Base
+import System.FilePath.Glob.Base  ( Pattern(..), Token(..)
+                                  , MatchOptions(..), matchDefault
+                                  , tokToLower
+                                  )
 import System.FilePath.Glob.Utils (dropLeadingZeroes, inRange, pathParts)
 
 -- |Matches the given 'Pattern' against the given 'FilePath', returning 'True'
