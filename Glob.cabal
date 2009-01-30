@@ -17,6 +17,7 @@ License-File: LICENSE.txt
 Build-Type: Simple
 
 Extra-Source-Files: CHANGELOG.txt
+                    CREDITS.txt
                     tests/README.txt
                     tests/*.hs
                     tests/Tests/*.hs
