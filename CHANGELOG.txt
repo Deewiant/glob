@@ -33,6 +33,9 @@
 	Change: globDir, given "" as the directory, uses getCurrentDirectory.
 	Change: globDir now keeps track of the number of path separators, thus
 	        "a//*" will return "a//b" instead of "a/b" as a match result.
+	Change: if character ranges begin with ! or ^, these characters are now
+	        considered the start of the range: [^-~] is the range ^ through ~,
+	        not the inverse of [-~].
 
 	Regression fix: handle directories without read permissions even more
 	                properly.

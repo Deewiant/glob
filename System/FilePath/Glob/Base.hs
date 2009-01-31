@@ -286,6 +286,8 @@ decompile = concatMap show . unPattern
 --            certain predefined characters. See below for a full list.
 --
 -- [@[^..\]@ or @[!..\]@] Like @[..]@, but matches any character /not/ listed.
+--                        Note that @[^-x]@ is not the inverse of @[-x]@, but
+--                        the range @[^-x]@.
 --
 -- [@\<m-n>@] Matches any integer in the range m to n, inclusive. The range may
 --            be open-ended by leaving out either number: @\"\<->\"@, for
