@@ -52,5 +52,8 @@ prop_monoid4 opt x y =
        [a,b] = map fromRight es
        cat1  = mappend a b
        cat2  = tryCompileWith o (unPS x ++ unPS y)
-    in     take 2 (reverse . unPS $ x) /= "**" && take 1 (unPS y) /= "/"
+       last2 = take 2 . reverse . unPS $ x
+       head2 = take 2 . unPS $ y
+    in     (last2 /= "**" && take 1 head2 /= "/")
+        && (take 1 last2 /= "*" && take 2 head2 /= "*/")
        ==> all isRight es && isRight cat2 && cat1 == fromRight cat2
