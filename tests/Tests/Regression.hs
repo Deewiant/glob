@@ -33,6 +33,7 @@ decompileCases =
    , ("range-compression-2", "[.]",   "[.]")
    , ("range-compression-3", "**[/]", "*[/]")
    , ("range-compression-4", "x[.]",  "x[.]")
+   , ("range-compression-5", "[^~-]", "[^~-]")
    ]
 
 matchCases =
@@ -118,6 +119,9 @@ matchCases =
    , (True , "[abc"       , "[abc")
    , (True , "<abc"       , "<abc")
    , (True , "<1-"        , "<1-")
+   , (True , "[^-~]"      , "x")
+   , (False, "[^-~]"      , "X")
+   , (False, "[^^-~]"     , "x")
    ]
 
 matchWithCases =
