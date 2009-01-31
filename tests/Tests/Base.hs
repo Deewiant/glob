@@ -15,14 +15,15 @@ newtype PString = PatString { unPS    :: String } deriving Show
 newtype Path    = Path      { unP     :: String } deriving Show
 newtype COpts   = COpts     { unCOpts :: CompOptions } deriving Show
 
-alpha = extSeparator : pathSeparators ++ "-^!" ++ ['a'..'z'] ++ ['0'..'9']
+alpha0 = extSeparator : "-^!" ++ ['a'..'z'] ++ ['0'..'9']
+alpha  = pathSeparators ++ alpha0
 
 instance Arbitrary PString where
    arbitrary = sized $ \size -> do
       let xs =
              (1, return "**/") :
              map (\(a,b) -> (a*100,b))
-             [ (40, plain)
+             [ (40, plain alpha)
              , (20, return "?")
              , (20, charRange)
              , (10, return "*")
@@ -34,7 +35,7 @@ instance Arbitrary PString where
 
 instance Arbitrary Path where
    arbitrary = sized $ \size -> do
-      s <- mapM (const plain) [1..size `mod` 16]
+      s <- mapM (const $ plain alpha) [1..size `mod` 16]
       return.Path $ concat s
 
 instance Arbitrary COpts where
@@ -42,15 +43,15 @@ instance Arbitrary COpts where
       [a,b,c,d,e,f] <- vector 6
       return.COpts $ CompOptions a b c d e f False
 
-plain = sized $ \size -> do
-   s <- mapM (const $ elements alpha) [0..size `mod` 3]
+plain from = sized $ \size -> do
+   s <- mapM (const $ elements from) [0..size `mod` 3]
    return s
 
 charRange = do
-   s <- plain
+   s <- plain alpha0
    if s `elem` ["^","!"]
       then do
-         s' <- plain
+         s' <- plain alpha0
          return$ "[" ++ s ++ s' ++ "]"
       else
          return$ "[" ++ s ++       "]"
