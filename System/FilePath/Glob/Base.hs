@@ -123,12 +123,16 @@ instance Show Token where
                    )
                    ("", "", id)
                    r
-          s = let s' = fs []
-                  (x,y) = splitAt 1 s'
-               in if not b && x == "-"
-                     then y ++ x
-                     else s'
-       in concat ["[", if b then "" else "^", s, caret, exclamation, "]"]
+          (beg,rest) = let s' = fs []
+                           (x,y) = splitAt 1 s'
+                           in if not b && x == "-"
+                                 then (y,x)
+                                 else (s',"")
+       in concat [ "["
+                 , if b then "" else "^"
+                 , beg, caret, exclamation, rest
+                 , "]"
+                 ]
 
 instance Show Pattern where
    showsPrec d p = showParen (d > 10) $
@@ -418,7 +422,7 @@ charRange opts zs =
                 -- [!-#] is not the inverse of [-#], it is the range ! through
                 -- #
                 '-':']':xs -> (Right (CharRange False [Left '-']), xs)
-                '-'    :xs -> first (fmap (CharRange True )) (start zs)
+                '-'    :_  -> first (fmap (CharRange True )) (start zs)
                 xs         -> first (fmap (CharRange False)) (start xs)
         _                  -> first (fmap (CharRange True )) (start zs)
  where
