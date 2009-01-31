@@ -15,9 +15,9 @@ tests = testGroup "Regression"
             tc (nameMatchTest t) $
                match (compile p) s == b
    , testGroup "Specific options" .
-        flip map matchWithCases $ \t@(b,o,p,s) ->
+        flip map matchWithCases $ \t@(b,co,mo,p,s) ->
            tc (nameMatchTest (b,p,s)) $
-              matchWith o (compile p) s == b
+              matchWith mo (compileWith co p) s == b
    , testGroup "Decompilation" .
         flip map decompileCases $ \(n,orig,s) ->
            tc n $ decompile (compile orig) == s
@@ -121,5 +121,6 @@ matchCases =
    ]
 
 matchWithCases =
-   [ (True , matchDefault { ignoreCase = True }, "[@-[]", "a")
+   [ (True , compDefault, matchDefault { ignoreCase = True }, "[@-[]", "a")
+   , (True , compPosix  , matchDefault                      , "a[/]b", "a[/]b")
    ]
