@@ -108,11 +108,13 @@ instance Show Token where
       '<' : fromMaybe "" a ++ "-" ++
             fromMaybe "" b ++ ">"
 
-   -- We have to be careful here with ^ and ! lest [a!b] become [!ab]
-   -- So we just put them at the end
+   -- We have to be careful here with ^ and ! lest [a!b] become [!ab]. So we
+   -- just put them at the end.
+   --
+   -- Also, [^x-] was sorted and should not become [^-x].
    show (CharRange b r)     =
       let f = either (:[]) (\(x,y) -> [x,'-',y])
-          (caret,exclamation,s) =
+          (caret,exclamation,fs) =
              foldr (\c (ca,ex,ss) ->
                 case c of
                      Left '^' -> ("^",ex,ss)
@@ -121,7 +123,12 @@ instance Show Token where
                    )
                    ("", "", id)
                    r
-       in concat ["[", if b then "" else "^", s [], caret, exclamation, "]"]
+          s = let s' = fs []
+                  (x,y) = splitAt 1 s'
+               in if not b && x == "-"
+                     then y ++ x
+                     else s'
+       in concat ["[", if b then "" else "^", s, caret, exclamation, "]"]
 
 instance Show Pattern where
    showsPrec d p = showParen (d > 10) $
@@ -404,10 +411,16 @@ openRangeNum = Just . dropLeadingZeroes
 type CharRange = [Either Char (Char,Char)]
 
 charRange :: CompOptions -> String -> (Either String Token, String)
-charRange opts xs_ =
-   case xs_ of
-        (x:xs') | x `elem` "^!" -> first (fmap (CharRange False)) (start xs')
-        _                       -> first (fmap (CharRange  True)) (start xs_)
+charRange opts zs =
+   case zs of
+        y:ys | y `elem` "^!" ->
+           case ys of
+                -- [!-#] is not the inverse of [-#], it is the range ! through
+                -- #
+                '-':']':xs -> (Right (CharRange False [Left '-']), xs)
+                '-'    :xs -> first (fmap (CharRange True )) (start zs)
+                xs         -> first (fmap (CharRange False)) (start xs)
+        _                  -> first (fmap (CharRange True )) (start zs)
  where
    start :: String -> (Either String CharRange, String)
    start (']':xs) = run $ char ']' xs
