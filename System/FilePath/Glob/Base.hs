@@ -149,29 +149,30 @@ instance Monoid Pattern where
 -- time.
 --
 -- Note that some of these options depend on each other: classes can never
--- occur if ranges aren't allowed.
+-- occur if ranges aren't allowed, for instance.
 
 -- We could presumably put locale information in here, too.
 data CompOptions = CompOptions
-    { characterClasses   :: Bool -- |Allow character classes, @[[:...:]]@
-    , characterRanges    :: Bool -- |Allow character ranges, @[...]@
-    , numberRanges       :: Bool -- |Allow open ranges, @<...>@
-    , wildcards          :: Bool -- |Allow wildcards, @*@ and @?@
-    , recursiveWildcards :: Bool -- |Allow recursive wildcards, @**/@
+    { characterClasses   :: Bool -- ^Allow character classes, @[[:...:]]@.
+    , characterRanges    :: Bool -- ^Allow character ranges, @[...]@.
+    , numberRanges       :: Bool -- ^Allow open ranges, @\<...>@.
+    , wildcards          :: Bool -- ^Allow wildcards, @*@ and @?@.
+    , recursiveWildcards :: Bool -- ^Allow recursive wildcards, @**/@.
 
-    -- |Allow path separators in character ranges.
-    --
-    -- If true, @a[/]b@ never matches anything (since character ranges can't
-    -- match path separators); if false and 'errorRecovery' is enabled, @a[/]b@
-    -- matches itself, i.e. a file named @]b@ in the subdirectory @a[@.
     , pathSepInRanges    :: Bool
+      -- ^Allow path separators in character ranges.
+      --
+      -- If true, @a[/]b@ never matches anything (since character ranges can't
+      -- match path separators); if false and 'errorRecovery' is enabled,
+      -- @a[/]b@ matches itself, i.e. a file named @]b@ in the subdirectory
+      -- @a[@.
 
-      -- |If the input is invalid, recover by turning any invalid part into
+    , errorRecovery      :: Bool
+      -- ^If the input is invalid, recover by turning any invalid part into
       -- literals. For instance, with 'characterRanges' enabled, @[abc@ is an
       -- error by default (unclosed character range); with 'errorRecovery', the
       -- @[@ is turned into a literal match, as though 'characterRanges' were
       -- disabled.
-    , errorRecovery      :: Bool
     } deriving (Show,Read,Eq)
 
 -- |The default set of compilation options: closest to the behaviour of the
@@ -206,15 +207,17 @@ compPosix = CompOptions
 -- |Options which can be passed to the 'matchWith' or 'globDirWith' functions:
 -- with these you can selectively toggle certain features at matching time.
 data MatchOptions = MatchOptions
-    { -- |Allow @*@, @?@, and @**/@ to match @.@ at the beginning of paths
-      matchDotsImplicitly :: Bool
-    , ignoreCase          :: Bool -- |Case-independent matching
+    { matchDotsImplicitly :: Bool
+      -- ^Allow @*@, @?@, and @**/@ to match @.@ at the beginning of paths.
 
-      -- |Treat @./@ as a no-op in both paths and patterns.
+    , ignoreCase          :: Bool
+      -- ^Case-independent matching.
+
+    , ignoreDotSlash      :: Bool
+      -- ^Treat @./@ as a no-op in both paths and patterns.
       --
       -- (Of course e.g. @../@ means something different and will not be
       -- ignored.)
-    , ignoreDotSlash :: Bool
     }
 
 -- |The default set of execution options: closest to the behaviour of the @zsh@
@@ -242,9 +245,8 @@ matchPosix = MatchOptions
 --
 -- Be careful with 'CompOptions': 'decompile' always produces a 'String' which
 -- can be passed to 'compile' to get back the same 'Pattern'. @compileWith
--- options . decompile . compileWith options@ will very likely produce a
--- different result than @compileWith options@ (unless @options@ is
--- 'compDefault').
+-- options . decompile@ is /not/ the identity function unless @options@ is
+-- 'compDefault'.
 decompile :: Pattern -> String
 decompile = concatMap show . unPattern
 
@@ -265,18 +267,47 @@ decompile = concatMap show . unPattern
 --            including the empty string.
 --
 -- [@[..\]@]  Matches any of the enclosed characters. Ranges of characters can
---            be specified by separating the endpoints with a \'-'. \'-' or ']'
---            can be matched by including them as the first character(s) in the
---            list.
+--            be specified by separating the endpoints with a @\'-'@. @\'-'@ or
+--            @']'@ can be matched by including them as the first character(s)
+--            in the list. Never matches path separators: @[\/]@ matches
+--            nothing at all. Named character classes can also be matched:
+--            @[:x:]@ within @[]@ specifies the class named @x@, which matches
+--            certain predefined characters. See below for a full list.
 --
--- [@[^..\]@ or @[!..\]@] Like [..], but matches any character /not/ listed.
+-- [@[^..\]@ or @[!..\]@] Like @[..]@, but matches any character /not/ listed.
 --
 -- [@\<m-n>@] Matches any integer in the range m to n, inclusive. The range may
---            be open-ended by leaving out either number: \"\<->\", for
+--            be open-ended by leaving out either number: @\"\<->\"@, for
 --            instance, matches any integer.
 --
 -- [@**/@]    Matches any number of characters, including path separators,
 --            excluding the empty string.
+--
+-- Supported character classes:
+--
+-- [@[:alnum:\]@]  Equivalent to @\"0-9A-Za-z\"@.
+--
+-- [@[:alpha:\]@]  Equivalent to @\"A-Za-z\"@.
+--
+-- [@[:blank:\]@]  Equivalent to @\"\\t \"@.
+--
+-- [@[:cntrl:\]@]  Equivalent to @\"\\0-\\x1f\\x7f\"@.
+--
+-- [@[:digit:\]@]  Equivalent to @\"0-9\"@.
+--
+-- [@[:graph:\]@]  Equivalent to @\"!-~\"@.
+--
+-- [@[:lower:\]@]  Equivalent to @\"a-z\"@.
+--
+-- [@[:print:\]@]  Equivalent to @\" -~\"@.
+--
+-- [@[:punct:\]@]  Equivalent to @\"!-\/:-\@[-`{-~\"@.
+--
+-- [@[:space:\]@]  Equivalent to @\"\\t-\\r \"@.
+--
+-- [@[:upper:\]@]  Equivalent to @\"A-Z\"@.
+--
+-- [@[:xdigit:\]@] Equivalent to @\"0-9A-Fa-f\"@.
 --
 -- Note that path separators (typically @\'/\'@) have to be matched explicitly
 -- or using the @**/@ pattern. In addition, extension separators (typically

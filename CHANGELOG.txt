@@ -31,6 +31,8 @@
 
 	Change: ".." can now be matched, by patterns such as ".*".
 	Change: globDir, given "" as the directory, uses getCurrentDirectory.
+	Change: globDir now keeps track of the number of path separators, thus
+	        "a//*" will return "a//b" instead of "a/b" as a match result.
 
 	Regression fix: handle directories without read permissions even more
 	                properly.

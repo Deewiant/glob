@@ -43,6 +43,9 @@ data TypedPattern
 -- grouped for each given 'Pattern', and the second contains all paths which
 -- were not matched by any 'Pattern'. The results are not in any defined order.
 --
+-- The given directory is prepended to all the matches: the returned paths are
+-- all valid from the point of view of the current working directory.
+--
 -- If multiple 'Pattern's match a single 'FilePath', that path will be included
 -- in multiple groups.
 --
@@ -59,10 +62,7 @@ data TypedPattern
 --
 -- (With the exception that that glob won't match anything beginning with @.@.)
 --
--- If @dir@ is @\"foo\"@ the pattern should be @\"foo/*\"@ to get the same
--- results with a plain 'filter'.
---
--- If the given 'FilePath' is @[]@, @getCurrentDirectory@ will be used.
+-- If the given 'FilePath' is @[]@, 'getCurrentDirectory' will be used.
 --
 -- Note that in some cases results outside the given directory may be returned:
 -- for instance the @.*@ pattern matches the @..@ directory.
@@ -197,7 +197,7 @@ unseparate = Pattern . foldr f []
 -- with 'globDir'.
 --
 -- Preserves the number of path separators: @commonDirectory (compile
--- \"foo///bar\")@ becomes @(\"foo///\"@, compile \"bar\")@.
+-- \"foo\/\/\/bar\")@ becomes @(\"foo\/\/\/\", compile \"bar\")@.
 commonDirectory :: Pattern -> (FilePath, Pattern)
 commonDirectory = second unseparate . splitP . separate
  where

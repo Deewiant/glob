@@ -9,12 +9,11 @@ module System.FilePath.Glob
    ( -- * Data type
      Pattern
      -- * Functions
-   , commonDirectory
      -- ** Compilation
-   , compile, simplify, decompile
+   , compile, decompile, simplify
      -- *** Options
    , CompOptions(..)
-   , tryCompileWith, compileWith
+   , compileWith, tryCompileWith
      -- **** Predefined option sets
    , compDefault, compPosix
      -- ** Matching
@@ -26,6 +25,8 @@ module System.FilePath.Glob
    , globDirWith
      -- **** Predefined option sets
    , matchDefault, matchPosix
+     -- ** Miscellaneous
+   , commonDirectory
    ) where
 
 import System.FilePath.Glob.Base      ( Pattern

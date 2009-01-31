@@ -8,10 +8,10 @@ import System.FilePath.Glob.Base (Pattern(..), Token(..), liftP)
 -- The resulting 'Pattern' matches the exact same input as the original one,
 -- with some differences:
 --
--- * 'globDir'\'s output will differ: for example, globbing for @\"./\*\"@
+-- * The output of 'globDir' will differ: for example, globbing for @\"./\*\"@
 --   gives @\"./foo\"@, but after simplification this'll be only @\"foo\"@.
 --
--- * 'show'ing the simplified 'Pattern' will obviously not give the original.
+-- * Decompiling the simplified 'Pattern' will obviously not give the original.
 --
 -- * The simplified 'Pattern' is a bit faster to match with and uses less
 --   memory, since some redundant data is removed.
