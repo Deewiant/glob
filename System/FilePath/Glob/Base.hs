@@ -141,8 +141,8 @@ instance Read Pattern where
 
 instance Monoid Pattern where
    mempty                          = Pattern []
-   mappend (Pattern a) (Pattern b) = optimize $ Pattern (a ++ b)
-   mconcat                         = optimize . Pattern . concat . map unPattern
+   mappend (Pattern a) (Pattern b) = optimize . Pattern $ (a ++ b)
+   mconcat                         = optimize . Pattern . concatMap unPattern
 
 -- |Options which can be passed to the 'tryCompileWith' or 'compileWith'
 -- functions: with these you can selectively toggle certain features at compile
@@ -159,6 +159,13 @@ data CompOptions = CompOptions
     , wildcards          :: Bool -- |Allow wildcards, @*@ and @?@
     , recursiveWildcards :: Bool -- |Allow recursive wildcards, @**/@
 
+    -- |Allow path separators in character ranges.
+    --
+    -- If true, @a[/]b@ never matches anything (since character ranges can't
+    -- match path separators); if false and 'errorRecovery' is enabled, @a[/]b@
+    -- matches itself, i.e. a file named @]b@ in the subdirectory @a[@.
+    , pathSepInRanges    :: Bool
+
       -- |If the input is invalid, recover by turning any invalid part into
       -- literals. For instance, with 'characterRanges' enabled, @[abc@ is an
       -- error by default (unclosed character range); with 'errorRecovery', the
@@ -168,7 +175,7 @@ data CompOptions = CompOptions
     } deriving (Show,Read,Eq)
 
 -- |The default set of compilation options: closest to the behaviour of the
--- @zsh@ shell.
+-- @zsh@ shell, with 'errorRecovery' enabled.
 --
 -- All options are enabled.
 compDefault :: CompOptions
@@ -178,20 +185,23 @@ compDefault = CompOptions
    , numberRanges       = True
    , wildcards          = True
    , recursiveWildcards = True
+   , pathSepInRanges    = True
    , errorRecovery      = True
    }
 
 -- |Options for POSIX-compliance, as described in @man 7 glob@.
 --
--- 'numberRanges' and 'recursiveWildcards' are disabled.
+-- 'numberRanges', 'recursiveWildcards', and 'pathSepInRanges' are disabled.
 compPosix :: CompOptions
-compPosix = CompOptions { characterClasses   = True
-                        , characterRanges    = True
-                        , numberRanges       = False
-                        , wildcards          = True
-                        , recursiveWildcards = False
-                        , errorRecovery      = True
-                        }
+compPosix = CompOptions
+   { characterClasses   = True
+   , characterRanges    = True
+   , numberRanges       = False
+   , wildcards          = True
+   , recursiveWildcards = False
+   , pathSepInRanges    = False
+   , errorRecovery      = True
+   }
 
 -- |Options which can be passed to the 'matchWith' or 'globDirWith' functions:
 -- with these you can selectively toggle certain features at matching time.
@@ -381,8 +391,11 @@ charRange opts xs_ =
 
    go :: String -> ErrorT String (Writer CharRange) String
    go ('[':':':xs) | characterClasses opts = readClass xs
-   go (    ']':xs)                         = return xs
-   go (      c:xs)                         = char c xs
+   go (    ']':xs) = return xs
+   go (      c:xs) =
+      if not (pathSepInRanges opts) && isPathSeparator c
+         then throwError "compile :: path separator within []"
+         else char c xs
    go []           = throwError "compile :: unclosed [] in pattern"
 
    char :: Char -> String -> ErrorT String (Writer CharRange) String

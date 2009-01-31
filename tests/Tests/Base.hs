@@ -39,8 +39,8 @@ instance Arbitrary Path where
 
 instance Arbitrary COpts where
    arbitrary = do
-      [a,b,c,d,e] <- vector 5
-      return.COpts $ CompOptions a b c d e False
+      [a,b,c,d,e,f] <- vector 6
+      return.COpts $ CompOptions a b c d e f False
 
 plain = sized $ \size -> do
    s <- mapM (const $ elements alpha) [0..size `mod` 3]
