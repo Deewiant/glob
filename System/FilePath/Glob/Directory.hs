@@ -1,7 +1,7 @@
 -- File created: 2008-10-16 12:12:50
 
 module System.FilePath.Glob.Directory
-   ( globDir, globDirWith
+   ( globDir, globDirWith, globDir1
    , commonDirectory
    ) where
 
@@ -94,6 +94,11 @@ globDirWith opts pats dir = do
    return ( map DL.toList matches
           , nubOrd allOthers \\ allMatches
           )
+
+-- |A convenience wrapper on top of 'globDir', for when you only have one
+-- 'Pattern' you care about.
+globDir1 :: Pattern -> FilePath -> IO [FilePath]
+globDir1 p = fmap (head . fst) . globDir [p]
 
 globDir' :: MatchOptions -> [TypedPattern] -> FilePath
          -> IO (DList FilePath, DList FilePath)

@@ -18,7 +18,7 @@ module System.FilePath.Glob
    , compDefault, compPosix
      -- ** Matching
    , match
-   , globDir
+   , globDir, globDir1
      -- *** Options
    , MatchOptions(..)
    , matchWith
@@ -36,6 +36,8 @@ import System.FilePath.Glob.Base      ( Pattern
                                       , compile, compileWith, tryCompileWith
                                       , decompile
                                       )
-import System.FilePath.Glob.Directory (globDir, globDirWith, commonDirectory)
+import System.FilePath.Glob.Directory ( globDir, globDirWith, globDir1
+                                      , commonDirectory
+                                      )
 import System.FilePath.Glob.Match     (match, matchWith)
 import System.FilePath.Glob.Simplify  (simplify)
