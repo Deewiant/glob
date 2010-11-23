@@ -1,3 +1,6 @@
+0.5.1, 2010-11-23:
+	Update dependencies to allow for mtl 2.0.
+
 0.5, 2009-12-01:
 	New functions:
 		System.FilePath.Glob.globDir :: Pattern -> FilePath -> IO [FilePath]
