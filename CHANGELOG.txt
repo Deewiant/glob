@@ -1,3 +1,10 @@
+0.6, 2011-09-12:
+	Change: globDir, given a Pattern starting with a path separator, now ignores
+			  the given directory. Thus e.g. globDir (compile "/*") d gives the
+			  contents of "/" regardless of the value of d.
+
+			  Thanks to Max Bolingbroke for the feature request.
+
 0.5.1, 2010-11-23:
 	Update dependencies to allow for mtl 2.0.
 

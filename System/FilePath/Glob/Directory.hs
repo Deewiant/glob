@@ -10,12 +10,15 @@ import Control.Monad    (forM)
 import qualified Data.DList as DL
 import Data.DList       (DList)
 import Data.List        ((\\))
+import Data.Maybe       (listToMaybe)
 import System.Directory ( doesDirectoryExist, getDirectoryContents
                         , getCurrentDirectory
                         )
-import System.FilePath  ((</>), extSeparator, isExtSeparator, pathSeparator)
+import System.FilePath  ( (</>), extSeparator, isExtSeparator, pathSeparator
+                        , takeDrive
+                        )
 
-import System.FilePath.Glob.Base  ( Pattern(..), Token(..)
+import System.FilePath.Glob.Base  ( Pattern(..), Token(..), liftP
                                   , MatchOptions, matchDefault
                                   )
 import System.FilePath.Glob.Match (matchWith)
@@ -64,6 +67,9 @@ data TypedPattern
 --
 -- If the given 'FilePath' is @[]@, 'getCurrentDirectory' will be used.
 --
+-- If the given 'Pattern' starts with a path separator, it is not relative to
+-- the given directory and the @dir@ parameter is completely ignored!
+--
 -- Note that in some cases results outside the given directory may be returned:
 -- for instance the @.*@ pattern matches the @..@ directory.
 --
@@ -84,8 +90,8 @@ globDirWith _ []   dir = do
    c <- getRecursiveContents dir'
    return ([], DL.toList c)
 
-globDirWith opts pats dir = do
-   results <- mapM (\p -> globDir' opts (separate p) dir) pats
+globDirWith opts pats@(_:_) dir = do
+   results <- mapM (\p -> globDir'0 opts p dir) pats
 
    let (matches, others) = unzip results
        allMatches        = DL.toList . DL.concat $ matches
@@ -100,11 +106,22 @@ globDirWith opts pats dir = do
 globDir1 :: Pattern -> FilePath -> IO [FilePath]
 globDir1 p = fmap (head . fst) . globDir [p]
 
+globDir'0 :: MatchOptions -> Pattern -> FilePath
+          -> IO (DList FilePath, DList FilePath)
+globDir'0 opts pat dir = do
+   (dir',pat') <-
+      if maybe False (==PathSeparator) . listToMaybe . unPattern $ pat
+         then do
+            curDir <- getCurrentDirectory
+            return (takeDrive curDir, liftP (dropWhile (==PathSeparator)) pat)
+         else fmap (flip (,) pat) $
+                 if null dir then getCurrentDirectory else return dir
+   globDir' opts (separate pat') dir'
+
 globDir' :: MatchOptions -> [TypedPattern] -> FilePath
          -> IO (DList FilePath, DList FilePath)
 globDir' opts pats@(_:_) dir = do
-   dir' <- if null dir then getCurrentDirectory else return dir
-   entries <- getDirectoryContents dir' `catch` const (return [])
+   entries <- getDirectoryContents dir `catch` const (return [])
 
    results <- forM entries $ \e -> matchTypedAndGo opts pats e (dir </> e)
 
