@@ -1,7 +1,7 @@
 -- File created: 2008-10-16 12:12:50
 
 module System.FilePath.Glob.Directory
-   ( globDir, globDirWith, globDir1
+   ( globDir, globDirWith, globDir1, glob
    , commonDirectory
    ) where
 
@@ -105,6 +105,11 @@ globDirWith opts pats@(_:_) dir = do
 -- 'Pattern' you care about.
 globDir1 :: Pattern -> FilePath -> IO [FilePath]
 globDir1 p = fmap (head . fst) . globDir [p]
+
+-- |A convenience wrapper on top of 'globDir1', for when you want to work in
+-- the current directory or have a 'Pattern' referring to an absolute path.
+glob :: Pattern -> IO [FilePath]
+glob = flip globDir1 ""
 
 globDir'0 :: MatchOptions -> Pattern -> FilePath
           -> IO (DList FilePath, DList FilePath)

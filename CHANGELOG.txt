@@ -1,4 +1,7 @@
 0.6, 2011-09-12:
+	New functions:
+		System.FilePath.Glob.glob :: Pattern -> IO [FilePath]
+
 	Change: globDir, given a Pattern starting with a path separator, now ignores
 			  the given directory. Thus e.g. globDir (compile "/*") d gives the
 			  contents of "/" regardless of the value of d.
