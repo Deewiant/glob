@@ -8,6 +8,8 @@
 
 			  Thanks to Max Bolingbroke for the feature request.
 
+	Changed dependency on mtl to transformers.
+
 0.5.1, 2010-11-23:
 	Update dependencies to allow for mtl 2.0.
 

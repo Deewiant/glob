@@ -19,17 +19,18 @@ module System.FilePath.Glob.Base
    , liftP, tokToLower
    ) where
 
-import Control.Arrow               (first)
-import Control.Monad.Error         (ErrorT, runErrorT, throwError)
-import Control.Monad.Writer.Strict (Writer, runWriter, tell)
-import Control.Exception           (assert)
-import Data.Char                   (isDigit, isAlpha, toLower)
-import Data.List                   (find, sortBy)
-import Data.Maybe                  (fromMaybe)
-import Data.Monoid                 (Monoid, mappend, mempty, mconcat)
-import System.FilePath             ( pathSeparator, extSeparator
-                                   , isExtSeparator, isPathSeparator
-                                   )
+import Control.Arrow                     (first)
+import Control.Monad.Trans.Class         (lift)
+import Control.Monad.Trans.Error         (ErrorT, runErrorT, throwError)
+import Control.Monad.Trans.Writer.Strict (Writer, runWriter, tell)
+import Control.Exception                 (assert)
+import Data.Char                         (isDigit, isAlpha, toLower)
+import Data.List                         (find, sortBy)
+import Data.Maybe                        (fromMaybe)
+import Data.Monoid                       (Monoid, mappend, mempty, mconcat)
+import System.FilePath                   ( pathSeparator, extSeparator
+                                         , isExtSeparator, isPathSeparator
+                                         )
 
 import System.FilePath.Glob.Utils ( dropLeadingZeroes
                                   , isLeft, fromLeft
@@ -451,16 +452,16 @@ charRange opts zs =
    char :: Char -> String -> ErrorT String (Writer CharRange) String
    char c ('-':x:xs) =
       if x == ']'
-         then tell [Left c, Left '-'] >> return xs
-         else tell [Right (c,x)]      >>     go xs
+         then ltell [Left c, Left '-'] >> return xs
+         else ltell [Right (c,x)]      >>     go xs
 
-   char c xs = tell [Left c] >> go xs
+   char c xs = ltell [Left c] >> go xs
 
    readClass :: String -> ErrorT String (Writer CharRange) String
    readClass xs = let (name,end) = span isAlpha xs
                    in case end of
-                           ':':']':rest -> charClass name           >> go rest
-                           _            -> tell [Left '[',Left ':'] >> go xs
+                           ':':']':rest -> charClass name            >> go rest
+                           _            -> ltell [Left '[',Left ':'] >> go xs
 
    charClass :: String -> ErrorT String (Writer CharRange) ()
    charClass name =
@@ -469,18 +470,18 @@ charRange opts zs =
       -- TODO: this is ASCII-only, not sure how this should be extended
       --       Unicode, or with a locale as input, or something else?
       case name of
-           "alnum"  -> tell [digit,upper,lower]
-           "alpha"  -> tell [upper,lower]
-           "blank"  -> tell blanks
-           "cntrl"  -> tell [Right ('\0','\x1f'), Left '\x7f']
-           "digit"  -> tell [digit]
-           "graph"  -> tell [Right ('!','~')]
-           "lower"  -> tell [lower]
-           "print"  -> tell [Right (' ','~')]
-           "punct"  -> tell punct
-           "space"  -> tell spaces
-           "upper"  -> tell [upper]
-           "xdigit" -> tell [digit, Right ('A','F'), Right ('a','f')]
+           "alnum"  -> ltell [digit,upper,lower]
+           "alpha"  -> ltell [upper,lower]
+           "blank"  -> ltell blanks
+           "cntrl"  -> ltell [Right ('\0','\x1f'), Left '\x7f']
+           "digit"  -> ltell [digit]
+           "graph"  -> ltell [Right ('!','~')]
+           "lower"  -> ltell [lower]
+           "print"  -> ltell [Right (' ','~')]
+           "punct"  -> ltell punct
+           "space"  -> ltell spaces
+           "upper"  -> ltell [upper]
+           "xdigit" -> ltell [digit, Right ('A','F'), Right ('a','f')]
            _        ->
               throwError ("compile :: unknown character class '" ++name++ "'")
 
@@ -490,6 +491,8 @@ charRange opts zs =
    punct  = map Right [('!','/'), (':','@'), ('[','`'), ('{','~')]
    blanks = [Left '\t',         Left ' ']
    spaces = [Right ('\t','\r'), Left ' ']
+
+   ltell = lift . tell
 
 
 ------------------------------------------

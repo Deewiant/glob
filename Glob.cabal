@@ -1,7 +1,7 @@
 Cabal-Version: >= 1.6
 
 Name:        Glob
-Version:     0.5.1
+Version:     0.6
 Homepage:    http://iki.fi/matti.niemenmaa/glob/
 Synopsis:    Globbing library
 Category:    System
@@ -23,12 +23,12 @@ Extra-Source-Files: CHANGELOG.txt
                     tests/Tests/*.hs
 
 Library
-   Build-Depends: base       >= 3 && < 5
-                , containers == 0.*
-                , directory  == 1.*
-                , dlist      == 0.*
-                , filepath   == 1.*
-                , mtl        >= 1.1 && < 2.1
+   Build-Depends: base         >= 3 && < 5
+                , containers   == 0.*
+                , directory    == 1.*
+                , dlist        == 0.*
+                , filepath     == 1.*
+                , transformers == 0.2.*
 
    if os(windows)
       Build-Depends: Win32 == 2.*
