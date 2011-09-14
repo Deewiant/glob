@@ -73,7 +73,7 @@ data TypedPattern
 -- 'Pattern' starts with a path separator, only the drive part of the
 -- 'FilePath' is used. On Posix systems these behaviours are equivalent:
 -- 'Pattern's starting with @\/@ work relative to @\/@. On Windows, 'Pattern's
--- starting with @\/@ or @\\@ work relative only to the drive part of
+-- starting with @\/@ or @\\@ work relative only to the drive part of the
 -- 'FilePath' and 'Pattern's starting with absolute paths ignore the
 -- 'FilePath'.
 --
