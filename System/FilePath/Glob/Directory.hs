@@ -67,8 +67,15 @@ data TypedPattern
 --
 -- If the given 'FilePath' is @[]@, 'getCurrentDirectory' will be used.
 --
--- If the given 'Pattern' starts with a path separator, it is not relative to
--- the given directory and the @dir@ parameter is completely ignored!
+-- If the given 'Pattern' starts with a drive (as defined by
+-- 'System.FilePath'), it is not relative to the given directory and the
+-- 'FilePath' parameter is completely ignored! Similarly, if the given
+-- 'Pattern' starts with a path separator, only the drive part of the
+-- 'FilePath' is used. On Posix systems these behaviours are equivalent:
+-- 'Pattern's starting with @\/@ work relative to @\/@. On Windows, 'Pattern's
+-- starting with @\/@ or @\\@ work relative only to the drive part of
+-- 'FilePath' and 'Pattern's starting with absolute paths ignore the
+-- 'FilePath'.
 --
 -- Note that in some cases results outside the given directory may be returned:
 -- for instance the @.*@ pattern matches the @..@ directory.
