@@ -10,15 +10,15 @@ import Control.Monad    (forM)
 import qualified Data.DList as DL
 import Data.DList       (DList)
 import Data.List        ((\\))
-import Data.Maybe       (listToMaybe)
 import System.Directory ( doesDirectoryExist, getDirectoryContents
                         , getCurrentDirectory
                         )
-import System.FilePath  ( (</>), extSeparator, isExtSeparator, pathSeparator
-                        , takeDrive
+import System.FilePath  ( (</>), takeDrive, splitDrive
+                        , extSeparator, isExtSeparator
+                        , pathSeparator, isPathSeparator
                         )
 
-import System.FilePath.Glob.Base  ( Pattern(..), Token(..), liftP
+import System.FilePath.Glob.Base  ( Pattern(..), Token(..)
                                   , MatchOptions, matchDefault
                                   )
 import System.FilePath.Glob.Match (matchWith)
@@ -114,13 +114,11 @@ glob = flip globDir1 ""
 globDir'0 :: MatchOptions -> Pattern -> FilePath
           -> IO (DList FilePath, DList FilePath)
 globDir'0 opts pat dir = do
-   (dir',pat') <-
-      if maybe False (==PathSeparator) . listToMaybe . unPattern $ pat
-         then do
-            curDir <- getCurrentDirectory
-            return (takeDrive curDir, liftP (dropWhile (==PathSeparator)) pat)
-         else fmap (flip (,) pat) $
-                 if null dir then getCurrentDirectory else return dir
+   let (pat', drive) = driveSplit pat
+   dir' <- case drive of
+                Just "" -> fmap takeDrive getCurrentDirectory
+                Just d  -> return d
+                Nothing -> if null dir then getCurrentDirectory else return dir
    globDir' opts (separate pat') dir'
 
 globDir' :: MatchOptions -> [TypedPattern] -> FilePath
@@ -219,6 +217,50 @@ unseparate = Pattern . foldr f []
    f (Any      p) ts = u p ++ ts
 
    u = unPattern
+
+-- Note that we consider "/foo" to specify a drive on Windows, even though it's
+-- relative to the current drive.
+--
+-- Returns the [TypedPattern] of the Pattern (with the drive dropped if
+-- appropriate) and, if the Pattern specified a drive, a Maybe representing the
+-- drive to use. If it's a Just "", use the drive of the current working
+-- directory.
+driveSplit :: Pattern -> (Pattern, Maybe FilePath)
+driveSplit = check . split . unPattern
+ where
+   -- We can't just use something like commonDirectory because of Windows
+   -- drives being possibly longer than one "directory", like "//?/foo/bar/".
+   -- So just take as much as possible.
+   split (LongLiteral _ l : xs) = first (l++) (split xs)
+   split (    Literal   l : xs) = first (l:) (split xs)
+   split (PathSeparator   : xs) = first (pathSeparator:) (split xs)
+   split ( ExtSeparator   : xs) = first ( extSeparator:) (split xs)
+   split xs                     = ([],xs)
+
+   -- The isPathSeparator check is interesting in two ways:
+   --
+   -- 1. It's correct to return simply Just "" because there can't be more than
+   --    one path separator if splitDrive gave a null drive: "//x" is a shared
+   --    "drive" in Windows and starts with the root "drive" in Posix.
+   --
+   -- 2. The 'head' is safe because we have not (null d) && null drive.
+   check (d,ps)
+      | null d                      = (Pattern     ps, Nothing)
+      | not (null drive)            = (dirify rest ps, Just drive)
+      | isPathSeparator (head rest) = (Pattern     ps, Just "")
+      | otherwise                   = (dirify d    ps, Nothing)
+    where
+      (drive, rest) = splitDrive d
+
+   dirify path = Pattern . (comp path++)
+
+   comp s = let (p,l) = foldr f ([],[]) s in if null l then p else ll l p
+    where
+      f c (p,l) | isExtSeparator  c = (ExtSeparator  : ll l p, [])
+                | isPathSeparator c = (PathSeparator : ll l p, [])
+                | otherwise         = (p, c:l)
+
+      ll l p = if null l then p else LongLiteral (length l) l : p
 
 -- |Factors out the directory component of a 'Pattern'. Useful in conjunction
 -- with 'globDir'.
