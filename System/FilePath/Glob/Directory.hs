@@ -110,7 +110,7 @@ globDirWith opts pats@(_:_) dir = do
           )
 
 -- |A convenience wrapper on top of 'globDir', for when you only have one
--- 'Pattern' you care about.
+-- 'Pattern' you care about. Returns only the matched paths.
 globDir1 :: Pattern -> FilePath -> IO [FilePath]
 globDir1 p = fmap (head . fst) . globDir [p]
 

@@ -1,10 +1,41 @@
 -- File created: 2008-10-10 13:37:42
 
--- | A library for globbing: matching patterns against file paths.
+-- | A library for globbing: matching patterns against file paths akin to the
+-- POSIX @glob()@ function.
 --
--- Basic usage: @'match' ('compile' pattern) filepath@.
+-- Pattern syntax is documented by 'compile'. To toggle features at compile
+-- time, look into 'CompOptions'. To modify matching behaviour, look into
+-- 'MatchOptions'.
 --
--- Basic usage in IO: @'globDir' ['compile' pattern] directory@.
+-- Basic usage examples:
+--
+-- Matching a 'String' pattern against a 'FilePath':
+--
+-- @
+-- 'match' ('compile' pattern) filepath
+-- @
+--
+-- Matching a 'String' pattern against all paths in the current working
+-- directory:
+--
+-- @
+-- 'glob' pattern
+-- @
+--
+-- Matching a 'String' pattern against all paths in a given directory (a
+-- 'FilePath'):
+--
+-- @
+-- 'globDir1' ('compile' pattern) directorypath
+-- @
+--
+-- Matching a list of 'String' patterns against all paths in a given directory,
+-- returning the matches for each pattern as well as the paths not matched by
+-- any of the patterns:
+--
+-- @
+-- 'globDir' (map 'compile' patterns) directorypath
+-- @
 module System.FilePath.Glob
    ( -- * Data type
      Pattern
