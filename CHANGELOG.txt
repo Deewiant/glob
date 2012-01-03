@@ -1,3 +1,11 @@
+0.7, 2012-01-03:
+	Changed function types:
+		System.FilePath.Glob.glob :: String -> IO [FilePath]
+			Now takes a String to be compiled instead of an already-compiled
+			Pattern.
+
+	Added a README and more basic usage documentation.
+
 0.6.1, 2011-09-14:
 	Bug fix: globDir should now ignore the given directory when given an
 	         absolute path on Windows.
