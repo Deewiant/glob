@@ -20,6 +20,7 @@ import System.FilePath  ( (</>), takeDrive, splitDrive
 
 import System.FilePath.Glob.Base  ( Pattern(..), Token(..)
                                   , MatchOptions, matchDefault
+                                  , compile
                                   )
 import System.FilePath.Glob.Match (matchWith)
 import System.FilePath.Glob.Utils ( getRecursiveContents
@@ -113,10 +114,15 @@ globDirWith opts pats@(_:_) dir = do
 globDir1 :: Pattern -> FilePath -> IO [FilePath]
 globDir1 p = fmap (head . fst) . globDir [p]
 
--- |A convenience wrapper on top of 'globDir1', for when you want to work in
--- the current directory or have a 'Pattern' referring to an absolute path.
-glob :: Pattern -> IO [FilePath]
-glob = flip globDir1 ""
+-- |The simplest IO function. Finds matches to the given pattern in the current
+-- working directory. Takes a 'String' instead of a 'Pattern' to avoid the need
+-- for a call to 'compile', simplifying usage further.
+--
+-- Can also be seen as a convenience wrapper on top of 'globDir1', for when you
+-- want to work in the current directory or have a pattern referring to an
+-- absolute path.
+glob :: String -> IO [FilePath]
+glob = flip globDir1 "" . compile
 
 globDir'0 :: MatchOptions -> Pattern -> FilePath
           -> IO (DList FilePath, DList FilePath)
