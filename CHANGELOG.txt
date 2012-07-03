@@ -1,3 +1,7 @@
+0.7.1, 2012-07-03:
+	Update dependencies to allow transformers-0.3, and generally tighten
+	them according to the policy.
+
 0.7, 2012-01-03:
 	Changed function types:
 		System.FilePath.Glob.glob :: String -> IO [FilePath]
