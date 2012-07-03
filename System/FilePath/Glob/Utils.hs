@@ -10,9 +10,11 @@ module System.FilePath.Glob.Utils
    , nubOrd
    , partitionDL
    , getRecursiveContents
+   , catchIO
    ) where
 
 import Control.Monad    (foldM)
+import qualified Control.Exception as E
 import Data.List        ((\\))
 import qualified Data.DList as DL
 import Data.DList       (DList)
@@ -125,7 +127,7 @@ doesDirectoryExist s =
 
 getRecursiveContents :: FilePath -> IO (DList FilePath)
 getRecursiveContents dir =
-   flip Prelude.catch (\_ -> return $ DL.singleton dir) $ do
+   flip catchIO (\_ -> return $ DL.singleton dir) $ do
 
       raw <- getDirectoryContents dir
 
@@ -160,3 +162,6 @@ nubOrd = go Set.empty
       if Set.member x set
          then go set xs
          else x : go (Set.insert x set) xs
+
+catchIO :: IO a -> (E.IOException -> IO a) -> IO a
+catchIO = E.catch
