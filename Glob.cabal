@@ -25,11 +25,11 @@ Extra-Source-Files: CHANGELOG.txt
 
 Library
    Build-Depends: base         >= 3 && < 5
-                , containers   == 0.*
-                , directory    == 1.*
-                , dlist        == 0.*
-                , filepath     == 1.*
-                , transformers == 0.2.*
+                , containers   <  0.6
+                , directory    <  1.2
+                , dlist        >= 0.4 && < 0.6
+                , filepath     >= 1.1 && < 1.4
+                , transformers >= 0.2 && < 0.3
 
    if os(windows)
       Build-Depends: Win32 == 2.*
