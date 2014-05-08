@@ -1,3 +1,6 @@
+0.7.5, 2014-05-08:
+	Update dependencies to allow transformers-0.4.
+
 0.7.4, 2014-03-18:
 	Update dependencies to allow dlist-0.7.
 
