@@ -23,6 +23,10 @@ Extra-Source-Files: CHANGELOG.txt
                     tests/*.hs
                     tests/Tests/*.hs
 
+Source-Repository head
+  Type: git
+  Location: https://github.com/Deewiant/glob
+
 Library
    Build-Depends: base         >= 4 && < 5
                 , containers   <  0.6
