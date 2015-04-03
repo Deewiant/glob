@@ -19,9 +19,6 @@ Build-Type: Simple
 Extra-Source-Files: CHANGELOG.txt
                     CREDITS.txt
                     README.txt
-                    tests/README.txt
-                    tests/*.hs
-                    tests/Tests/*.hs
 
 Source-Repository head
   Type: git
@@ -72,3 +69,11 @@ Test-Suite glob-tests
                   System.FilePath.Glob.Match
                   System.FilePath.Glob.Simplify
                   System.FilePath.Glob.Utils
+                  Tests.Base
+                  Tests.Compiler
+                  Tests.Instances
+                  Tests.Matcher
+                  Tests.Optimizer
+                  Tests.Regression
+                  Tests.Simplifier
+                  Tests.Utils
