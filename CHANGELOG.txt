@@ -1,6 +1,10 @@
 0.7.6, 2015-??-??:
 	Update dependencies to allow filepath-1.4.
 
+	Added Cabal Source-Repository metadata, pointing to GitHub.
+
+	Integrated tests with Cabal so that they can be run with "cabal test".
+
 0.7.5, 2014-05-08:
 	Update dependencies to allow transformers-0.4.
 
