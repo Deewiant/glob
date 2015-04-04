@@ -3,7 +3,7 @@
 module Tests.Simplifier (tests) where
 
 import Test.Framework
-import Test.Framework.Providers.QuickCheck
+import Test.Framework.Providers.QuickCheck2
 
 import System.FilePath.Glob.Base (tryCompileWith)
 import System.FilePath.Glob.Match

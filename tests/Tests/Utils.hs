@@ -4,7 +4,7 @@ module Tests.Utils (tests) where
 
 import Data.Maybe
 import Test.Framework
-import Test.Framework.Providers.QuickCheck
+import Test.Framework.Providers.QuickCheck2
 import Test.QuickCheck
 
 import System.FilePath.Glob.Utils

@@ -4,7 +4,7 @@ module Tests.Instances (tests) where
 
 import Data.Monoid (mempty, mappend)
 import Test.Framework
-import Test.Framework.Providers.QuickCheck
+import Test.Framework.Providers.QuickCheck2
 import Test.QuickCheck ((==>))
 
 import System.FilePath.Glob.Base (tryCompileWith)

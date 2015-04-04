@@ -4,7 +4,7 @@ module Tests.Matcher (tests) where
 
 import Control.Monad (ap)
 import Test.Framework
-import Test.Framework.Providers.QuickCheck
+import Test.Framework.Providers.QuickCheck2
 import Test.QuickCheck ((==>))
 
 import System.FilePath (isExtSeparator, isPathSeparator)

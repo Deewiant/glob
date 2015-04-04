@@ -3,7 +3,7 @@
 module Tests.Optimizer (tests) where
 
 import Test.Framework
-import Test.Framework.Providers.QuickCheck
+import Test.Framework.Providers.QuickCheck2
 
 import System.FilePath.Glob.Base  (tokenize, optimize)
 import System.FilePath.Glob.Match
