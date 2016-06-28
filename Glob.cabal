@@ -64,6 +64,9 @@ Test-Suite glob-tests
                 , test-framework-hunit       >= 0.2 && < 1
                 , test-framework-quickcheck2 >= 0.3 && < 1
 
+   if impl(ghc < 8.0)
+      Build-Depends: semigroups >= 0.18 && < 0.19
+
    if os(windows)
       Build-Depends: Win32 == 2.*
 
