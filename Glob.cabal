@@ -58,7 +58,7 @@ Test-Suite glob-tests
                 , dlist                      >= 0.4 && < 0.8
                 , filepath                   >= 1.1 && < 1.5
                 , transformers               >= 0.2 && < 0.6
-                , HUnit                      == 1.2.*
+                , HUnit                      >= 1.2 && < 1.4
                 , QuickCheck                 >= 2 && < 3
                 , test-framework             >= 0.2 && < 1
                 , test-framework-hunit       >= 0.2 && < 1
