@@ -8,6 +8,9 @@
 	Got rid of deprecation warnings by using Control.Monad.Trans.Except
 	instead of Control.Monad.Trans.Error.
 
+	Added Semigroup instance, bringing in a new dependency on semigroups on
+	pre-8.0 GHC versions.
+
 0.7.5, 2014-05-08:
 	Update dependencies to allow transformers-0.4.
 

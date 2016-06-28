@@ -26,8 +26,10 @@ import Control.Monad.Trans.Writer.Strict (Writer, runWriter, tell)
 import Control.Exception                 (assert)
 import Data.Char                         (isDigit, isAlpha, toLower)
 import Data.List                         (find, sortBy)
+import Data.List.NonEmpty                (toList)
 import Data.Maybe                        (fromMaybe)
 import Data.Monoid                       (Monoid, mappend, mempty, mconcat)
+import Data.Semigroup                    (Semigroup, (<>), sconcat, stimes)
 import System.FilePath                   ( pathSeparator, extSeparator
                                          , isExtSeparator, isPathSeparator
                                          )
@@ -151,10 +153,15 @@ instance Read Pattern where
       [(compile xs, rest)]
 #endif
 
+instance Semigroup Pattern where
+   Pattern a <> Pattern b = optimize $ Pattern (a <> b)
+   sconcat = optimize . Pattern . concatMap unPattern . toList
+   stimes n (Pattern a) = optimize $ Pattern (stimes n a)
+
 instance Monoid Pattern where
-   mempty                          = Pattern []
-   mappend (Pattern a) (Pattern b) = optimize . Pattern $ (a ++ b)
-   mconcat                         = optimize . Pattern . concatMap unPattern
+   mempty  = Pattern []
+   mappend = (<>)
+   mconcat = optimize . Pattern . concatMap unPattern
 
 -- |Options which can be passed to the 'tryCompileWith' or 'compileWith'
 -- functions: with these you can selectively toggle certain features at compile
