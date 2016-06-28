@@ -1,4 +1,4 @@
-0.7.6, 2015-??-??:
+0.7.6, 2016-06-28:
 	Update dependencies to allow filepath-1.4.
 
 	Added Cabal Source-Repository metadata, pointing to GitHub.
