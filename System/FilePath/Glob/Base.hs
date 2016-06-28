@@ -21,7 +21,7 @@ module System.FilePath.Glob.Base
 
 import Control.Arrow                     (first)
 import Control.Monad.Trans.Class         (lift)
-import Control.Monad.Trans.Error         (ErrorT, runErrorT, throwError)
+import Control.Monad.Trans.Except        (ExceptT, runExceptT, throwE)
 import Control.Monad.Trans.Writer.Strict (Writer, runWriter, tell)
 import Control.Exception                 (assert)
 import Data.Char                         (isDigit, isAlpha, toLower)
@@ -434,22 +434,22 @@ charRange opts zs =
    start ('-':xs) = run $ char '-' xs
    start xs       = run $ go xs
 
-   run :: ErrorT String (Writer CharRange) String
+   run :: ExceptT String (Writer CharRange) String
        -> (Either String CharRange, String)
-   run m = case runWriter.runErrorT $ m of
+   run m = case runWriter.runExceptT $ m of
                 (Left   err,  _) -> (Left err, [])
                 (Right rest, cs) -> (Right cs, rest)
 
-   go :: String -> ErrorT String (Writer CharRange) String
+   go :: String -> ExceptT String (Writer CharRange) String
    go ('[':':':xs) | characterClasses opts = readClass xs
    go (    ']':xs) = return xs
    go (      c:xs) =
       if not (pathSepInRanges opts) && isPathSeparator c
-         then throwError "compile :: path separator within []"
+         then throwE "compile :: path separator within []"
          else char c xs
-   go []           = throwError "compile :: unclosed [] in pattern"
+   go []           = throwE "compile :: unclosed [] in pattern"
 
-   char :: Char -> String -> ErrorT String (Writer CharRange) String
+   char :: Char -> String -> ExceptT String (Writer CharRange) String
    char c ('-':x:xs) =
       if x == ']'
          then ltell [Left c, Left '-'] >> return xs
@@ -457,13 +457,13 @@ charRange opts zs =
 
    char c xs = ltell [Left c] >> go xs
 
-   readClass :: String -> ErrorT String (Writer CharRange) String
+   readClass :: String -> ExceptT String (Writer CharRange) String
    readClass xs = let (name,end) = span isAlpha xs
                    in case end of
                            ':':']':rest -> charClass name            >> go rest
                            _            -> ltell [Left '[',Left ':'] >> go xs
 
-   charClass :: String -> ErrorT String (Writer CharRange) ()
+   charClass :: String -> ExceptT String (Writer CharRange) ()
    charClass name =
       -- The POSIX classes
       --
@@ -483,7 +483,7 @@ charRange opts zs =
            "upper"  -> ltell [upper]
            "xdigit" -> ltell [digit, Right ('A','F'), Right ('a','f')]
            _        ->
-              throwError ("compile :: unknown character class '" ++name++ "'")
+              throwE ("compile :: unknown character class '" ++name++ "'")
 
    digit  = Right ('0','9')
    upper  = Right ('A','Z')

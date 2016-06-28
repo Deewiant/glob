@@ -5,6 +5,9 @@
 
 	Integrated tests with Cabal so that they can be run with "cabal test".
 
+	Got rid of deprecation warnings by using Control.Monad.Trans.Except
+	instead of Control.Monad.Trans.Error.
+
 0.7.5, 2014-05-08:
 	Update dependencies to allow transformers-0.4.
 
