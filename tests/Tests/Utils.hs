@@ -9,7 +9,7 @@ import Test.QuickCheck
 
 import System.FilePath.Glob.Utils
 
-import Utils
+import Tests.Base ((-->))
 
 tests = testGroup "Utils"
    [ testProperty "overlapperLosesNoInfo" prop_overlapperLosesNoInfo

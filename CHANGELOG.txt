@@ -1,3 +1,7 @@
+0.7.11, 2016-08-08:
+	Got rid of tests/Utils.hs to fix test compilation on case-insensitive
+	filesystems (tests/Utils.hs vs tests/Tests/Utils.hs).
+
 0.7.10, 2016-07-18:
 	Update dependencies to allow dlist-0.8.
 

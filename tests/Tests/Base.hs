@@ -1,15 +1,13 @@
 -- File created: 2008-10-10 22:03:00
 
 module Tests.Base ( PString(unPS), Path(unP), COpts(unCOpts)
-                  , fromRight, isRight
+                  , (-->), fromRight, isRight
                   ) where
 
 import System.FilePath (extSeparator, pathSeparators)
 import Test.QuickCheck
 
 import System.FilePath.Glob.Base (CompOptions(..))
-
-import Utils (fromRight, isRight)
 
 newtype PString = PatString { unPS    :: String } deriving Show
 newtype Path    = Path      { unP     :: String } deriving Show
@@ -72,3 +70,11 @@ openRange = do
       , maybe "" show (b :: Maybe Int)
       , ">"
       ]
+
+fromRight (Right x) = x
+fromRight _         = error "fromRight :: Left"
+
+isRight (Right _) = True
+isRight _         = False
+
+a --> b = not a || b
