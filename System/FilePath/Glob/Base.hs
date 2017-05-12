@@ -30,6 +30,7 @@ import Data.List.NonEmpty                (toList)
 import Data.Maybe                        (fromMaybe)
 import Data.Monoid                       (Monoid, mappend, mempty, mconcat)
 import Data.Semigroup                    (Semigroup, (<>), sconcat, stimes)
+import Data.String                       (IsString(fromString))
 import System.FilePath                   ( pathSeparator, extSeparator
                                          , isExtSeparator, isPathSeparator
                                          )
@@ -162,6 +163,9 @@ instance Monoid Pattern where
    mempty  = Pattern []
    mappend = (<>)
    mconcat = optimize . Pattern . concatMap unPattern
+
+instance IsString Pattern where
+    fromString = compile
 
 -- |Options which can be passed to the 'tryCompileWith' or 'compileWith'
 -- functions: with these you can selectively toggle certain features at compile
