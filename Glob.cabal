@@ -1,7 +1,7 @@
 Cabal-Version: >= 1.9.2
 
 Name:        Glob
-Version:     0.7.14
+Version:     0.8.0
 Homepage:    http://iki.fi/matti.niemenmaa/glob/
 Synopsis:    Globbing library
 Category:    System

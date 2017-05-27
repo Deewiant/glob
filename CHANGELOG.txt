@@ -1,3 +1,6 @@
+0.8.0, 2017-05-27:
+        Added instance IsString Pattern, thanks to Mitsutoshi Aoe.
+
 0.7.14, 2016-12-29:
 	Update dependencies to allow directory-1.3.
 
