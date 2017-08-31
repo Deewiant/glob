@@ -58,6 +58,7 @@ module System.FilePath.Glob
    , matchDefault, matchPosix
      -- ** Miscellaneous
    , commonDirectory
+   , isLiteral
    ) where
 
 import System.FilePath.Glob.Base      ( Pattern
@@ -66,6 +67,7 @@ import System.FilePath.Glob.Base      ( Pattern
                                       , matchDefault, matchPosix
                                       , compile, compileWith, tryCompileWith
                                       , decompile
+                                      , isLiteral
                                       )
 import System.FilePath.Glob.Directory ( globDir, globDirWith, globDir1, glob
                                       , commonDirectory

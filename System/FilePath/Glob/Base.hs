@@ -17,6 +17,8 @@ module System.FilePath.Glob.Base
    , optimize
 
    , liftP, tokToLower
+
+   , isLiteral
    ) where
 
 import Control.Arrow                     (first)
@@ -638,3 +640,14 @@ sortCharRange = sortBy cmp
    cmp (Left   a)    (Right (b,_)) = compare a b
    cmp (Right (a,_)) (Left   b)    = compare a b
    cmp (Right (a,_)) (Right (b,_)) = compare a b
+
+-- |Returns `True` iff the given `Pattern` is a literal file path, i.e. it has
+-- no wildcards, character ranges, etc.
+isLiteral :: Pattern -> Bool
+isLiteral = all lit . unPattern
+ where
+   lit (Literal _) = True
+   lit ExtSeparator = True
+   lit PathSeparator = True
+   lit (LongLiteral _ _) = True
+   lit _ = False
