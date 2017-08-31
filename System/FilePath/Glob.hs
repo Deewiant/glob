@@ -53,9 +53,11 @@ module System.FilePath.Glob
      -- *** Options
    , MatchOptions(..)
    , matchWith
+   , GlobOptions(..)
    , globDirWith
      -- **** Predefined option sets
    , matchDefault, matchPosix
+   , globDefault
      -- ** Miscellaneous
    , commonDirectory
    ) where
@@ -67,7 +69,8 @@ import System.FilePath.Glob.Base      ( Pattern
                                       , compile, compileWith, tryCompileWith
                                       , decompile
                                       )
-import System.FilePath.Glob.Directory ( globDir, globDirWith, globDir1, glob
+import System.FilePath.Glob.Directory ( GlobOptions(..), globDefault
+                                      , globDir, globDirWith, globDir1, glob
                                       , commonDirectory
                                       )
 import System.FilePath.Glob.Match     (match, matchWith)

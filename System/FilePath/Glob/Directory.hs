@@ -1,7 +1,8 @@
 -- File created: 2008-10-16 12:12:50
 
 module System.FilePath.Glob.Directory
-   ( globDir, globDirWith, globDir1, glob
+   ( GlobOptions(..), globDefault
+   , globDir, globDirWith, globDir1, glob
    , commonDirectory
    ) where
 
@@ -29,6 +30,19 @@ import System.FilePath.Glob.Utils ( getRecursiveContents
                                   , partitionDL
                                   , catchIO
                                   )
+-- |Options which can be passed to the 'globDirWith' function.
+data GlobOptions = GlobOptions
+  { matchOptions :: MatchOptions
+  -- ^Options controlling how matching is performed; see 'MatchOptions'.
+  , includeUnmatched :: Bool
+  -- ^Whether to include unmatched files in the result.
+  }
+
+-- |The default set of globbing options: uses the default matching options, and
+-- does not include unmatched files.
+globDefault :: GlobOptions
+globDefault = GlobOptions matchDefault False
+
 -- The Patterns in TypedPattern don't contain PathSeparator or AnyDirectory
 --
 -- We store the number of PathSeparators that Dir and AnyDir were followed by
@@ -43,9 +57,8 @@ data TypedPattern
    deriving Show
 
 -- |Matches each given 'Pattern' against the contents of the given 'FilePath',
--- recursively. The result pair\'s first component contains the matched paths,
--- grouped for each given 'Pattern', and the second contains all paths which
--- were not matched by any 'Pattern'. The results are not in any defined order.
+-- recursively. The result contains the matched paths, grouped for each given
+-- 'Pattern'. The results are not in any defined order.
 --
 -- The given directory is prepended to all the matches: the returned paths are
 -- all valid from the point of view of the current working directory.
@@ -62,7 +75,7 @@ data TypedPattern
 -- the directory: the matching is performed relative to the directory, so that
 -- for instance the following is true:
 --
--- > fmap (head.fst) (globDir [compile "*"] dir) == getDirectoryContents dir
+-- > fmap head (globDir [compile "*"] dir) == getDirectoryContents dir
 --
 -- (With the exception that that glob won't match anything beginning with @.@.)
 --
@@ -86,17 +99,24 @@ data TypedPattern
 --
 -- Directories without read permissions are returned as entries but their
 -- contents, of course, are not.
-globDir :: [Pattern] -> FilePath -> IO ([[FilePath]], [FilePath])
-globDir = globDirWith matchDefault
+globDir :: [Pattern] -> FilePath -> IO [[FilePath]]
+globDir pats dir = fmap fst $ globDirWith globDefault pats dir
 
--- |Like 'globDir', but applies the given 'MatchOptions' instead of the
--- defaults when matching.
-globDirWith :: MatchOptions -> [Pattern] -> FilePath
-            -> IO ([[FilePath]], [FilePath])
-globDirWith _ []   dir = do
-   dir' <- if null dir then getCurrentDirectory else return dir
-   c <- getRecursiveContents dir'
-   return ([], DL.toList c)
+-- |Like 'globDir', but applies the given 'GlobOptions' instead of the
+-- defaults when matching. The first component of the returned tuple contains
+-- the matched paths, grouped for each given 'Pattern', and the second contains
+-- Just the unmatched paths if the given 'GlobOptions' specified that unmatched
+-- files should be included, or otherwise Nothing.
+globDirWith :: GlobOptions -> [Pattern] -> FilePath
+            -> IO ([[FilePath]], Maybe [FilePath])
+globDirWith opts []   dir =
+   if includeUnmatched opts
+      then do
+         dir' <- if null dir then getCurrentDirectory else return dir
+         c <- getRecursiveContents dir'
+         return ([], Just (DL.toList c))
+      else
+         return ([], Nothing)
 
 globDirWith opts pats@(_:_) dir = do
    results <- mapM (\p -> globDir'0 opts p dir) pats
@@ -106,13 +126,15 @@ globDirWith opts pats@(_:_) dir = do
        allOthers         = DL.toList . DL.concat $ others
 
    return ( map DL.toList matches
-          , nubOrd allOthers \\ allMatches
+          , if includeUnmatched opts
+               then Just (nubOrd allOthers \\ allMatches)
+               else Nothing
           )
 
 -- |A convenience wrapper on top of 'globDir', for when you only have one
 -- 'Pattern' you care about. Returns only the matched paths.
 globDir1 :: Pattern -> FilePath -> IO [FilePath]
-globDir1 p = fmap (head . fst) . globDir [p]
+globDir1 p = fmap head . globDir [p]
 
 -- |The simplest IO function. Finds matches to the given pattern in the current
 -- working directory. Takes a 'String' instead of a 'Pattern' to avoid the need
@@ -124,7 +146,7 @@ globDir1 p = fmap (head . fst) . globDir [p]
 glob :: String -> IO [FilePath]
 glob = flip globDir1 "" . compile
 
-globDir'0 :: MatchOptions -> Pattern -> FilePath
+globDir'0 :: GlobOptions -> Pattern -> FilePath
           -> IO (DList FilePath, DList FilePath)
 globDir'0 opts pat dir = do
    let (pat', drive) = driveSplit pat
@@ -134,7 +156,7 @@ globDir'0 opts pat dir = do
                 Nothing -> if null dir then getCurrentDirectory else return dir
    globDir' opts (separate pat') dir'
 
-globDir' :: MatchOptions -> [TypedPattern] -> FilePath
+globDir' :: GlobOptions -> [TypedPattern] -> FilePath
          -> IO (DList FilePath, DList FilePath)
 globDir' opts pats@(_:_) dir = do
    entries <- getDirectoryContents dir `catchIO` const (return [])
@@ -150,34 +172,34 @@ globDir' _ [] dir =
    -- original pattern had a trailing PathSeparator. Reproduce it here.
    return (DL.singleton (dir ++ [pathSeparator]), DL.empty)
 
-matchTypedAndGo :: MatchOptions
+matchTypedAndGo :: GlobOptions
                 -> [TypedPattern]
                 -> FilePath -> FilePath
                 -> IO (DList FilePath, DList FilePath)
 
 -- (Any p) is always the last element
 matchTypedAndGo opts [Any p] path absPath =
-   if matchWith opts p path
+   if matchWith (matchOptions opts) p path
       then return (DL.singleton absPath, DL.empty)
-      else doesDirectoryExist absPath >>= didn'tMatch path absPath
+      else doesDirectoryExist absPath >>= didn'tMatch opts path absPath
 
 matchTypedAndGo opts (Dir n p:ps) path absPath = do
    isDir <- doesDirectoryExist absPath
-   if isDir && matchWith opts p path
+   if isDir && matchWith (matchOptions opts) p path
       then globDir' opts ps (absPath ++ replicate n pathSeparator)
-      else didn'tMatch path absPath isDir
+      else didn'tMatch opts path absPath isDir
 
 matchTypedAndGo opts (AnyDir n p:ps) path absPath = do
    if path `elem` [".",".."]
-      then didn'tMatch path absPath True
+      then didn'tMatch opts path absPath True
       else do
          isDir <- doesDirectoryExist absPath
-         let m = matchWith opts (unseparate ps)
+         let m = matchWith (matchOptions opts) (unseparate ps)
              unconditionalMatch =
                 null (unPattern p) && not (isExtSeparator $ head path)
              p' = Pattern (unPattern p ++ [AnyNonPathSeparator])
 
-         case unconditionalMatch || matchWith opts p' path of
+         case unconditionalMatch || matchWith (matchOptions opts) p' path of
               True | isDir  -> do
                  contents <- getRecursiveContents
                                 (absPath ++ replicate n pathSeparator)
@@ -189,21 +211,25 @@ matchTypedAndGo opts (AnyDir n p:ps) path absPath = do
                        else partitionDL (any m . pathParts) contents
 
               True | m path -> return (DL.singleton absPath, DL.empty)
-              _             -> didn'tMatch path absPath isDir
+              _             -> didn'tMatch opts path absPath isDir
 
 matchTypedAndGo _ _ _ _ = error "Glob.matchTypedAndGo :: internal error"
 
 -- To be called when a pattern didn't match a path: given the path and whether
 -- it was a directory, return all paths which didn't match (i.e. for a file,
 -- just the file, and for a directory, everything inside it).
-didn'tMatch :: FilePath -> FilePath -> Bool
+didn'tMatch :: GlobOptions -> FilePath -> FilePath -> Bool
             -> IO (DList FilePath, DList FilePath)
-didn'tMatch path absPath isDir = (fmap $ (,) DL.empty) $
-   if isDir
-      then if path `elem` [".",".."]
-              then return DL.empty
-              else getRecursiveContents absPath
-      else return$ DL.singleton absPath
+didn'tMatch opts path absPath isDir =
+   if includeUnmatched opts
+      then (fmap $ (,) DL.empty) $
+         if isDir
+            then if path `elem` [".",".."]
+                    then return DL.empty
+                    else getRecursiveContents absPath
+            else return$ DL.singleton absPath
+      else
+         return (DL.empty, DL.empty)
 
 separate :: Pattern -> [TypedPattern]
 separate = go DL.empty . unPattern
