@@ -26,6 +26,7 @@ tests = testGroup "Directory"
        [ testGroup "edge-cases" commonDirectoryEdgeCases
        , testProperty "property" prop_commonDirectory
        ]
+   , testCase "globDir1" caseGlobDir1
    ]
 
 caseIncludeUnmatched = do
@@ -70,6 +71,17 @@ caseOnlyMatched = do
 
    zipWithM assertEqualUnordered expectedMatches (fst result)
    assertEqual "" Nothing (snd result)
+
+caseGlobDir1 = do
+   -- this is little a bit of a hack; we pass the same pattern twice to ensure
+   -- that the optimization in the single pattern case is bypassed
+   let naiveGlobDir1 p = fmap head . globDir [p, p]
+   let pat = compile "FilePath/*/*.hs"
+   let dir = "System"
+
+   actual <- globDir1 pat dir
+   expected <- naiveGlobDir1 pat dir
+   assertEqual "" expected actual
 
 assertEqualUnordered :: (Ord a, Show a) => [a] -> [a] -> Assertion
 assertEqualUnordered = assertEqual "" `on` sort
