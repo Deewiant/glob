@@ -75,6 +75,7 @@ Test-Suite glob-tests
    Other-Modules: System.FilePath.Glob.Base
                   System.FilePath.Glob.Directory
                   System.FilePath.Glob.Match
+                  System.FilePath.Glob.Primitive
                   System.FilePath.Glob.Simplify
                   System.FilePath.Glob.Utils
                   Tests.Base
