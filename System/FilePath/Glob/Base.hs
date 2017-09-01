@@ -522,8 +522,8 @@ optimize = liftP (fin . go)
    -- Has to be done here: we can't backtrack in go, but some cases might
    -- result in consecutive Literals being generated.
    -- E.g. "a[b]".
-   fin (x:y:xs) | isLiteral x && isLiteral y =
-      let (ls,rest) = span isLiteral xs
+   fin (x:y:xs) | isCharLiteral x && isCharLiteral y =
+      let (ls,rest) = span isCharLiteral xs
        in fin $ LongLiteral (length ls + 2)
                             (foldr (\(Literal a) -> (a:)) [] (x:y:ls))
                 : rest
@@ -571,14 +571,14 @@ optimize = liftP (fin . go)
 
    compressors = [isStar, isStarSlash, isAnyNumber]
 
-   isLiteral   (Literal _)                 = True
-   isLiteral   _                           = False
-   isStar      AnyNonPathSeparator         = True
-   isStar      _                           = False
-   isStarSlash AnyDirectory                = True
-   isStarSlash _                           = False
-   isAnyNumber (OpenRange Nothing Nothing) = True
-   isAnyNumber _                           = False
+   isCharLiteral (Literal _)                 = True
+   isCharLiteral _                           = False
+   isStar        AnyNonPathSeparator         = True
+   isStar        _                           = False
+   isStarSlash   AnyDirectory                = True
+   isStarSlash   _                           = False
+   isAnyNumber   (OpenRange Nothing Nothing) = True
+   isAnyNumber   _                           = False
 
 optimizeCharRange :: Token -> Token
 optimizeCharRange (CharRange b_ rs) = fin b_ . go . sortCharRange $ rs
