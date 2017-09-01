@@ -21,7 +21,7 @@ tests = testGroup "Directory"
 
 caseIncludeUnmatched = do
    let pats = ["**/D*.hs", "**/[MU]*.hs"]
-   everything <- (DList.toList <$> getRecursiveContents "System")
+   everything <- (fmap DList.toList (getRecursiveContents "System"))
                  >>= removeDirectories
    let expectedMatches =
           [ [ "System/FilePath/Glob/Directory.hs" ]
