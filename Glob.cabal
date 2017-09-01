@@ -79,6 +79,7 @@ Test-Suite glob-tests
                   System.FilePath.Glob.Utils
                   Tests.Base
                   Tests.Compiler
+                  Tests.Directory
                   Tests.Instances
                   Tests.Matcher
                   Tests.Optimizer

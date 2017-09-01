@@ -6,6 +6,7 @@ import System.Environment (getArgs)
 import Test.Framework
 
 import qualified Tests.Compiler   as Compiler
+import qualified Tests.Directory  as Directory
 import qualified Tests.Instances  as Instances
 import qualified Tests.Matcher    as Matcher
 import qualified Tests.Optimizer  as Optimizer
@@ -29,4 +30,5 @@ tests =
    , Optimizer.tests
    , Simplifier.tests
    , Instances.tests
+   , Directory.tests
    ]
