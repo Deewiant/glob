@@ -109,7 +109,20 @@ globDir pats dir = fmap fst $ globDirWith globDefault pats dir
 -- files should be included, or otherwise Nothing.
 globDirWith :: GlobOptions -> [Pattern] -> FilePath
             -> IO ([[FilePath]], Maybe [FilePath])
-globDirWith opts []   dir =
+globDirWith opts [pat] dir | not (includeUnmatched opts) =
+   -- This is an optimization for the case where only one pattern has been
+   -- passed and we are not including unmatched files: we can use
+   -- 'commonDirectory' to avoid some calls to 'getDirectoryContents'.
+   let (prefix, pat') = commonDirectory pat
+    in globDirWith' opts [pat'] (dir </> prefix)
+
+globDirWith opts pats dir =
+   globDirWith' opts pats dir
+
+-- See 'globDirWith'.
+globDirWith' :: GlobOptions -> [Pattern] -> FilePath
+            -> IO ([[FilePath]], Maybe [FilePath])
+globDirWith' opts []   dir =
    if includeUnmatched opts
       then do
          dir' <- if null dir then getCurrentDirectory else return dir
@@ -118,7 +131,7 @@ globDirWith opts []   dir =
       else
          return ([], Nothing)
 
-globDirWith opts pats@(_:_) dir = do
+globDirWith' opts pats@(_:_) dir = do
    results <- mapM (\p -> globDir'0 opts p dir) pats
 
    let (matches, others) = unzip results
