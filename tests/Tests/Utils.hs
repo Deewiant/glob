@@ -3,18 +3,20 @@
 module Tests.Utils (tests) where
 
 import Data.Maybe
+import Data.List (isSuffixOf)
 import Test.Framework
 import Test.Framework.Providers.QuickCheck2
 import Test.QuickCheck
 
 import System.FilePath.Glob.Utils
 
-import Tests.Base ((-->))
+import Tests.Base ((-->), unP)
 
 tests = testGroup "Utils"
    [ testProperty "overlapperLosesNoInfo" prop_overlapperLosesNoInfo
    , testProperty "increasingSeq"         prop_increasingSeq
    , testProperty "addToRange"            prop_addToRange
+   , testProperty "pathParts"             prop_pathParts
    ]
 
 validateRange (a,b) = if b > a then (a,b) else (b,a)
@@ -41,3 +43,7 @@ prop_addToRange x c =
    let r  = validateRange x
        r' = addToRange r c
     in isJust r' ==> inRange (fromJust r') (c :: Float)
+
+prop_pathParts pstr =
+   let p = unP pstr
+    in all (`isSuffixOf` p) (pathParts p)

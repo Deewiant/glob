@@ -10,13 +10,14 @@ import Control.Arrow    (first, second)
 import Control.Monad    (forM)
 import qualified Data.DList as DL
 import Data.DList       (DList)
-import Data.List        ((\\))
+import Data.List        ((\\), stripPrefix, find)
 import System.Directory ( doesDirectoryExist, getDirectoryContents
                         , getCurrentDirectory
                         )
 import System.FilePath  ( (</>), takeDrive, splitDrive
                         , extSeparator, isExtSeparator
                         , pathSeparator, isPathSeparator
+                        , takeDirectory
                         )
 
 import System.FilePath.Glob.Base  ( Pattern(..), Token(..)
@@ -213,20 +214,56 @@ matchTypedAndGo opts (AnyDir n p:ps) path absPath = do
              p' = Pattern (unPattern p ++ [AnyNonPathSeparator])
 
          case unconditionalMatch || matchWith (matchOptions opts) p' path of
-              True | isDir  -> do
-                 contents <- getRecursiveContents
-                                (absPath ++ replicate n pathSeparator)
+              True | isDir -> do
+                 contents <- getRecursiveContents absPath
                  return $
                     -- foo**/ should match foo/ and nothing below it
                     -- relies on head contents == absPath
                     if null ps
-                       then (DL.singleton $ DL.head contents, DL.tail contents)
-                       else partitionDL (any m . pathParts) contents
+                       then ( DL.singleton $
+                                DL.head contents
+                                ++ replicate n pathSeparator
+                            , DL.tail contents
+                            )
+                       else let (matches, nonMatches) =
+                                   partitionDL fst
+                                      (fmap (recursiveMatch n m) contents)
+                             in (fmap snd matches, fmap snd nonMatches)
 
-              True | m path -> return (DL.singleton absPath, DL.empty)
-              _             -> didn'tMatch opts path absPath isDir
+              True | m path ->
+                 return ( DL.singleton $
+                             takeDirectory absPath
+                             ++ replicate n pathSeparator
+                             ++ path
+                        , DL.empty
+                        )
+              _ ->
+                 didn'tMatch opts path absPath isDir
 
 matchTypedAndGo _ _ _ _ = error "Glob.matchTypedAndGo :: internal error"
+
+recursiveMatch :: Int -> (FilePath -> Bool) -> FilePath -> (Bool, FilePath)
+recursiveMatch n isMatch path =
+   case find isMatch (pathParts path) of
+        Just matchedSuffix ->
+           case stripSuffix matchedSuffix path of
+                Just dir ->
+                   ( True
+                   , dir
+                     ++ replicate (n-1) pathSeparator
+                     ++ matchedSuffix
+                   )
+                Nothing ->
+                   -- the fact that we won't hit this branch relies on the
+                   -- property that every element of `pathParts fp` is a suffix
+                   -- of `fp`.
+                   error "Glob.recursiveMatch :: internal error"
+        Nothing ->
+           (False, path)
+
+   where
+   stripSuffix suffix =
+      fmap reverse . stripPrefix (reverse suffix) . reverse
 
 -- To be called when a pattern didn't match a path: given the path and whether
 -- it was a directory, return all paths which didn't match (i.e. for a file,
