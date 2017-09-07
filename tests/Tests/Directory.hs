@@ -5,13 +5,14 @@ import Test.Framework.Providers.HUnit
 import Test.Framework.Providers.QuickCheck2
 import Test.QuickCheck (Property, (===))
 import Test.HUnit.Base
-import Control.Monad (filterM, zipWithM)
+import Control.Monad (filterM, zipWithM, when)
+import Data.Foldable (for_, find)
 import Data.Function (on)
 import Data.Monoid ((<>))
 import Data.List ((\\), sort)
 import qualified Data.DList as DList
 import System.Directory (doesDirectoryExist)
-import System.FilePath (takeBaseName)
+import System.FilePath (takeBaseName, normalise)
 
 import System.FilePath.Glob.Base
 import System.FilePath.Glob.Directory
@@ -27,6 +28,7 @@ tests = testGroup "Directory"
        , testProperty "property" prop_commonDirectory
        ]
    , testCase "globDir1" caseGlobDir1
+   , testGroup "repeated-path-separators" caseRepeatedPathSeparators
    ]
 
 caseIncludeUnmatched = do
@@ -49,12 +51,7 @@ caseIncludeUnmatched = do
        Nothing ->
           assertFailure "Expected Just a list of unmatched files"
        Just unmatched -> do
-          assertEqualUnordered everythingElse (applyHack unmatched)
-
-   where
-   -- FIXME: slashes are not correctly preserved with AnyDirectory (that is,
-   -- **) patterns. This hack works around that so that these tests can run.
-   applyHack = ("System/FilePath" :) . filter (/= "System/FilePath/")
+          assertEqualUnordered everythingElse unmatched
 
 caseOnlyMatched = do
    let pats = ["**/D*.hs", "**/[MU]*.hs"]
@@ -116,4 +113,51 @@ commonDirectoryEdgeCases = zipWith mkTest [1..] testData
       , ("[.]foo/bar/*", ("", compile "[.]foo/bar/*"))
       , ("foo.bar/baz/*", ("foo.bar/baz/", compile "*"))
       , ("foo[.]bar/baz/*", ("foo.bar/baz/", compile "*"))
+      ]
+
+-- see #16
+caseRepeatedPathSeparators = zipWith mkTest [1..] testData
+   where
+   mkTest i (dir, pat, expected) =
+      testCase (show i) $ do
+         actual <- globDir1 (compile pat) dir
+         assertEqualUnordered expected actual
+
+   testData =
+      [ ( "System"
+        , "*//Glob///[U]*.hs"
+        , [ "System/FilePath//Glob///Utils.hs"
+          ]
+        )
+      , ( "System"
+        , "**//[GU]*.hs"
+        , [ "System/FilePath//Glob.hs"
+          , "System/FilePath/Glob//Utils.hs"
+          ]
+        )
+      , ( "System"
+        , "File**/"
+        , [ "System/FilePath/"
+          ]
+        )
+      , ( "System"
+        , "File**//"
+        , [ "System/FilePath//"
+          ]
+        )
+      , ( "System"
+        , "File**///"
+        , [ "System/FilePath///"
+          ]
+        )
+      , ( "System/FilePath"
+        , "**//Glob.hs"
+        , [ "System/FilePath//Glob.hs"
+          ]
+        )
+      , ( "System"
+        , "**Path/Glob//Utils.hs"
+        , [ "System/FilePath/Glob//Utils.hs"
+          ]
+        )
       ]

@@ -10,13 +10,14 @@ import Control.Arrow    (first, second)
 import Control.Monad    (forM)
 import qualified Data.DList as DL
 import Data.DList       (DList)
-import Data.List        ((\\))
+import Data.List        ((\\), find)
 import System.Directory ( doesDirectoryExist, getDirectoryContents
                         , getCurrentDirectory
                         )
 import System.FilePath  ( (</>), takeDrive, splitDrive
                         , extSeparator, isExtSeparator
                         , pathSeparator, isPathSeparator
+                        , takeDirectory
                         )
 
 import System.FilePath.Glob.Base  ( Pattern(..), Token(..)
@@ -213,20 +214,68 @@ matchTypedAndGo opts (AnyDir n p:ps) path absPath = do
              p' = Pattern (unPattern p ++ [AnyNonPathSeparator])
 
          case unconditionalMatch || matchWith (matchOptions opts) p' path of
-              True | isDir  -> do
-                 contents <- getRecursiveContents
-                                (absPath ++ replicate n pathSeparator)
+              True | isDir -> do
+                 contents <- getRecursiveContents absPath
                  return $
                     -- foo**/ should match foo/ and nothing below it
                     -- relies on head contents == absPath
                     if null ps
-                       then (DL.singleton $ DL.head contents, DL.tail contents)
-                       else partitionDL (any m . pathParts) contents
+                       then ( DL.singleton $
+                                DL.head contents
+                                ++ replicate n pathSeparator
+                            , DL.tail contents
+                            )
+                       else let (matches, nonMatches) =
+                                   partitionDL fst
+                                      (fmap (recursiveMatch n m) contents)
+                             in (fmap snd matches, fmap snd nonMatches)
 
-              True | m path -> return (DL.singleton absPath, DL.empty)
-              _             -> didn'tMatch opts path absPath isDir
+              True | m path ->
+                 return ( DL.singleton $
+                             takeDirectory absPath
+                             ++ replicate n pathSeparator
+                             ++ path
+                        , DL.empty
+                        )
+              _ ->
+                 didn'tMatch opts path absPath isDir
 
 matchTypedAndGo _ _ _ _ = error "Glob.matchTypedAndGo :: internal error"
+
+-- To be called to check whether a filepath matches the part of a pattern
+-- following an **/ (AnyDirectory) token and reconstruct the filepath with the
+-- correct number of slashes. Arguments are:
+--
+-- * Int: number of slashes in the AnyDirectory token, i.e. 1 for **/, 2 for
+--   **//, and so on
+--
+-- * FilePath -> Bool: matching function for the remainder of the pattern, to
+--   determine whether the rest of the filepath following the AnyDirectory token
+--   matches
+--
+-- * FilePath: the (entire) filepath to be checked: some file which is in a
+--   subdirectory of a directory which matches the prefix of the pattern up to
+--   the AnyDirectory token.
+--
+-- The returned tuple contains both the result, where True means the filepath
+-- matches and should be included in the resulting list of matching files, and
+-- False otherwise. We also include the filepath in the returned tuple, because
+-- this function also takes care of including the correct number of slashes
+-- in the result. For example, with a pattern **//foo/bar.txt, this function
+-- would ensure that, if dir/foo/bar.txt exists, it would be returned as
+-- dir//foo/bar.txt.
+recursiveMatch :: Int -> (FilePath -> Bool) -> FilePath -> (Bool, FilePath)
+recursiveMatch n isMatch path =
+   case find isMatch (pathParts path) of
+        Just matchedSuffix ->
+           let dir = take (length path - length matchedSuffix) path
+            in ( True
+               , dir
+                 ++ replicate (n-1) pathSeparator
+                 ++ matchedSuffix
+               )
+        Nothing ->
+           (False, path)
 
 -- To be called when a pattern didn't match a path: given the path and whether
 -- it was a directory, return all paths which didn't match (i.e. for a file,
