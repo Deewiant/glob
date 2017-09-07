@@ -10,7 +10,7 @@ import Control.Arrow    (first, second)
 import Control.Monad    (forM)
 import qualified Data.DList as DL
 import Data.DList       (DList)
-import Data.List        ((\\), stripPrefix, find)
+import Data.List        ((\\), find)
 import System.Directory ( doesDirectoryExist, getDirectoryContents
                         , getCurrentDirectory
                         )
@@ -242,28 +242,40 @@ matchTypedAndGo opts (AnyDir n p:ps) path absPath = do
 
 matchTypedAndGo _ _ _ _ = error "Glob.matchTypedAndGo :: internal error"
 
+-- To be called to check whether a filepath matches the part of a pattern
+-- following an **/ (AnyDirectory) token and reconstruct the filepath with the
+-- correct number of slashes. Arguments are:
+--
+-- * Int: number of slashes in the AnyDirectory token, i.e. 1 for **/, 2 for
+--   **//, and so on
+--
+-- * FilePath -> Bool: matching function for the remainder of the pattern, to
+--   determine whether the rest of the filepath following the AnyDirectory token
+--   matches
+--
+-- * FilePath: the (entire) filepath to be checked: some file which is in a
+--   subdirectory of a directory which matches the prefix of the pattern up to
+--   the AnyDirectory token.
+--
+-- The returned tuple contains both the result, where True means the filepath
+-- matches and should be included in the resulting list of matching files, and
+-- False otherwise. We also include the filepath in the returned tuple, because
+-- this function also takes care of including the correct number of slashes
+-- in the result. For example, with a pattern **//foo/bar.txt, this function
+-- would ensure that, if dir/foo/bar.txt exists, it would be returned as
+-- dir//foo/bar.txt.
 recursiveMatch :: Int -> (FilePath -> Bool) -> FilePath -> (Bool, FilePath)
 recursiveMatch n isMatch path =
    case find isMatch (pathParts path) of
         Just matchedSuffix ->
-           case stripSuffix matchedSuffix path of
-                Just dir ->
-                   ( True
-                   , dir
-                     ++ replicate (n-1) pathSeparator
-                     ++ matchedSuffix
-                   )
-                Nothing ->
-                   -- the fact that we won't hit this branch relies on the
-                   -- property that every element of `pathParts fp` is a suffix
-                   -- of `fp`.
-                   error "Glob.recursiveMatch :: internal error"
+           let dir = take (length path - length matchedSuffix) path
+            in ( True
+               , dir
+                 ++ replicate (n-1) pathSeparator
+                 ++ matchedSuffix
+               )
         Nothing ->
            (False, path)
-
-   where
-   stripSuffix suffix =
-      fmap reverse . stripPrefix (reverse suffix) . reverse
 
 -- To be called when a pattern didn't match a path: given the path and whether
 -- it was a directory, return all paths which didn't match (i.e. for a file,
