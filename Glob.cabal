@@ -47,6 +47,8 @@ Library
                     System.FilePath.Glob.Simplify
                     System.FilePath.Glob.Utils
 
+   GHC-Options: -Wall
+
 Test-Suite glob-tests
    type: exitcode-stdio-1.0
 

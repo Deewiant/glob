@@ -2,7 +2,7 @@ env:
    - CABALVER=1.18 GHCVER=7.4.1 # Debian 7
    - CABALVER=1.20 GHCVER=7.6.3 # Debian 8
    - CABALVER=1.18 GHCVER=7.8.4
-   - CABALVER=1.22 GHCVER=7.10.1
+   - CABALVER=1.22 GHCVER=7.10.3
    - CABALVER=1.24 GHCVER=8.0.2
    - CABALVER=1.24 GHCVER=8.2.1
    - CABALVER=head GHCVER=head
@@ -26,7 +26,7 @@ install:
 
 script:
    - cabal configure --enable-tests --enable-benchmarks -v2
-   - cabal build
+   - cabal build --ghc-options=-Werror
    - cabal test --show-details=failures
    - cabal haddock
    - cabal check

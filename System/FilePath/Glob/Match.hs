@@ -1,10 +1,14 @@
 -- File created: 2008-10-10 13:29:03
 
+{-# LANGUAGE CPP #-}
+
 module System.FilePath.Glob.Match (match, matchWith) where
 
 import Control.Exception (assert)
 import Data.Char         (isDigit, toLower, toUpper)
+#if !MIN_VERSION_base(4,8,0)
 import Data.Monoid       (mappend)
+#endif
 import System.FilePath   (isPathSeparator, isExtSeparator)
 
 import System.FilePath.Glob.Base  ( Pattern(..), Token(..)
