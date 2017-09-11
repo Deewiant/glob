@@ -30,7 +30,10 @@ import Data.Char                         (isDigit, isAlpha, toLower)
 import Data.List                         (find, sortBy)
 import Data.List.NonEmpty                (toList)
 import Data.Maybe                        (fromMaybe)
+-- Monoid is re-exported from Prelude as of 4.8.0.0
+#if !MIN_VERSION_base(4,8,0)
 import Data.Monoid                       (Monoid, mappend, mempty, mconcat)
+#endif
 import Data.Semigroup                    (Semigroup, (<>), sconcat, stimes)
 import Data.String                       (IsString(fromString))
 import System.FilePath                   ( pathSeparator, extSeparator
