@@ -63,6 +63,7 @@ data Token
 
    -- after optimization only
    | LongLiteral !Int String
+   | Unmatchable  -- [/], or [.] at the beginning or after a path separator
    deriving (Eq)
 
 -- Note: CharRanges aren't converted, because this is tricky in general.
@@ -104,8 +105,7 @@ liftP f (Pattern pat) = Pattern (f pat)
 
 instance Show Token where
    show (Literal c)
-      | c `elem` "*?[<" || isExtSeparator c
-                            = ['[',c,']']
+      | c `elem` "*?[<"     = ['[',c,']']
       | otherwise           = assert (not $ isPathSeparator c) [c]
    show ExtSeparator        = [ extSeparator]
    show PathSeparator       = [pathSeparator]
@@ -142,6 +142,8 @@ instance Show Token where
                  , beg, caret, exclamation, rest
                  , "]"
                  ]
+
+   show Unmatchable = "[.]"
 
 instance Show Pattern where
    showsPrec d p = showParen (d > 10) $
@@ -517,7 +519,7 @@ charRange opts zs =
 
 
 optimize :: Pattern -> Pattern
-optimize = liftP (fin . go)
+optimize = liftP (fin . checkUnmatchable . convertExtSeparators . go)
  where
    fin [] = []
 
@@ -572,6 +574,41 @@ optimize = liftP (fin . go)
                              else go (x : ys)
            Nothing -> x : go xs
 
+   convertExtSeparators [] = []
+   convertExtSeparators ts =
+      case spanSegment ts of
+           (Literal '.' : _, _, _) ->
+              [Unmatchable]
+           (ExtSeparator : ts', seps, rest) ->
+              ExtSeparator : convert ts'
+              ++ seps
+              ++ convertExtSeparators rest
+           (ts', seps, rest) ->
+              convert ts'
+              ++ seps
+              ++ convertExtSeparators rest
+      where
+      convert [] = []
+      convert (ExtSeparator : xs) = Literal '.' : convert xs
+      convert (x : xs) = x : convert xs
+
+   -- Split the given list of tokens into:
+   --   * tokens up until the next path separator
+   --   * path separator(s)
+   --   * everything else
+   --
+   -- so e.g. spanSegment applied to foo//bar/baz should give
+   -- (foo, //, bar/baz).
+   spanSegment :: [Token] -> ([Token], [Token], [Token])
+   spanSegment ts =
+      let (segment, rest') = span (/= PathSeparator) ts
+          (separators, rest) = span (== PathSeparator) rest'
+       in (segment, separators, rest)
+
+   -- needs to be after 'go', so that optimizeCharRange takes care of [/], but
+   -- before 'fin', i.e. before Literals are changed into LongLiterals.
+   checkUnmatchable ts = if Unmatchable `elem` ts then [Unmatchable] else ts
+
    compressors = [isStar, isStarSlash, isAnyNumber]
 
    isCharLiteral (Literal _)                 = True
@@ -589,7 +626,7 @@ optimizeCharRange (CharRange b_ rs) = fin b_ . go . sortCharRange $ rs
    -- [/] is interesting, it actually matches nothing at all
    -- [.] can be Literalized though, just don't make it into an ExtSeparator so
    --     that it doesn't match a leading dot
-   fin True [Left  c] | not (isPathSeparator c) = Literal c
+   fin True [Left  c] = if isPathSeparator c then Unmatchable else Literal c
    fin True [Right r] | r == (minBound,maxBound) = NonPathSeparator
    fin b x = CharRange b x
 

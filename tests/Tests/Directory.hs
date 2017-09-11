@@ -96,23 +96,31 @@ getRecursiveContentsDir :: FilePath -> IO [FilePath]
 getRecursiveContentsDir root =
   fmap (filter (/= root) . DList.toList) (getRecursiveContents root)
 
-prop_commonDirectory :: PString -> Property
-prop_commonDirectory pstr =
-   let pat    = compile (unPS pstr)
+-- These two patterns should always be equal
+prop_commonDirectory' :: String -> (Pattern, Pattern)
+prop_commonDirectory' str =
+   let pat    = compile str
        (a, b) = commonDirectory pat
-    in pat === (literal a <> b)
+    in (pat, literal a <> b)
+
+prop_commonDirectory :: PString -> Property
+prop_commonDirectory = uncurry (===) . prop_commonDirectory' . unPS
 
 commonDirectoryEdgeCases = zipWith mkTest [1..] testData
    where
    mkTest i (input, expected) =
-      testCase (show i)
-               (assertEqual "" expected (commonDirectory (compile input)))
+      testCase (show i) $ do
+         assertEqual "" expected (commonDirectory (compile input))
+         uncurry (assertEqual "") (prop_commonDirectory' input)
+
    testData =
-      [ ("[.]/*", ("", compile "[.]/*"))
-      , ("foo/[.]bar/*", ("foo/", compile "[.]bar/*"))
+      [ ("[.]/*", ("", compile "[.]"))
+      , ("foo/[.]bar/*", ("", compile "[.]"))
       , ("[.]foo/bar/*", ("", compile "[.]foo/bar/*"))
       , ("foo.bar/baz/*", ("foo.bar/baz/", compile "*"))
+      , ("[f]oo[.]/bar/*", ("foo./bar/", compile "*"))
       , ("foo[.]bar/baz/*", ("foo.bar/baz/", compile "*"))
+      , (".[.]/foo/*", ("../foo/", compile "*"))
       ]
 
 -- see #16

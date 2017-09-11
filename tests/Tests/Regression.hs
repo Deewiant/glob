@@ -31,8 +31,8 @@ nameMatchTest (False,p,s) = show p ++ " doesn't match " ++ show s
 decompileCases =
    [ ("range-compression-1", "[*]",   "[*]")
    , ("range-compression-2", "[.]",   "[.]")
-   , ("range-compression-3", "**[/]", "*[/]")
-   , ("range-compression-4", "x[.]",  "x[.]")
+   , ("range-compression-3", "**[/]", "[.]")
+   , ("range-compression-4", "x[.]",  "x.")
    , ("range-compression-5", "[^~-]", "[^~-]")
    , ("range-compression-6", "[^!-]", "[^!-]")
    ]
