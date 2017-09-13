@@ -124,6 +124,7 @@ matchCases =
    , (False, "[^-~]"      , "X")
    , (False, "[^^-~]"     , "x")
    , (False, "[^-]"       , "-")
+   , (True,  "//"         , "//")
    ]
 
 matchWithCases =

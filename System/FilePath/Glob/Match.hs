@@ -75,7 +75,8 @@ match' o (NonPathSeparator:xs) (c:cs) =
    not (isPathSeparator c) && match' o xs cs
 
 match' o (PathSeparator   :xs) (c:cs) =
-   isPathSeparator c && begMatch o xs (dropWhile isPathSeparator cs)
+   isPathSeparator c && begMatch o (dropWhile (== PathSeparator) xs)
+                                   (dropWhile isPathSeparator cs)
 
 match' o (CharRange b rng :xs) (c:cs) =
    let rangeMatch r =
