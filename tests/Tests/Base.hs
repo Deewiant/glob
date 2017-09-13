@@ -31,10 +31,14 @@ instance Arbitrary PString where
       s <- mapM (const $ frequency xs) [1..size]
       return.PatString $ concat s
 
+   shrink (PatString s) = map PatString (shrink s)
+
 instance Arbitrary Path where
    arbitrary = sized $ \size -> do
       s <- mapM (const $ plain alpha) [1..size `mod` 16]
       return.Path $ concat s
+
+   shrink (Path s) = map Path (shrink s)
 
 instance Arbitrary COpts where
    arbitrary = do
