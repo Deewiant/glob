@@ -17,6 +17,7 @@ tests = testGroup "Matcher"
    [ testProperty "match-1" prop_match1
    , testProperty "match-2" prop_match2
    , testProperty "match-3" prop_match3
+   , testProperty "match-4" prop_match4
    ]
 
 -- ./foo should be equivalent to foo in both path and pattern
@@ -48,3 +49,16 @@ prop_match3 p_ =
        ~(x:_) = p
     in not (null p || isPathSeparator x || isExtSeparator x)
        ==> match (compile "[!/]") [x]
+
+-- Anything should match itself, when compiled with everything disabled.
+prop_match4 ps_ =
+   let ps = unPS ps_
+       noOpts = CompOptions { characterClasses = False
+                            , characterRanges = False
+                            , numberRanges = False
+                            , wildcards = False
+                            , recursiveWildcards = False
+                            , pathSepInRanges = False
+                            , errorRecovery = True
+                            }
+    in match (compileWith noOpts ps) ps
