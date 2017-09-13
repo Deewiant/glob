@@ -44,10 +44,14 @@ begMatch _ (ExtSeparator:AnyDirectory:_) (x:y:_)
    | isExtSeparator x && isExtSeparator y = False
 
 begMatch opts (ExtSeparator:PathSeparator:pat) s | ignoreDotSlash opts =
-   begMatch opts (dropWhile isSlash pat) s
+   begMatch opts (dropWhile isSlash pat) (dropDotSlash s)
  where
    isSlash PathSeparator = True
    isSlash _             = False
+
+   dropDotSlash (x:y:ys) | isExtSeparator x && isPathSeparator y =
+      dropWhile isPathSeparator ys
+   dropDotSlash xs = xs
 
 begMatch opts pat (x:y:s)
    | dotSlash && dotStarSlash        = match' opts pat' s
