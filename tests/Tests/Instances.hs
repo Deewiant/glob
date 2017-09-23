@@ -42,8 +42,7 @@ prop_monoidLaw3 opt x =
     in isRight e && mappend a mempty == a
 
 -- mappending two Patterns should be equivalent to appending the original
--- strings they came from and compiling that, as long as the second doesn't
--- start with [.]
+-- strings they came from and compiling that
 --
 -- (notice: relies on the fact that our Arbitrary instance doesn't generate
 -- unclosed [] or <>; we only check for **/)
