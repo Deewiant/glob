@@ -130,6 +130,8 @@ match' o (LongLiteral len s:xs) path =
    let (pre,cs) = splitAt len path
     in pre == s && match' o xs cs
 
+match' _ (Unmatchable:_) _ = False
+
 -- Does the actual open range matching: finds whether the third parameter
 -- is between the first two or not.
 --
