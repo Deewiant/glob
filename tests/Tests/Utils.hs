@@ -37,7 +37,7 @@ prop_overlapperLosesNoInfo x1 x2 c =
 
 prop_increasingSeq a xs =
    let s = fst . increasingSeq $ a:xs
-    in s == reverse [a :: Float .. head s]
+    in a <= 2^23 ==> s == reverse [a :: Float .. head s]
 
 prop_addToRange x c =
    let r  = validateRange x
