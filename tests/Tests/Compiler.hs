@@ -6,12 +6,14 @@ import Test.Framework
 import Test.Framework.Providers.QuickCheck2
 import Test.QuickCheck ((==>))
 
-import System.FilePath.Glob.Base (tryCompileWith, compile, decompile)
+import System.FilePath.Glob.Base
+   (CompOptions(..), compDefault, compile, decompile, isLiteral, tryCompileWith)
 
 import Tests.Base
 
 tests = testGroup "Compiler"
    [ testProperty "compile-decompile-1" prop_compileDecompile1
+   , testProperty "isliteral" prop_isLiteral
    ]
 
 -- compile . decompile should be the identity function
@@ -21,3 +23,16 @@ prop_compileDecompile1 o s =
        pat1  = fromRight epat1
        pat2  = compile . decompile $ pat1
     in isRight epat1 ==> pat1 == pat2
+
+prop_isLiteral p =
+   let epat = tryCompileWith noWildcardOptions (unPS p)
+       pat = fromRight epat
+    in isRight epat ==> (isLiteral . compile . decompile) pat
+ where
+   noWildcardOptions = compDefault
+      { characterClasses   = False
+      , characterRanges    = False
+      , numberRanges       = False
+      , wildcards          = False
+      , recursiveWildcards = False
+      }
