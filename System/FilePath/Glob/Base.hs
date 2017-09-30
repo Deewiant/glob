@@ -588,15 +588,6 @@ optimize (Pattern pat) =
            x'@(CharRange _ _) -> x' : go xs
            x'                 -> go (x':xs)
 
-   -- <a-a> -> a
-   go (OpenRange (Just a) (Just b):xs)
-      | a == b = LongLiteral (length a) a : go xs
-
-   -- <a-b> -> [a-b]
-   -- a and b are guaranteed non-null
-   go (OpenRange (Just [a]) (Just [b]):xs)
-      | b > a = go $ CharRange True [Right (a,b)] : xs
-
    go (x:xs) =
       case find ($ x) compressors of
            Just c  -> let (compressed,ys) = span c xs
