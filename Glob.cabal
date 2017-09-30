@@ -89,3 +89,5 @@ Test-Suite glob-tests
                   Tests.Regression
                   Tests.Simplifier
                   Tests.Utils
+
+   GHC-Options: -Wall
