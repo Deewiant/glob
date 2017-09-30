@@ -7,7 +7,7 @@ import Test.Framework
 import Test.Framework.Providers.QuickCheck2
 import Test.QuickCheck ((==>))
 
-import System.FilePath.Glob.Base (tryCompileWith)
+import System.FilePath.Glob.Base (Token(Unmatchable), tryCompileWith, unPattern)
 import System.FilePath.Glob.Match
 import System.FilePath.Glob.Simplify
 
@@ -45,7 +45,7 @@ prop_monoidLaw3 opt x =
 -- strings they came from and compiling that
 --
 -- (notice: relies on the fact that our Arbitrary instance doesn't generate
--- unclosed [] or <>; we only check for **/)
+-- unclosed [] or <>; we only check for **/ and Unmatchable)
 prop_monoid4 opt x y =
    let o     = unCOpts opt
        es    = map (tryCompileWith o . unPS) [x,y]
@@ -56,6 +56,6 @@ prop_monoid4 opt x y =
        head2 = take 2 . unPS $ y
     in     (last2 /= "**" && take 1 head2 /= "/")
         && (take 1 last2 /= "*" && take 2 head2 /= "*/")
-        && (take 3 (unPS y) /= "[.]")
         && all isRight es && isRight cat2
+        && take 1 (unPattern b) /= [Unmatchable]
        ==> cat1 == fromRight cat2
