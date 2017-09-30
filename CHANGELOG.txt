@@ -1,3 +1,51 @@
+0.9.0, 2017-09-30:
+	New functions, data types, and constants:
+		System.FilePath.Glob.isLiteral :: Pattern -> Bool
+			Tells whether a Pattern is a literal file path.
+
+		System.FilePath.Glob.GlobOptions
+			Options for the glob* family of IO functions.
+
+		System.FilePath.Glob.globDefault :: GlobOptions
+			Use matchDefault and don't return unmatched files.
+
+
+	Changed function types:
+		System.FilePath.Glob.globDir :: [Pattern] -> FilePath -> IO [[FilePath]]
+			No longer returns unmatched paths, like globDir1.
+
+		System.FilePath.Glob.globDirWith :: GlobOptions -> [Pattern] -> FilePath -> IO ([[FilePath]], Maybe [FilePath])
+			Takes GlobOptions instead of MatchOptions, and returns
+			unmatched paths in a Maybe corresponding to whether they
+			were requested in the options or not.
+
+			This is a significant performance boost for all glob*
+			functions when unmatched file paths are not desired.
+
+	Optimization: when unmatched file paths are not requested, glob and
+	              globDir1 use commonDirectory to avoid extra
+	              getDirectoryContents calls at the start.
+	Optimization: character ranges containing . or / are simplified more
+	              than before, especially when they make the entire pattern
+	              incapable of matching anything.
+	Optimization: extension separator matching where the extension is
+	              surrounded by other literals (e.g. "*.txt" or "foo.*" or
+	              simply "foo.txt") should be quicker in general, and the
+	              Patterns should be smaller. (This adds to the number of
+	              places where the code assumes that the extension separator
+	              is the '.' character.)
+
+	Bug fix: commonDirectory should no longer add extra directory separators
+	         to the Pattern.
+	Bug fix: the glob* functions should now place slashes correctly when
+	         using recursively matching patterns with extra slashes, such as
+	         "**//foo".
+	Bug fix: number ranges are no longer optimized to single characters, so
+	         that leading zeroes are handled correctly: e.g. "<0-9>" didn't
+	         match "007".
+	Bug fix: "//" did not match itself.
+	Bug fix: ".//" did not match itself.
+
 0.8.0, 2017-05-27:
         Added instance IsString Pattern, thanks to Mitsutoshi Aoe.
 
