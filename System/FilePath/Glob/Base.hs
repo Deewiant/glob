@@ -121,6 +121,9 @@ instance Show Token where
    -- just put them at the end.
    --
    -- Also, [^x-] was sorted and should not become [^-x].
+   --
+   -- Also, for something like [/!^] or /[.^!] that got optimized to have just ^
+   -- and ! we need to add a dummy /.
    show (CharRange b r)     =
       let f = either (:[]) (\(x,y) -> [x,'-',y])
           (caret,exclamation,fs) =
@@ -139,6 +142,7 @@ instance Show Token where
                                  else (s',"")
        in concat [ "["
                  , if b then "" else "^"
+                 , if b && null beg && not (null caret && null exclamation) then "/" else ""
                  , beg, caret, exclamation, rest
                  , "]"
                  ]
@@ -574,13 +578,13 @@ optimize (Pattern pat) =
    go (p@PathSeparator : ExtSeparator : xs) = p : Literal '.' : go xs
    go (ExtSeparator : xs) = Literal '.' : go xs
    go (p@PathSeparator : x@(CharRange _ _) : xs) =
-      p : case optimizeCharRange x of
+      p : case optimizeCharRange True x of
              x'@(CharRange _ _) -> x' : go xs
              Literal '.'        -> [Unmatchable]
              x'                 -> go (x':xs)
 
    go (x@(CharRange _ _) : xs) =
-      case optimizeCharRange x of
+      case optimizeCharRange False x of
            x'@(CharRange _ _) -> x' : go xs
            x'                 -> go (x':xs)
 
@@ -614,15 +618,20 @@ optimize (Pattern pat) =
    isAnyNumber   (OpenRange Nothing Nothing) = True
    isAnyNumber   _                           = False
 
-optimizeCharRange :: Token -> Token
-optimizeCharRange (CharRange b_ rs) = fin b_ . go . sortCharRange $ rs
+optimizeCharRange :: Bool -> Token -> Token
+optimizeCharRange precededBySlash (CharRange b rs) =
+   fin . stripUnmatchable . go . sortCharRange $ rs
  where
    -- [/] is interesting, it actually matches nothing at all
    -- [.] can be Literalized though, just don't make it into an ExtSeparator so
    --     that it doesn't match a leading dot
-   fin True [Left  c] = if isPathSeparator c then Unmatchable else Literal c
-   fin True [Right r] | r == (minBound,maxBound) = NonPathSeparator
-   fin b x = CharRange b x
+   fin [Left  c] | b = if isPathSeparator c then Unmatchable else Literal c
+   fin [Right r] | b && r == (minBound,maxBound) = NonPathSeparator
+   fin x = CharRange b x
+
+   stripUnmatchable xs@(_:_:_) | b =
+      filter (\x -> (not precededBySlash || x /= Left '.') && x /= Left '/') xs
+   stripUnmatchable xs = xs
 
    go [] = []
 
@@ -665,7 +674,7 @@ optimizeCharRange (CharRange b_ rs) = fin b_ . go . sortCharRange $ rs
                    -- [a-cb-d] -> [a-d]
                    Just o  -> go$ Right o : ys
                    Nothing -> x : go xs
-optimizeCharRange _ = error "Glob.optimizeCharRange :: internal error"
+optimizeCharRange _ _ = error "Glob.optimizeCharRange :: internal error"
 
 sortCharRange :: [Either Char (Char,Char)] -> [Either Char (Char,Char)]
 sortCharRange = sortBy cmp

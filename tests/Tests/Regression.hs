@@ -35,6 +35,9 @@ decompileCases =
    , ("range-compression-4", "x[.]",  "x.")
    , ("range-compression-5", "[^~-]", "[^~-]")
    , ("range-compression-6", "[^!-]", "[^!-]")
+   , ("range-compression-7", "/[a.]", "/a")
+   , ("range-compression-8", "/[.!^]", "/[/^!]")
+   , ("range-compression-9", "[/!^]", "[/^!]")
    ]
 
 matchCases =
