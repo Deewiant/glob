@@ -22,6 +22,7 @@ tests = testGroup "Matcher"
 
 -- ./foo should be equivalent to foo in both path and pattern
 -- ... but not when exactly one of the two starts with /
+-- ... and when both start with /, not when adding ./ to only one of them
 prop_match1 o p_ pth_ =
    let p0    = unPS p_
        pth0  = unP pth_
@@ -37,11 +38,16 @@ prop_match1 o p_ pth_ =
        pth' = "./" ++ pth
     in not (null p) && isRight ep && isRight ep'
        ==> all (uncurry (==)) . (zip`ap`tail) $
-              [ match pat  pth
-              , match pat  pth'
-              , match pat' pth
-              , match pat' pth'
-              ]
+              if isPathSeparator (head p)
+                 && not (null pth) && isPathSeparator (head pth)
+                 then [ match pat  pth
+                      , match pat' pth'
+                      ]
+                 else [ match pat  pth
+                      , match pat  pth'
+                      , match pat' pth
+                      , match pat' pth'
+                      ]
 
 -- [/] shouldn't match anything
 prop_match2 = not . match (compile "[/]")  . take 1 . unP
