@@ -40,7 +40,7 @@ prop_overlapperLosesNoInfo x1 x2 c =
 prop_increasingSeq :: Float -> [Float] -> Property
 prop_increasingSeq a xs =
    let s = fst . increasingSeq $ a:xs
-    in a <= 2^(23 :: Int) ==> s == reverse [a .. head s]
+    in abs a <= 2^(23 :: Int) ==> s == reverse [a .. head s]
 
 prop_addToRange :: (Float, Float) -> Float -> Property
 prop_addToRange x c =
