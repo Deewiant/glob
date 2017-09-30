@@ -35,15 +35,13 @@ prop_match1 o p_ pth_ =
        pat  = fromRight ep
        pat' = fromRight ep'
        pth' = "./" ++ pth
-    in and [ isRight ep, isRight ep'
-           , ( all (uncurry (==)) . (zip`ap`tail) $
-                  [ match pat  pth
-                  , match pat  pth'
-                  , match pat' pth
-                  , match pat' pth'
-                  ]
-             ) || null p
-           ]
+    in not (null p) && isRight ep && isRight ep'
+       ==> all (uncurry (==)) . (zip`ap`tail) $
+              [ match pat  pth
+              , match pat  pth'
+              , match pat' pth
+              , match pat' pth'
+              ]
 
 -- [/] shouldn't match anything
 prop_match2 = not . match (compile "[/]")  . take 1 . unP

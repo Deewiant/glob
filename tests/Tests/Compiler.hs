@@ -4,6 +4,7 @@ module Tests.Compiler (tests) where
 
 import Test.Framework
 import Test.Framework.Providers.QuickCheck2
+import Test.QuickCheck ((==>))
 
 import System.FilePath.Glob.Base (tryCompileWith, compile, decompile)
 
@@ -19,4 +20,4 @@ prop_compileDecompile1 o s =
        epat1 = tryCompileWith opt (unPS s)
        pat1  = fromRight epat1
        pat2  = compile . decompile $ pat1
-    in isRight epat1 && pat1 == pat2
+    in isRight epat1 ==> pat1 == pat2
