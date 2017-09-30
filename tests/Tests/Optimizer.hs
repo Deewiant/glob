@@ -7,7 +7,7 @@ import Test.Framework.Providers.QuickCheck2
 import Test.QuickCheck (Property, (==>))
 
 import System.FilePath.Glob.Base
-   (Token(ExtSeparator, Literal), optimize, liftP, tokenize, unPattern)
+   (Token(..), optimize, liftP, tokenize, unPattern)
 import System.FilePath.Glob.Match
 
 import Tests.Base
@@ -28,18 +28,23 @@ prop_optimize1 o s =
 
 -- Optimizing shouldn't affect whether a match succeeds
 --
--- ...except for the ExtSeparator removal, because it's explicitly not handled
--- in matching.
+-- ...except for some things that are explicitly not handled in matching:
+--  * ExtSeparator removal
+--  * AnyNonPathSeparator flattening
 prop_optimize2 :: COpts -> PString -> Path -> Property
 prop_optimize2 o p s =
    let x   = tokenize (unCOpts o) (unPS p)
        pat = fromRight x
        pth = unP s
-    in isRight x ==> match (liftP (map replaceExtSeparator) pat) pth
+    in isRight x ==> match (liftP miniOptimize pat) pth
                      == match (optimize pat) pth
  where
-   replaceExtSeparator ExtSeparator = Literal '.'
-   replaceExtSeparator t = t
+   miniOptimize = go
+
+   go (ExtSeparator : xs) = Literal '.' : go xs
+   go (AnyNonPathSeparator : xs@(AnyNonPathSeparator : _)) = go xs
+   go (x:xs) = x : go xs
+   go [] = []
 
 -- Optimizing should remove all ExtSeparators
 prop_optimize3 :: COpts -> PString -> Property
