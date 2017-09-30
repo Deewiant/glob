@@ -4,15 +4,11 @@ import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.Framework.Providers.QuickCheck2
 import Test.QuickCheck (Property, (===))
-import Test.HUnit.Base
-import Control.Monad (filterM, zipWithM, when)
-import Data.Foldable (for_, find)
+import Test.HUnit.Base hiding (Test)
 import Data.Function (on)
 import Data.Monoid ((<>))
 import Data.List ((\\), sort)
 import qualified Data.DList as DList
-import System.Directory (doesDirectoryExist)
-import System.FilePath (takeBaseName, normalise)
 
 import System.FilePath.Glob.Base
 import System.FilePath.Glob.Directory
@@ -20,17 +16,19 @@ import System.FilePath.Glob.Primitive
 import System.FilePath.Glob.Utils
 import Tests.Base (PString, unPS)
 
+tests :: Test
 tests = testGroup "Directory"
    [ testCase "includeUnmatched" caseIncludeUnmatched
    , testCase "onlyMatched" caseOnlyMatched
    , testGroup "commonDirectory"
-       [ testGroup "edge-cases" commonDirectoryEdgeCases
+       [ testGroup "edge-cases" testsCommonDirectoryEdgeCases
        , testProperty "property" prop_commonDirectory
        ]
    , testCase "globDir1" caseGlobDir1
-   , testGroup "repeated-path-separators" caseRepeatedPathSeparators
+   , testGroup "repeated-path-separators" testsRepeatedPathSeparators
    ]
 
+caseIncludeUnmatched :: Assertion
 caseIncludeUnmatched = do
    let pats = ["**/D*.hs", "**/[MU]*.hs"]
    everything <- getRecursiveContentsDir "System"
@@ -45,7 +43,7 @@ caseIncludeUnmatched = do
    result <- globDirWith (GlobOptions matchDefault True)
                          (map compile pats)
                          "System"
-   zipWithM assertEqualUnordered expectedMatches (fst result)
+   mapM_ (uncurry assertEqualUnordered) (zip expectedMatches (fst result))
 
    case snd result of
        Nothing ->
@@ -53,6 +51,7 @@ caseIncludeUnmatched = do
        Just unmatched -> do
           assertEqualUnordered everythingElse unmatched
 
+caseOnlyMatched :: Assertion
 caseOnlyMatched = do
    let pats = ["**/D*.hs", "**/[MU]*.hs"]
    let expectedMatches =
@@ -66,9 +65,10 @@ caseOnlyMatched = do
                          (map compile pats)
                          "System"
 
-   zipWithM assertEqualUnordered expectedMatches (fst result)
+   mapM_ (uncurry assertEqualUnordered) (zip expectedMatches (fst result))
    assertEqual "" Nothing (snd result)
 
+caseGlobDir1 :: Assertion
 caseGlobDir1 = do
    -- this is little a bit of a hack; we pass the same pattern twice to ensure
    -- that the optimization in the single pattern case is bypassed
@@ -106,8 +106,9 @@ prop_commonDirectory' str =
 prop_commonDirectory :: PString -> Property
 prop_commonDirectory = uncurry (===) . prop_commonDirectory' . unPS
 
-commonDirectoryEdgeCases = zipWith mkTest [1..] testData
-   where
+testsCommonDirectoryEdgeCases :: [Test]
+testsCommonDirectoryEdgeCases = zipWith mkTest [1 :: Int ..] testData
+ where
    mkTest i (input, expected) =
       testCase (show i) $ do
          assertEqual "" expected (commonDirectory (compile input))
@@ -124,8 +125,9 @@ commonDirectoryEdgeCases = zipWith mkTest [1..] testData
       ]
 
 -- see #16
-caseRepeatedPathSeparators = zipWith mkTest [1..] testData
-   where
+testsRepeatedPathSeparators :: [Test]
+testsRepeatedPathSeparators = zipWith mkTest [1 :: Int ..] testData
+ where
    mkTest i (dir, pat, expected) =
       testCase (show i) $ do
          actual <- globDir1 (compile pat) dir

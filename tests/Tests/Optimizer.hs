@@ -4,7 +4,7 @@ module Tests.Optimizer (tests) where
 
 import Test.Framework
 import Test.Framework.Providers.QuickCheck2
-import Test.QuickCheck ((==>))
+import Test.QuickCheck (Property, (==>))
 
 import System.FilePath.Glob.Base
    (Token(ExtSeparator, Literal), optimize, liftP, tokenize, unPattern)
@@ -12,6 +12,7 @@ import System.FilePath.Glob.Match
 
 import Tests.Base
 
+tests :: Test
 tests = testGroup "Optimizer"
    [ testProperty "optimize-1" prop_optimize1
    , testProperty "optimize-2" prop_optimize2
@@ -19,6 +20,7 @@ tests = testGroup "Optimizer"
    ]
 
 -- Optimizing twice should give the same result as optimizing once
+prop_optimize1 :: COpts -> PString -> Property
 prop_optimize1 o s =
    let pat = tokenize (unCOpts o) (unPS s)
        xs = iterate optimize (fromRight pat)
@@ -28,6 +30,7 @@ prop_optimize1 o s =
 --
 -- ...except for the ExtSeparator removal, because it's explicitly not handled
 -- in matching.
+prop_optimize2 :: COpts -> PString -> Path -> Property
 prop_optimize2 o p s =
    let x   = tokenize (unCOpts o) (unPS p)
        pat = fromRight x
@@ -39,6 +42,7 @@ prop_optimize2 o p s =
    replaceExtSeparator t = t
 
 -- Optimizing should remove all ExtSeparators
+prop_optimize3 :: COpts -> PString -> Property
 prop_optimize3 o p =
    let x   = tokenize (unCOpts o) (unPS p)
        pat = fromRight x

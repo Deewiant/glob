@@ -5,7 +5,7 @@ module Tests.Matcher (tests) where
 import Control.Monad (ap)
 import Test.Framework
 import Test.Framework.Providers.QuickCheck2
-import Test.QuickCheck ((==>))
+import Test.QuickCheck (Property, (==>))
 
 import System.FilePath (isExtSeparator, isPathSeparator)
 import System.FilePath.Glob.Base
@@ -13,6 +13,7 @@ import System.FilePath.Glob.Match
 
 import Tests.Base
 
+tests :: Test
 tests = testGroup "Matcher"
    [ testProperty "match-1" prop_match1
    , testProperty "match-2" prop_match2
@@ -23,6 +24,7 @@ tests = testGroup "Matcher"
 -- ./foo should be equivalent to foo in both path and pattern
 -- ... but not when exactly one of the two starts with /
 -- ... and when both start with /, not when adding ./ to only one of them
+prop_match1 :: COpts -> PString -> Path -> Property
 prop_match1 o p_ pth_ =
    let p0    = unPS p_
        pth0  = unP pth_
@@ -50,9 +52,11 @@ prop_match1 o p_ pth_ =
                       ]
 
 -- [/] shouldn't match anything
+prop_match2 :: Path -> Bool
 prop_match2 = not . match (compile "[/]")  . take 1 . unP
 
 -- [!/] is like ?
+prop_match3 :: Path -> Property
 prop_match3 p_ =
    let p = unP p_
        ~(x:_) = p
@@ -60,6 +64,7 @@ prop_match3 p_ =
        ==> match (compile "[!/]") [x]
 
 -- Anything should match itself, when compiled with everything disabled.
+prop_match4 :: PString -> Bool
 prop_match4 ps_ =
    let ps = unPS ps_
        noOpts = CompOptions { characterClasses = False

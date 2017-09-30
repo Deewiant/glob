@@ -4,6 +4,7 @@ module Tests.Base ( PString(unPS), Path(unP), COpts(unCOpts)
                   , (-->), fromRight, isRight
                   ) where
 
+import Data.Either (isRight)
 import System.FilePath (extSeparator, pathSeparators)
 import Test.QuickCheck
 
@@ -13,6 +14,7 @@ newtype PString = PatString { unPS    :: String } deriving Show
 newtype Path    = Path      { unP     :: String } deriving Show
 newtype COpts   = COpts     { unCOpts :: CompOptions } deriving Show
 
+alpha0, alpha :: String
 alpha0 = extSeparator : "-^!" ++ ['a'..'z'] ++ ['0'..'9']
 alpha  = pathSeparators ++ alpha0
 
@@ -45,10 +47,11 @@ instance Arbitrary COpts where
       [a,b,c,d,e,f] <- vector 6
       return.COpts $ CompOptions a b c d e f False
 
-plain from = sized $ \size -> do
-   s <- mapM (const $ elements from) [0..size `mod` 3]
-   return s
 
+plain :: String -> Gen String
+plain from = sized $ \size -> mapM (const $ elements from) [0..size `mod` 3]
+
+charRange :: Gen String
 charRange = do
    s <- plain alpha0
    if s `elem` ["^","!"]
@@ -58,6 +61,7 @@ charRange = do
       else
          return$ "[" ++ s ++       "]"
 
+openRange :: Gen String
 openRange = do
    probA <- choose (0,1) :: Gen Float
    probB <- choose (0,1) :: Gen Float
@@ -75,10 +79,9 @@ openRange = do
       , ">"
       ]
 
+fromRight :: Either a b -> b
 fromRight (Right x) = x
 fromRight _         = error "fromRight :: Left"
 
-isRight (Right _) = True
-isRight _         = False
-
+(-->) :: Bool -> Bool -> Bool
 a --> b = not a || b

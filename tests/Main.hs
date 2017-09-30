@@ -14,14 +14,16 @@ import qualified Tests.Regression as Regression
 import qualified Tests.Simplifier as Simplifier
 import qualified Tests.Utils      as Utils
 
+main :: IO ()
 main = do
    args <- getArgs
    defaultMainWithArgs tests . concat $
-      [ ["--timeout", show 10]
-      , ["--maximum-generated-tests", show 1000]
+      [ ["--timeout", show (10 :: Int)]
+      , ["--maximum-generated-tests", show (1000 :: Int)]
       , args
       ]
 
+tests :: [Test]
 tests =
    [ Regression.tests
    , Utils.tests

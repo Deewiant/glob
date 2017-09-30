@@ -4,18 +4,19 @@ module Tests.Regression (tests) where
 
 import Test.Framework
 import Test.Framework.Providers.HUnit
-import Test.HUnit.Base
+import Test.HUnit.Base hiding (Test)
 
 import System.FilePath.Glob.Base
 import System.FilePath.Glob.Match
 
+tests :: Test
 tests = testGroup "Regression"
    [ testGroup "Matching/compiling" .
         flip map matchCases $ \t@(b,p,s) ->
             tc (nameMatchTest t) $
                match (compile p) s == b
    , testGroup "Specific options" .
-        flip map matchWithCases $ \t@(b,co,mo,p,s) ->
+        flip map matchWithCases $ \(b,co,mo,p,s) ->
            tc (nameMatchTest (b,p,s)) $
               matchWith mo (compileWith co p) s == b
    , testGroup "Decompilation" .
@@ -25,9 +26,11 @@ tests = testGroup "Regression"
  where
    tc n = testCase n . assert
 
+nameMatchTest :: (Bool, String, FilePath) -> String
 nameMatchTest (True ,p,s) = show p ++ " matches " ++ show s
 nameMatchTest (False,p,s) = show p ++ " doesn't match " ++ show s
 
+decompileCases :: [(String, String, String)]
 decompileCases =
    [ ("range-compression-1", "[*]",   "[*]")
    , ("range-compression-2", "[.]",   "[.]")
@@ -40,6 +43,7 @@ decompileCases =
    , ("range-compression-9", "[/!^]", "[/^!]")
    ]
 
+matchCases :: [(Bool, String, String)]
 matchCases =
    [ (True , "*"          , "")
    , (True , "**"         , "")
@@ -134,6 +138,7 @@ matchCases =
    , (True,  ".//"        , ".//")
    ]
 
+matchWithCases :: [(Bool, CompOptions, MatchOptions, String, String)]
 matchWithCases =
    [ (True , compDefault, matchDefault { ignoreCase = True }, "[@-[]", "a")
    , (True , compPosix  , matchDefault                      , "a[/]b", "a[/]b")

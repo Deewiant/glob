@@ -5,14 +5,13 @@ module Tests.Instances (tests) where
 import Data.Monoid (mempty, mappend)
 import Test.Framework
 import Test.Framework.Providers.QuickCheck2
-import Test.QuickCheck ((==>))
+import Test.QuickCheck (Property, (==>))
 
 import System.FilePath.Glob.Base (Token(Unmatchable), tryCompileWith, unPattern)
-import System.FilePath.Glob.Match
-import System.FilePath.Glob.Simplify
 
 import Tests.Base
 
+tests :: Test
 tests = testGroup "Instances"
    [ testProperty "monoid-law-1" prop_monoidLaw1
    , testProperty "monoid-law-2" prop_monoidLaw2
@@ -21,6 +20,7 @@ tests = testGroup "Instances"
    ]
 
 -- The monoid laws: associativity...
+prop_monoidLaw1 :: COpts -> PString -> PString -> PString -> Property
 prop_monoidLaw1 opt x y z =
    let o       = unCOpts opt
        es      = map (tryCompileWith o . unPS) [x,y,z]
@@ -28,6 +28,7 @@ prop_monoidLaw1 opt x y z =
     in all isRight es ==> mappend a (mappend b c) == mappend (mappend a b) c
 
 -- ... left identity ...
+prop_monoidLaw2 :: COpts -> PString -> Property
 prop_monoidLaw2 opt x =
    let o = unCOpts opt
        e = tryCompileWith o (unPS x)
@@ -35,6 +36,7 @@ prop_monoidLaw2 opt x =
     in isRight e ==> mappend mempty a == a
 
 -- ... and right identity.
+prop_monoidLaw3 :: COpts -> PString -> Property
 prop_monoidLaw3 opt x =
    let o = unCOpts opt
        e = tryCompileWith o (unPS x)
@@ -46,6 +48,7 @@ prop_monoidLaw3 opt x =
 --
 -- (notice: relies on the fact that our Arbitrary instance doesn't generate
 -- unclosed [] or <>; we only check for **/ and Unmatchable)
+prop_monoid4 :: COpts -> PString -> PString -> Property
 prop_monoid4 opt x y =
    let o     = unCOpts opt
        es    = map (tryCompileWith o . unPS) [x,y]
