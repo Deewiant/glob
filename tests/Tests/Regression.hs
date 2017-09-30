@@ -41,6 +41,7 @@ decompileCases =
    , ("range-compression-7", "/[a.]", "/a")
    , ("range-compression-8", "/[.!^]", "/[/^!]")
    , ("range-compression-9", "[/!^]", "[/^!]")
+   , ("num-compression-1", "<->[0-9]<->", "[0-9][0-9]<->")
    ]
 
 matchCases :: [(Bool, String, String)]
@@ -136,6 +137,7 @@ matchCases =
    , (False, "[^-]"       , "-")
    , (True,  "//"         , "//")
    , (True,  ".//"        , ".//")
+   , (False, "<-><->"     , "1")
    ]
 
 matchWithCases :: [(Bool, CompOptions, MatchOptions, String, String)]

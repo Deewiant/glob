@@ -588,26 +588,30 @@ optimize (Pattern pat) =
            x'@(CharRange _ _) -> x' : go xs
            x'                 -> go (x':xs)
 
+   -- Put [0-9] in front of <-> to allow compressing <->[0-9]<->. Handling the
+   -- [0-9] first in matching should also be faster in general.
+   go (o@(OpenRange Nothing Nothing) : d : xs) | d == anyDigit =
+      d : go (o : xs)
+
    go (x:xs) =
-      case find ($ x) compressors of
-           Just c  -> let (compressed,ys) = span c xs
-                       in if null compressed
-                             then x : go ys
-                             else go (x : ys)
+      case find ((== x) . fst) compressables of
+           Just (_, f) -> let (compressed,ys) = span (== x) xs
+                           in if null compressed
+                                 then x : go ys
+                                 else f (length compressed) ++ go (x : ys)
            Nothing -> x : go xs
 
    checkUnmatchable f ts = if Unmatchable `elem` ts then [Unmatchable] else f ts
 
-   compressors = [isStar, isStarSlash, isAnyNumber]
+   compressables = [ (AnyNonPathSeparator, const [])
+                   , (AnyDirectory, const [])
+                   , (OpenRange Nothing Nothing, \n -> replicate n anyDigit)
+                   ]
 
-   isCharLiteral (Literal _)                 = True
-   isCharLiteral _                           = False
-   isStar        AnyNonPathSeparator         = True
-   isStar        _                           = False
-   isStarSlash   AnyDirectory                = True
-   isStarSlash   _                           = False
-   isAnyNumber   (OpenRange Nothing Nothing) = True
-   isAnyNumber   _                           = False
+   isCharLiteral (Literal _) = True
+   isCharLiteral _           = False
+
+   anyDigit = CharRange True [Right ('0', '9')]
 
 optimizeCharRange :: Bool -> Token -> Token
 optimizeCharRange precededBySlash (CharRange b rs) =

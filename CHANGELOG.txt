@@ -45,6 +45,7 @@
 	         match "007".
 	Bug fix: "//" did not match itself.
 	Bug fix: ".//" did not match itself.
+	Bug fix: "<-><->" matched single digit numbers.
 
 0.8.0, 2017-05-27:
         Added instance IsString Pattern, thanks to Mitsutoshi Aoe.
