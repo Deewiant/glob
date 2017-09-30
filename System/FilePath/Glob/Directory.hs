@@ -101,7 +101,7 @@ data TypedPattern
 -- Directories without read permissions are returned as entries but their
 -- contents, of course, are not.
 globDir :: [Pattern] -> FilePath -> IO [[FilePath]]
-globDir pats dir = fmap fst $ globDirWith globDefault pats dir
+globDir pats dir = fmap fst (globDirWith globDefault pats dir)
 
 -- |Like 'globDir', but applies the given 'GlobOptions' instead of the
 -- defaults when matching. The first component of the returned tuple contains
@@ -195,17 +195,17 @@ matchTypedAndGo :: GlobOptions
 matchTypedAndGo opts [Any p] path absPath =
    if matchWith (matchOptions opts) p path
       then return (DL.singleton absPath, DL.empty)
-      else doesDirectoryExist absPath >>= didn'tMatch opts path absPath
+      else doesDirectoryExist absPath >>= didNotMatch opts path absPath
 
 matchTypedAndGo opts (Dir n p:ps) path absPath = do
    isDir <- doesDirectoryExist absPath
    if isDir && matchWith (matchOptions opts) p path
       then globDir' opts ps (absPath ++ replicate n pathSeparator)
-      else didn'tMatch opts path absPath isDir
+      else didNotMatch opts path absPath isDir
 
-matchTypedAndGo opts (AnyDir n p:ps) path absPath = do
+matchTypedAndGo opts (AnyDir n p:ps) path absPath =
    if path `elem` [".",".."]
-      then didn'tMatch opts path absPath True
+      then didNotMatch opts path absPath True
       else do
          isDir <- doesDirectoryExist absPath
          let m = matchWith (matchOptions opts) (unseparate ps)
@@ -238,7 +238,7 @@ matchTypedAndGo opts (AnyDir n p:ps) path absPath = do
                         , DL.empty
                         )
               _ ->
-                 didn'tMatch opts path absPath isDir
+                 didNotMatch opts path absPath isDir
 
 matchTypedAndGo _ _ _ _ = error "Glob.matchTypedAndGo :: internal error"
 
@@ -280,11 +280,11 @@ recursiveMatch n isMatch path =
 -- To be called when a pattern didn't match a path: given the path and whether
 -- it was a directory, return all paths which didn't match (i.e. for a file,
 -- just the file, and for a directory, everything inside it).
-didn'tMatch :: GlobOptions -> FilePath -> FilePath -> Bool
+didNotMatch :: GlobOptions -> FilePath -> FilePath -> Bool
             -> IO (DList FilePath, DList FilePath)
-didn'tMatch opts path absPath isDir =
+didNotMatch opts path absPath isDir =
    if includeUnmatched opts
-      then (fmap $ (,) DL.empty) $
+      then fmap ((,) DL.empty) $
          if isDir
             then if path `elem` [".",".."]
                     then return DL.empty

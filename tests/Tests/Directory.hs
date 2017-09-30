@@ -46,10 +46,8 @@ caseIncludeUnmatched = do
    mapM_ (uncurry assertEqualUnordered) (zip expectedMatches (fst result))
 
    case snd result of
-       Nothing ->
-          assertFailure "Expected Just a list of unmatched files"
-       Just unmatched -> do
-          assertEqualUnordered everythingElse unmatched
+       Nothing -> assertFailure "Expected Just a list of unmatched files"
+       Just unmatched -> assertEqualUnordered everythingElse unmatched
 
 caseOnlyMatched :: Assertion
 caseOnlyMatched = do

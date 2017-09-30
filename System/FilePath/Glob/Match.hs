@@ -86,9 +86,7 @@ match' o (CharRange b rng :xs) (c:cs) =
           either (== c) (`inRange` c) r ||
              -- See comment near Base.tokToLower for an explanation of why we
              -- do this
-             if ignoreCase o
-                then either (== toUpper c) (`inRange` toUpper c) r
-                else False
+             ignoreCase o && either (== toUpper c) (`inRange` toUpper c) r
     in not (isPathSeparator c) &&
        any rangeMatch rng == b &&
        match' o xs cs
@@ -98,23 +96,22 @@ match' o (OpenRange lo hi :xs) path =
       (lzNum,cs) = span isDigit path
       num        = dropLeadingZeroes lzNum
       numChoices =
-         tail . takeWhile (not.null.snd) . map (flip splitAt num) $ [0..]
-    in if null lzNum
-          then False -- no digits
-          else
-            -- So, given the path "123foo" what we've got is:
-            --    cs         = "foo"
-            --    num        = "123"
-            --    numChoices = [("1","23"),("12","3")]
-            --
-            -- We want to try matching x against each of 123, 12, and 1.
-            -- 12 and 1 are in numChoices already, but we need to add (num,"")
-            -- manually.
-            any (\(n,rest) -> inOpenRange lo hi n && match' o xs (rest ++ cs))
-                ((num,"") : numChoices)
+         tail . takeWhile (not.null.snd) . map (`splitAt` num) $ [0..]
+    in -- null lzNum means no digits: definitely not a match
+       not (null lzNum) &&
+          -- So, given the path "123foo" what we've got is:
+          --    cs         = "foo"
+          --    num        = "123"
+          --    numChoices = [("1","23"),("12","3")]
+          --
+          -- We want to try matching x against each of 123, 12, and 1.
+          -- 12 and 1 are in numChoices already, but we need to add (num,"")
+          -- manually.
+          any (\(n,rest) -> inOpenRange lo hi n && match' o xs (rest ++ cs))
+              ((num,"") : numChoices)
 
 match' o again@(AnyNonPathSeparator:xs) path@(c:cs) =
-   match' o xs path || (if isPathSeparator c then False else match' o again cs)
+   match' o xs path || (not (isPathSeparator c) && match' o again cs)
 
 match' o again@(AnyDirectory:xs) path =
    let parts   = pathParts (dropWhile isPathSeparator path)
