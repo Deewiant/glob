@@ -13,7 +13,7 @@ import System.FilePath   (isPathSeparator, isExtSeparator)
 
 import System.FilePath.Glob.Base  ( Pattern(..), Token(..)
                                   , MatchOptions(..), matchDefault
-                                  , tokToLower
+                                  , isLiteral, tokToLower
                                   )
 import System.FilePath.Glob.Utils (dropLeadingZeroes, inRange, pathParts)
 
@@ -40,10 +40,10 @@ matchWith opts p f = begMatch opts (lcPat $ unPattern p) (lcPath f)
 --
 -- (All of the above is modulo options, of course)
 begMatch, match' :: MatchOptions -> [Token] -> FilePath -> Bool
-begMatch _ (ExtSeparator:AnyDirectory:_) (x:y:_)
+begMatch _ (Literal '.' : AnyDirectory : _) (x:y:_)
    | isExtSeparator x && isExtSeparator y = False
 
-begMatch opts (ExtSeparator:PathSeparator:pat) s | ignoreDotSlash opts =
+begMatch opts (Literal '.' : PathSeparator : pat) s | ignoreDotSlash opts =
    begMatch opts (dropWhile isSlash pat) (dropDotSlash s)
  where
    isSlash PathSeparator = True
@@ -60,15 +60,15 @@ begMatch opts pat (x:y:s)
    dotSlash = isExtSeparator x && isPathSeparator y
    (dotStarSlash, pat') =
       case pat of
-        ExtSeparator:AnyNonPathSeparator:PathSeparator:rest -> (True, rest)
-        _                                                   -> (False, pat)
+        Literal '.': AnyNonPathSeparator : PathSeparator : rest -> (True, rest)
+        _                                                       -> (False, pat)
 
-begMatch opts pat s =
-   if not (null s) && isExtSeparator (head s) && not (matchDotsImplicitly opts)
-      then case pat of
-                ExtSeparator:pat' -> match' opts pat' (tail s)
-                _                 -> False
-      else match' opts pat s
+begMatch opts pat (e:_)
+   | isExtSeparator e
+     && not (matchDotsImplicitly opts)
+     && not (isLiteral . Pattern $ take 1 pat) = False
+
+begMatch opts pat s = match' opts pat s
 
 match' _ []                        s  = null s
 match' _ (AnyNonPathSeparator:s)   "" = null s

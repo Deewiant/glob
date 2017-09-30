@@ -357,7 +357,7 @@ driveSplit = check . split . unPattern
 
    comp s = let (p,l) = foldr f ([],[]) s in if null l then p else ll l p
     where
-      f c (p,l) | isExtSeparator  c = (ExtSeparator  : ll l p, [])
+      f c (p,l) | isExtSeparator  c = (Literal '.'   : ll l p, [])
                 | isPathSeparator c = (PathSeparator : ll l p, [])
                 | otherwise         = (p, c:l)
 
@@ -371,7 +371,7 @@ driveSplit = check . split . unPattern
 commonDirectory :: Pattern -> (FilePath, Pattern)
 commonDirectory = second unseparate . splitP . separate
  where
-   splitP pt@(Dir n p:ps) | not (startsWithImplicitExt p) =
+   splitP pt@(Dir n p:ps) =
       case fromConst DL.empty (unPattern p) of
            Just d  -> first ((d ++ replicate n pathSeparator) </>) (splitP ps)
            Nothing -> ("", pt)
@@ -383,11 +383,3 @@ commonDirectory = second unseparate . splitP . separate
    fromConst d (ExtSeparator   :xs) = fromConst (d `DL.snoc` extSeparator) xs
    fromConst d (LongLiteral _ s:xs) = fromConst (d `DL.append`DL.fromList s) xs
    fromConst _ _                    = Nothing
-
-   -- "." must be explicitly matched at the start of a pattern or after a path
-   -- separator; this function checks for an implicit match i.e. "[.]".
-   startsWithImplicitExt p =
-      case unPattern p of
-         (Literal '.' : _) -> True
-         (LongLiteral _ ('.':_) : _) -> True
-         _ -> False

@@ -6,7 +6,8 @@ import Test.Framework
 import Test.Framework.Providers.QuickCheck2
 import Test.QuickCheck ((==>))
 
-import System.FilePath.Glob.Base  (tokenize, optimize)
+import System.FilePath.Glob.Base
+   (Token(ExtSeparator), optimize, tokenize, unPattern)
 import System.FilePath.Glob.Match
 
 import Tests.Base
@@ -14,6 +15,7 @@ import Tests.Base
 tests = testGroup "Optimizer"
    [ testProperty "optimize-1" prop_optimize1
    , testProperty "optimize-2" prop_optimize2
+   , testProperty "optimize-3" prop_optimize3
    ]
 
 -- Optimizing twice should give the same result as optimizing once
@@ -28,3 +30,10 @@ prop_optimize2 o p s =
        pat = fromRight x
        pth = unP s
     in isRight x ==> match pat pth == match (optimize pat) pth
+
+-- Optimizing should remove all ExtSeparators
+prop_optimize3 o p =
+   let x   = tokenize (unCOpts o) (unPS p)
+       pat = fromRight x
+    in isRight x && ExtSeparator `elem` unPattern pat
+       ==> ExtSeparator `notElem` unPattern (optimize pat)

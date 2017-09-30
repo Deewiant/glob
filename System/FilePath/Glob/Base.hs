@@ -53,7 +53,7 @@ import Text.Read (readPrec, lexP, parens, prec, Lexeme(Ident))
 data Token
    -- primitives
    = Literal !Char
-   | ExtSeparator                              --  .
+   | ExtSeparator                              --  .  optimized away to Literal
    | PathSeparator                             --  /
    | NonPathSeparator                          --  ?
    | CharRange !Bool [Either Char (Char,Char)] --  []
@@ -519,7 +519,18 @@ charRange opts zs =
 
 
 optimize :: Pattern -> Pattern
-optimize = liftP (fin . checkUnmatchable . convertExtSeparators . go)
+optimize (Pattern pat) =
+   Pattern . fin $
+      case pat of
+         e : ts | e == ExtSeparator || e == Literal '.' ->
+            checkUnmatchable (Literal '.' :) (go ts)
+         _ ->
+            -- Handle the case where the whole pattern starts with a
+            -- now-literalized [.]. LongLiterals haven't been created yet so
+            -- checking for Literal suffices.
+            case go pat of
+                 Literal '.' : _ -> [Unmatchable]
+                 opat -> checkUnmatchable id opat
  where
    fin [] = []
 
@@ -552,6 +563,22 @@ optimize = liftP (fin . checkUnmatchable . convertExtSeparators . go)
    fin (x:xs) = x : fin xs
 
    go [] = []
+
+   -- Get rid of ExtSeparators, so that they can hopefully be combined into
+   -- LongLiterals later.
+   --
+   -- /.                      -> fine
+   -- . elsewhere             -> fine
+   -- /[.]                    -> Unmatchable
+   -- [.] at start of pattern -> handled outside 'go'
+   go (p@PathSeparator : ExtSeparator : xs) = p : Literal '.' : go xs
+   go (ExtSeparator : xs) = Literal '.' : go xs
+   go (p@PathSeparator : x@(CharRange _ _) : xs) =
+      p : case optimizeCharRange x of
+             x'@(CharRange _ _) -> x' : go xs
+             Literal '.'        -> [Unmatchable]
+             x'                 -> go (x':xs)
+
    go (x@(CharRange _ _) : xs) =
       case optimizeCharRange x of
            x'@(CharRange _ _) -> x' : go xs
@@ -574,40 +601,7 @@ optimize = liftP (fin . checkUnmatchable . convertExtSeparators . go)
                              else go (x : ys)
            Nothing -> x : go xs
 
-   convertExtSeparators [] = []
-   convertExtSeparators ts =
-      case spanSegment ts of
-           (Literal '.' : _, _, _) ->
-              [Unmatchable]
-           (ExtSeparator : ts', seps, rest) ->
-              ExtSeparator : convert ts'
-              ++ seps
-              ++ convertExtSeparators rest
-           (ts', seps, rest) ->
-              convert ts'
-              ++ seps
-              ++ convertExtSeparators rest
-      where
-      convert [] = []
-      convert (ExtSeparator : xs) = Literal '.' : convert xs
-      convert (x : xs) = x : convert xs
-
-   -- Split the given list of tokens into:
-   --   * tokens up until the next path separator
-   --   * path separator(s)
-   --   * everything else
-   --
-   -- so e.g. spanSegment applied to foo//bar/baz should give
-   -- (foo, //, bar/baz).
-   spanSegment :: [Token] -> ([Token], [Token], [Token])
-   spanSegment ts =
-      let (segment, rest') = span (/= PathSeparator) ts
-          (separators, rest) = span (== PathSeparator) rest'
-       in (segment, separators, rest)
-
-   -- needs to be after 'go', so that optimizeCharRange takes care of [/], but
-   -- before 'fin', i.e. before Literals are changed into LongLiterals.
-   checkUnmatchable ts = if Unmatchable `elem` ts then [Unmatchable] else ts
+   checkUnmatchable f ts = if Unmatchable `elem` ts then [Unmatchable] else f ts
 
    compressors = [isStar, isStarSlash, isAnyNumber]
 
