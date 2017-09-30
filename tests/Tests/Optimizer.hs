@@ -7,7 +7,7 @@ import Test.Framework.Providers.QuickCheck2
 import Test.QuickCheck ((==>))
 
 import System.FilePath.Glob.Base
-   (Token(ExtSeparator), optimize, tokenize, unPattern)
+   (Token(ExtSeparator, Literal), optimize, liftP, tokenize, unPattern)
 import System.FilePath.Glob.Match
 
 import Tests.Base
@@ -25,11 +25,18 @@ prop_optimize1 o s =
     in isRight pat ==> xs !! 1 == xs !! 2
 
 -- Optimizing shouldn't affect whether a match succeeds
+--
+-- ...except for the ExtSeparator removal, because it's explicitly not handled
+-- in matching.
 prop_optimize2 o p s =
    let x   = tokenize (unCOpts o) (unPS p)
        pat = fromRight x
        pth = unP s
-    in isRight x ==> match pat pth == match (optimize pat) pth
+    in isRight x ==> match (liftP (map replaceExtSeparator) pat) pth
+                     == match (optimize pat) pth
+ where
+   replaceExtSeparator ExtSeparator = Literal '.'
+   replaceExtSeparator t = t
 
 -- Optimizing should remove all ExtSeparators
 prop_optimize3 o p =

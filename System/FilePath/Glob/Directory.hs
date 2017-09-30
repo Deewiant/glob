@@ -15,7 +15,7 @@ import System.Directory ( doesDirectoryExist, getDirectoryContents
                         , getCurrentDirectory
                         )
 import System.FilePath  ( (</>), takeDrive, splitDrive
-                        , extSeparator, isExtSeparator
+                        , isExtSeparator
                         , pathSeparator, isPathSeparator
                         , takeDirectory
                         )
@@ -335,7 +335,6 @@ driveSplit = check . split . unPattern
    split (LongLiteral _ l : xs) = first (l++) (split xs)
    split (    Literal   l : xs) = first (l:) (split xs)
    split (PathSeparator   : xs) = first (pathSeparator:) (split xs)
-   split ( ExtSeparator   : xs) = first ( extSeparator:) (split xs)
    split xs                     = ([],xs)
 
    -- The isPathSeparator check is interesting in two ways:
@@ -380,6 +379,5 @@ commonDirectory = second unseparate . splitP . separate
 
    fromConst d []                   = Just (DL.toList d)
    fromConst d (Literal c      :xs) = fromConst (d `DL.snoc` c) xs
-   fromConst d (ExtSeparator   :xs) = fromConst (d `DL.snoc` extSeparator) xs
    fromConst d (LongLiteral _ s:xs) = fromConst (d `DL.append`DL.fromList s) xs
    fromConst _ _                    = Nothing

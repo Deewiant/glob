@@ -73,8 +73,7 @@ begMatch opts pat s = match' opts pat s
 match' _ []                        s  = null s
 match' _ (AnyNonPathSeparator:s)   "" = null s
 match' _ _                         "" = False
-match' o (Literal l       :xs) (c:cs) =           l == c  && match' o xs cs
-match' o ( ExtSeparator   :xs) (c:cs) = isExtSeparator c  && match' o xs cs
+match' o (Literal l       :xs) (c:cs) = l == c && match' o xs cs
 match' o (NonPathSeparator:xs) (c:cs) =
    not (isPathSeparator c) && match' o xs cs
 
@@ -131,6 +130,7 @@ match' o (LongLiteral len s:xs) path =
     in pre == s && match' o xs cs
 
 match' _ (Unmatchable:_) _ = False
+match' _ (ExtSeparator:_) _ = error "ExtSeparator survived optimization?"
 
 -- Does the actual open range matching: finds whether the third parameter
 -- is between the first two or not.

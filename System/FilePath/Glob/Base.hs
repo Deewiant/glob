@@ -681,7 +681,6 @@ isLiteral :: Pattern -> Bool
 isLiteral = all lit . unPattern
  where
    lit (Literal _) = True
-   lit ExtSeparator = True
-   lit PathSeparator = True
    lit (LongLiteral _ _) = True
+   lit PathSeparator = True
    lit _ = False
