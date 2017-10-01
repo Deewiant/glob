@@ -1,8 +1,13 @@
 -- File created: 2009-01-30 15:01:02
 
+{-# LANGUAGE CPP #-}
+
 module Tests.Instances (tests) where
 
+-- Monoid is re-exported from Prelude as of 4.8.0.0
+#if !MIN_VERSION_base(4,8,0)
 import Data.Monoid (mempty, mappend)
+#endif
 import Test.Framework
 import Test.Framework.Providers.QuickCheck2
 import Test.QuickCheck (Property, (==>))
