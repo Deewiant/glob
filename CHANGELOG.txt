@@ -46,6 +46,7 @@
 	Bug fix: "//" did not match itself.
 	Bug fix: ".//" did not match itself.
 	Bug fix: "<-><->" matched single digit numbers.
+	Bug fix: "<0-0><1-1>" didn't match "01".
 
 0.8.0, 2017-05-27:
         Added instance IsString Pattern, thanks to Mitsutoshi Aoe.

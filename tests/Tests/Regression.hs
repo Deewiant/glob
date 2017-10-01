@@ -138,6 +138,8 @@ matchCases =
    , (True,  "//"         , "//")
    , (True,  ".//"        , ".//")
    , (False, "<-><->"     , "1")
+   , (True,  "<0-0><1-1>" , "01")
+   , (True,  "<0-1><0-1>" , "00")
    ]
 
 matchWithCases :: [(Bool, CompOptions, MatchOptions, String, String)]

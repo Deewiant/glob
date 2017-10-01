@@ -92,23 +92,31 @@ match' o (CharRange b rng :xs) (c:cs) =
        match' o xs cs
 
 match' o (OpenRange lo hi :xs) path =
-   let
-      (lzNum,cs) = span isDigit path
-      num        = dropLeadingZeroes lzNum
-      numChoices =
-         tail . takeWhile (not.null.snd) . map (`splitAt` num) $ [0..]
+   let getNumChoices n =
+          tail . takeWhile (not.null.snd) . map (`splitAt` n) $ [0..]
+       (lzNum,cs) = span isDigit path
+       num        = dropLeadingZeroes lzNum
+       numChoices = getNumChoices num
+       zeroChoices = takeWhile (all (=='0') . fst) (getNumChoices lzNum)
     in -- null lzNum means no digits: definitely not a match
        not (null lzNum) &&
-          -- So, given the path "123foo" what we've got is:
-          --    cs         = "foo"
-          --    num        = "123"
-          --    numChoices = [("1","23"),("12","3")]
+          -- So, given the path "00123foo" what we've got is:
+          --    lzNum       = "00123"
+          --    cs          = "foo"
+          --    num         = "123"
+          --    numChoices  = [("1","23"),("12","3")]
+          --    zeroChoices = [("0", "0123"), ("00", "123")]
           --
           -- We want to try matching x against each of 123, 12, and 1.
           -- 12 and 1 are in numChoices already, but we need to add (num,"")
           -- manually.
-          any (\(n,rest) -> inOpenRange lo hi n && match' o xs (rest ++ cs))
-              ((num,"") : numChoices)
+          --
+          -- It's also possible that we only want to match the zeroes. Handle
+          -- that separately since inOpenRange doesn't like leading zeroes.
+          (any (\(n,rest) -> inOpenRange lo hi n && match' o xs (rest ++ cs))
+               ((num,"") : numChoices)
+           || (not (null zeroChoices) && inOpenRange lo hi "0"
+               && any (\(_,rest) -> match' o xs (rest ++ cs)) zeroChoices))
 
 match' o again@(AnyNonPathSeparator:xs) path@(c:cs) =
    match' o xs path || (not (isPathSeparator c) && match' o again cs)
