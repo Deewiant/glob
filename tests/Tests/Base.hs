@@ -4,7 +4,6 @@ module Tests.Base ( PString(unPS), Path(unP), COpts(unCOpts)
                   , (-->), fromRight, isRight
                   ) where
 
-import Data.Either (isRight)
 import System.FilePath (extSeparator, pathSeparators)
 import Test.QuickCheck
 
@@ -78,6 +77,11 @@ openRange = do
       , maybe "" show (b :: Maybe Int)
       , ">"
       ]
+
+-- Not in Data.Either until base-4.7 (GHC 7.8)
+isRight :: Either a b -> Bool
+isRight (Right _) = True
+isRight _ = False
 
 fromRight :: Either a b -> b
 fromRight (Right x) = x
