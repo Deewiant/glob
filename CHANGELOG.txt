@@ -1,7 +1,12 @@
 0.9.0, 2017-10-01:
+	Thanks to Harry Garrood for many contributions to this release.
+
 	New functions, data types, and constants:
 		System.FilePath.Glob.isLiteral :: Pattern -> Bool
 			Tells whether a Pattern is a literal file path.
+
+			Thanks to Simon Hengel and Harry Garrood for the
+			feature request.
 
 		System.FilePath.Glob.GlobOptions
 			Options for the glob* family of IO functions.
