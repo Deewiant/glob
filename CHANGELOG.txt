@@ -45,6 +45,7 @@
 	         match "007".
 	Bug fix: "//" did not match itself.
 	Bug fix: ".//" did not match itself.
+	Bug fix: "x" did not match ".//x" (with ignoreDotSlash enabled).
 	Bug fix: "<-><->" matched single digit numbers.
 	Bug fix: "<0-0><1-1>" didn't match "01".
 

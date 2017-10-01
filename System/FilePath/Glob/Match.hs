@@ -55,7 +55,8 @@ begMatch opts (Literal '.' : PathSeparator : pat) s | ignoreDotSlash opts =
 
 begMatch opts pat (x:y:s)
    | dotSlash && dotStarSlash        = match' opts pat' s
-   | ignoreDotSlash opts && dotSlash = begMatch opts pat s
+   | ignoreDotSlash opts && dotSlash =
+        begMatch opts pat (dropWhile isPathSeparator s)
  where
    dotSlash = isExtSeparator x && isPathSeparator y
    (dotStarSlash, pat') =
