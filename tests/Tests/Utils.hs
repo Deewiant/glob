@@ -23,7 +23,7 @@ tests = testGroup "Utils"
 validateRange :: Ord a => (a, a) -> (a, a)
 validateRange (a,b) = if b > a then (a,b) else (b,a)
 
-prop_overlapperLosesNoInfo :: (Float, Float) -> (Float, Float) -> Float -> Bool
+prop_overlapperLosesNoInfo :: (Int, Int) -> (Int, Int) -> Int -> Bool
 prop_overlapperLosesNoInfo x1 x2 c =
    let r1 = validateRange x1
        r2 = validateRange x2
@@ -37,12 +37,12 @@ prop_overlapperLosesNoInfo x1 x2 c =
         Just o  -> (inRange r1 c --> inRange o c) &&
                    (inRange r2 c --> inRange o c)
 
-prop_increasingSeq :: Float -> [Float] -> Property
+prop_increasingSeq :: Int -> [Int] -> Bool
 prop_increasingSeq a xs =
    let s = fst . increasingSeq $ a:xs
-    in abs a <= 2^(23 :: Int) ==> s == reverse [a .. head s]
+    in s == reverse [a .. head s]
 
-prop_addToRange :: (Float, Float) -> Float -> Property
+prop_addToRange :: (Int, Int) -> Int -> Property
 prop_addToRange x c =
    let r  = validateRange x
        r' = addToRange r c
