@@ -43,7 +43,7 @@ instance Arbitrary Path where
 
 instance Arbitrary COpts where
    arbitrary = do
-      [a,b,c,d,e,f] <- vector 6
+      (a,b,c,d,e,f) <- arbitrary
       return.COpts $ CompOptions a b c d e f False
 
 
