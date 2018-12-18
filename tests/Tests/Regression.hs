@@ -141,8 +141,12 @@ matchCases =
    , (False, "<-><->"     , "1")
    , (True,  "<0-0><1-1>" , "01")
    , (True,  "<0-1><0-1>" , "00")
-   , (False, "foo/**/asdf", "foo/.bar/baz/asdf")
-   , (False, "foo/**/asdf", "foo/bar/.baz/asdf")
+   , (False, "a/**/d"     , "a/.b/c/d")
+   , (False, "a/**/d"     , "a/b/.c/d")
+   , (True,  "a/**/.d"    , "a/b/c/.d")
+   , (True,  "a/**/.c/d"  , "a/b/.c/d")
+   , (True,  "a/**/.c/.d" , "a/b/.c/.d")
+   , (True,  "a/**/.d/.e" , "a/b/c/.d/.e")
    ]
 
 matchWithCases :: [(Bool, CompOptions, MatchOptions, String, String)]

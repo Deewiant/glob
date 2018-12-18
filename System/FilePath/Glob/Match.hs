@@ -6,6 +6,8 @@ module System.FilePath.Glob.Match (match, matchWith) where
 
 import Control.Exception (assert)
 import Data.Char         (isDigit, toLower, toUpper)
+import Data.List         (findIndex)
+import Data.Maybe        (fromMaybe)
 #if !MIN_VERSION_base(4,8,0)
 import Data.Monoid       (mappend)
 #endif
@@ -74,7 +76,6 @@ begMatch opts pat s = match' opts pat s
 match' _ []                        s  = null s
 match' _ (AnyNonPathSeparator:s)   "" = null s
 match' _ _                         "" = False
-
 match' o (Literal l       :xs) (c:cs) = l == c && match' o xs cs
 match' o (NonPathSeparator:xs) (c:cs) =
    not (isPathSeparator c) && match' o xs cs
@@ -123,14 +124,16 @@ match' o (OpenRange lo hi :xs) path =
 match' o again@(AnyNonPathSeparator:xs) path@(c:cs) =
    match' o xs path || (not (isPathSeparator c) && match' o again cs)
 
-match' o again@(AnyDirectory:xs) path =
-   let parts   = pathParts (dropWhile isPathSeparator path)
-       matches = any (match' o xs) parts || any (match' o again) (tail parts)
-    in if not (matchDotsImplicitly o)
-          --  **/ shouldn't match foo/.bar, so check that remaining bits don't
-          -- start with .
-          then all (not.isExtSeparator.head) (init parts) && matches
-          else matches
+match' o (AnyDirectory:xs) path =
+   if not (matchDotsImplicitly o)
+      --  **/ shouldn't match foo/.bar, so check that remaining bits don't
+      -- start with .
+      then all (not.isExtSeparator.head) matchedDirs && matches
+      else matches
+ where parts   = pathParts (dropWhile isPathSeparator path)
+       matches = any (match' o xs) parts
+       getMatchIndex ps = fromMaybe 0 (findIndex (match' o xs) ps)
+       (matchedDirs, _) = splitAt (getMatchIndex parts) parts
 
 match' o (LongLiteral len s:xs) path =
    let (pre,cs) = splitAt len path
