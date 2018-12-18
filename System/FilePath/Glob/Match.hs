@@ -74,6 +74,7 @@ begMatch opts pat s = match' opts pat s
 match' _ []                        s  = null s
 match' _ (AnyNonPathSeparator:s)   "" = null s
 match' _ _                         "" = False
+
 match' o (Literal l       :xs) (c:cs) = l == c && match' o xs cs
 match' o (NonPathSeparator:xs) (c:cs) =
    not (isPathSeparator c) && match' o xs cs
@@ -125,7 +126,7 @@ match' o again@(AnyNonPathSeparator:xs) path@(c:cs) =
 match' o again@(AnyDirectory:xs) path =
    let parts   = pathParts (dropWhile isPathSeparator path)
        matches = any (match' o xs) parts || any (match' o again) (tail parts)
-    in if null xs && not (matchDotsImplicitly o)
+    in if not (matchDotsImplicitly o)
           --  **/ shouldn't match foo/.bar, so check that remaining bits don't
           -- start with .
           then all (not.isExtSeparator.head) (init parts) && matches
