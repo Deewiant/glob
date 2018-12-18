@@ -6,7 +6,7 @@ module System.FilePath.Glob.Match (match, matchWith) where
 
 import Control.Exception (assert)
 import Data.Char         (isDigit, toLower, toUpper)
-import Data.List         (findIndex)
+import Data.List         (elemIndex)
 import Data.Maybe        (fromMaybe)
 #if !MIN_VERSION_base(4,8,0)
 import Data.Monoid       (mappend)
@@ -128,12 +128,13 @@ match' o (AnyDirectory:xs) path =
    if not (matchDotsImplicitly o)
       --  **/ shouldn't match foo/.bar, so check that remaining bits don't
       -- start with .
-      then all (not.isExtSeparator.head) matchedDirs && matches
-      else matches
+      then all (not.isExtSeparator.head) matchedDirs && hasMatch
+      else hasMatch
  where parts   = pathParts (dropWhile isPathSeparator path)
-       matches = any (match' o xs) parts
-       getMatchIndex ps = fromMaybe 0 (findIndex (match' o xs) ps)
-       (matchedDirs, _) = splitAt (getMatchIndex parts) parts
+       matches = map (match' o xs) parts
+       hasMatch = or matches
+       matchIndex = fromMaybe 0 (elemIndex True matches)
+       (matchedDirs, _) = splitAt matchIndex parts
 
 match' o (LongLiteral len s:xs) path =
    let (pre,cs) = splitAt len path
