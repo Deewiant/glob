@@ -127,7 +127,7 @@ match' o again@(AnyNonPathSeparator:xs) path@(c:cs) =
 match' o (AnyDirectory:xs) path =
    if matchDotsImplicitly o
       then hasMatch
-      -- **/baz shouldn't match foo/.bar/baz, so check that none of the
+      --  **/baz shouldn't match foo/.bar/baz, so check that none of the
       -- directories matched by **/ start with .
       else all (not.isExtSeparator.head) matchedDirs && hasMatch
  where parts   = pathParts (dropWhile isPathSeparator path)
