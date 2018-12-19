@@ -129,7 +129,7 @@ match' o (AnyDirectory:xs) path =
       then hasMatch
       --  **/baz shouldn't match foo/.bar/baz, so check that none of the
       -- directories matched by **/ start with .
-      else all (not.isExtSeparator.head) matchedDirs && hasMatch
+      else hasMatch && all (not.isExtSeparator.head) matchedDirs
  where parts   = pathParts (dropWhile isPathSeparator path)
        matchIndex = findIndex (match' o xs) parts
        hasMatch = isJust matchIndex
