@@ -6,7 +6,7 @@ import Test.Framework.Providers.QuickCheck2
 import Test.QuickCheck (Property, (===))
 import Test.HUnit.Base hiding (Test)
 import Data.Function (on)
-import Data.Monoid ((<>))
+import Data.Monoid (mappend)
 import Data.List ((\\), sort)
 import qualified Data.DList as DList
 
@@ -99,7 +99,7 @@ prop_commonDirectory' :: String -> (Pattern, Pattern)
 prop_commonDirectory' str =
    let pat    = compile str
        (a, b) = commonDirectory pat
-    in (pat, literal a <> b)
+    in (pat, literal a `mappend` b)
 
 prop_commonDirectory :: PString -> Property
 prop_commonDirectory = uncurry (===) . prop_commonDirectory' . unPS
