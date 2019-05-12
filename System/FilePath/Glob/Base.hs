@@ -1,6 +1,7 @@
 -- File created: 2008-10-10 13:29:26
 
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE PatternGuards #-}
 
 module System.FilePath.Glob.Base
    ( Token(..), Pattern(..)
@@ -542,10 +543,10 @@ optimize (Pattern pat) =
    -- Has to be done here: we can't backtrack in go, but some cases might
    -- result in consecutive Literals being generated.
    -- E.g. "a[b]".
-   fin (x:y:xs) | isCharLiteral x && isCharLiteral y =
-      let (ls,rest) = span isCharLiteral xs
+   fin (x:y:xs) | Just x' <- isCharLiteral x, Just y' <- isCharLiteral y =
+      let (ls,rest) = spanMaybe isCharLiteral xs
        in fin $ LongLiteral (length ls + 2)
-                            (foldr (\(Literal a) -> (a:)) [] (x:y:ls))
+                            (foldr (\a -> (a:)) [] (x':y':ls))
                 : rest
 
    -- concatenate LongLiterals
@@ -608,10 +609,19 @@ optimize (Pattern pat) =
                    , (OpenRange Nothing Nothing, \n -> replicate n anyDigit)
                    ]
 
-   isCharLiteral (Literal _) = True
-   isCharLiteral _           = False
+   isCharLiteral (Literal x) = Just x
+   isCharLiteral _           = Nothing
 
    anyDigit = CharRange True [Right ('0', '9')]
+
+-- | Like 'span', but let's use a -> Maybe b predicate
+spanMaybe :: (a -> Maybe b) -> [a] -> ([b], [a])
+spanMaybe f = go
+ where
+   go xs@[]        = ([], xs)
+   go xs@(x : xs') = case f x of
+      Nothing -> ([], xs)
+      Just y  -> let (ys, zs) = go xs' in (y : ys, zs)
 
 optimizeCharRange :: Bool -> Token -> Token
 optimizeCharRange precededBySlash (CharRange b rs) =
