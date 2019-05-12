@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module Tests.Directory where
 
 import Test.Framework
@@ -6,7 +7,9 @@ import Test.Framework.Providers.QuickCheck2
 import Test.QuickCheck (Property, (===))
 import Test.HUnit.Base hiding (Test)
 import Data.Function (on)
+#if !MIN_VERSION_base(4,8,0)
 import Data.Monoid (mappend)
+#endif
 import Data.List ((\\), sort)
 import qualified Data.DList as DList
 
