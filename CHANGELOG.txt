@@ -1,6 +1,8 @@
 0.10.1, 2020-07-19:
 	Updated code and dependencies to support dlist-1.0.
 
+	Cabal-Version minimum bumped to 1.10 as Hackage now rejects older minima.
+
 0.10.0, 2018-12-19:
 	Bug fix: "**/" matched hidden directories in some scenarios even when
 	         matchDotsImplicitly was set to False.

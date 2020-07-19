@@ -1,4 +1,4 @@
-Cabal-Version: >= 1.9.2
+Cabal-Version: >= 1.10
 
 Name:        Glob
 Version:     0.10.1
@@ -39,6 +39,8 @@ Library
    if os(windows)
       Build-Depends: Win32 == 2.*
 
+   Default-Language: Haskell98
+
    Exposed-Modules: System.FilePath.Glob
                     System.FilePath.Glob.Primitive
    Other-Modules:   System.FilePath.Glob.Base
@@ -73,6 +75,8 @@ Test-Suite glob-tests
 
    if os(windows)
       Build-Depends: Win32 == 2.*
+
+   Default-Language: Haskell98
 
    Other-Modules: System.FilePath.Glob.Base
                   System.FilePath.Glob.Directory
