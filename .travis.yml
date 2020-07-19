@@ -24,11 +24,19 @@ install:
    - ghc --version
    - ghc --print-project-git-commit-id 2> /dev/null || true
    - travis_retry cabal update
-   - cabal install --only-dependencies --enable-tests --enable-benchmarks
+   # For pre-3.0, need to install dependencies before configuring
+   - cabal install --only-dependencies --enable-tests --enable-benchmarks || true
 
 script:
    - cabal configure --enable-tests --enable-benchmarks -v2
-   - cabal build --ghc-options=-Werror
+   - |
+     if [[ $CABALVER = [12]* ]]; then
+        cabal build --ghc-options=-Werror
+     else
+        # https://github.com/haskell/cabal/issues/3883
+        printf "package Glob\n  ghc-options: -Werror\n" >> cabal.project
+        cabal build
+     fi
    - cabal test --show-details=failures
    - cabal haddock
    - cabal check
