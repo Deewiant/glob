@@ -28,7 +28,7 @@ import System.FilePath.Glob.Match (matchWith)
 import System.FilePath.Glob.Utils ( getRecursiveContents
                                   , nubOrd
                                   , pathParts
-                                  , partitionDL
+                                  , partitionDL, tailDL
                                   , catchIO
                                   )
 -- |Options which can be passed to the 'globDirWith' function.
@@ -223,7 +223,7 @@ matchTypedAndGo opts (AnyDir n p:ps) path absPath =
                        then ( DL.singleton $
                                 DL.head contents
                                 ++ replicate n pathSeparator
-                            , DL.tail contents
+                            , tailDL contents
                             )
                        else let (matches, nonMatches) =
                                    partitionDL fst

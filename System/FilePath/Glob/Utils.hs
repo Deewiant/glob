@@ -8,7 +8,7 @@ module System.FilePath.Glob.Utils
    , dropLeadingZeroes
    , pathParts
    , nubOrd
-   , partitionDL
+   , partitionDL, tailDL
    , getRecursiveContents
    , catchIO
    ) where
@@ -153,6 +153,13 @@ partitionDL p_ = DL.foldr (f p_) (DL.empty,DL.empty)
       if p x
          then (DL.cons x ts, fs)
          else (ts, DL.cons x fs)
+
+tailDL :: DList a -> DList a
+#if MIN_VERSION_dlist(1,0,0)
+tailDL = DL.fromList . DL.tail
+#else
+tailDL = DL.tail
+#endif
 
 nubOrd :: Ord a => [a] -> [a]
 nubOrd = go Set.empty
