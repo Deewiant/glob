@@ -69,7 +69,7 @@ Test-Suite glob-tests
                 , test-framework-quickcheck2 >= 0.3 && < 1
 
    if impl(ghc < 8.0)
-      Build-Depends: semigroups >= 0.18 && < 0.19
+      Build-Depends: semigroups >= 0.18 && < 0.20
 
    if os(windows)
       Build-Depends: Win32 == 2.*
