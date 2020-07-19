@@ -37,7 +37,7 @@ script:
         printf "package Glob\n  ghc-options: -Werror\n" >> cabal.project
         cabal build
      fi
-   - cabal test --show-details=failures
+   - cabal test
    - cabal haddock
    - cabal check
    - cabal sdist
