@@ -45,7 +45,13 @@ script:
       SRC_TGZ=$(cabal info . | awk '{print $2 ".tar.gz";exit}')
       cd dist-newstyle/sdist || cd dist
       if [[ -f "$SRC_TGZ" ]]; then
-         cabal install --force-reinstalls "$SRC_TGZ"
+         if cabal --version | grep -q 'version 3.[0-3]'; then
+            # https://github.com/haskell/cabal/issues/6393
+            echo >&2 "cabal v2-install broke tarball installs, fixed in 3.4"
+            echo >&2 "Will not test sdist installability"
+         else
+            cabal install --force-reinstalls "$SRC_TGZ"
+         fi
       else
          echo >&2 "$SRC_TGZ not found"
          exit 1
