@@ -35,7 +35,11 @@ import Data.Maybe                        (fromMaybe)
 #if !MIN_VERSION_base(4,8,0)
 import Data.Monoid                       (Monoid, mappend, mempty, mconcat)
 #endif
+#if MIN_VERSION_base(4,11,0)
+import Data.Semigroup                    (sconcat, stimes)
+#else
 import Data.Semigroup                    (Semigroup, (<>), sconcat, stimes)
+#endif
 import Data.String                       (IsString(fromString))
 import System.FilePath                   ( pathSeparator, extSeparator
                                          , isExtSeparator, isPathSeparator
