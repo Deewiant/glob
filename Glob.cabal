@@ -31,7 +31,7 @@ Library
                 , dlist        >= 0.4 && < 1.1
                 , filepath     >= 1.1 && < 1.5
                 , transformers >= 0.2 && < 0.6
-                , transformers-compat >= 0.3 && < 0.7
+                , transformers-compat >= 0.3 && < 0.8
 
    if impl(ghc < 8.0)
       Build-Depends: semigroups >= 0.18 && < 0.20
@@ -63,7 +63,7 @@ Test-Suite glob-tests
                 , dlist                      >= 0.4 && < 1.1
                 , filepath                   >= 1.1 && < 1.5
                 , transformers               >= 0.2 && < 0.6
-                , transformers-compat        >= 0.3 && < 0.7
+                , transformers-compat        >= 0.3 && < 0.8
                 , HUnit                      >= 1.2 && < 1.7
                 , QuickCheck                 >= 2 && < 3
                 , test-framework             >= 0.2 && < 1
