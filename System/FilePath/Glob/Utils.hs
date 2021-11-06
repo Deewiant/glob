@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE ForeignFunctionInterface #-}
 -- File created: 2008-10-10 13:40:35
 
 module System.FilePath.Glob.Utils
@@ -26,7 +27,8 @@ import System.IO.Unsafe (unsafeInterleaveIO)
 #if mingw32_HOST_OS
 import Data.Bits          ((.&.))
 import System.Win32.Types (withTString)
-import System.Win32.File  (c_GetFileAttributes, fILE_ATTRIBUTE_DIRECTORY)
+import System.Win32.File  (FileAttributeOrFlag, fILE_ATTRIBUTE_DIRECTORY)
+import System.Win32.String (LPCTSTR)
 #else
 import Foreign.C.String      (withCString)
 import Foreign.Marshal.Alloc (allocaBytes)
@@ -123,6 +125,10 @@ doesDirectoryExist s =
             if st == 0
                then fmap s_isdir (st_mode p)
                else return False
+#endif
+
+#if mingw32_HOST_OS
+foreign import ccall unsafe "windows.h GetFileAttributesW" c_GetFileAttributes :: LPCTSTR -> IO FileAttributeOrFlag
 #endif
 
 getRecursiveContents :: FilePath -> IO (DList FilePath)
