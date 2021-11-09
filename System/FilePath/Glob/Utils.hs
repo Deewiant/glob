@@ -128,7 +128,13 @@ doesDirectoryExist s =
 #endif
 
 #if mingw32_HOST_OS
+#if defined(i386_HOST_ARCH)
+foreign import stdcall unsafe "windows.h GetFileAttributesW" c_GetFileAttributes :: LPCTSTR -> IO FileAttributeOrFlag
+#elif defined(x86_64_HOST_ARCH)
 foreign import ccall unsafe "windows.h GetFileAttributesW" c_GetFileAttributes :: LPCTSTR -> IO FileAttributeOrFlag
+#else
+#error Unknown mingw32 arch
+#endif
 #endif
 
 getRecursiveContents :: FilePath -> IO (DList FilePath)
