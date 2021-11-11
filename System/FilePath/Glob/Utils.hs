@@ -26,9 +26,8 @@ import System.IO.Unsafe (unsafeInterleaveIO)
 
 #if mingw32_HOST_OS
 import Data.Bits          ((.&.))
-import System.Win32.Types (withTString)
+import System.Win32.Types (LPCTSTR, withTString)
 import System.Win32.File  (FileAttributeOrFlag, fILE_ATTRIBUTE_DIRECTORY)
-import System.Win32.String (LPCTSTR)
 #else
 import Foreign.C.String      (withCString)
 import Foreign.Marshal.Alloc (allocaBytes)
