@@ -1,11 +1,12 @@
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Tests.Directory where
 
 import Test.Framework
 import Test.Framework.Providers.HUnit
 import Test.Framework.Providers.QuickCheck2
 import Test.QuickCheck (Property, (===))
-import Test.HUnit.Base hiding (Test)
+import Test.HUnit.Base hiding (Path, Test)
 import Data.Function (on)
 #if !MIN_VERSION_base(4,8,0)
 import Data.Monoid (mappend)
@@ -17,7 +18,8 @@ import System.FilePath.Glob.Base
 import System.FilePath.Glob.Directory
 import System.FilePath.Glob.Primitive
 import System.FilePath.Glob.Utils
-import Tests.Base (PString, unPS)
+import Tests.Base (Path (Path), PString, unPS)
+import Data.Bifunctor (Bifunctor(first))
 
 tests :: Test
 tests = testGroup "Directory"
@@ -34,8 +36,9 @@ tests = testGroup "Directory"
 caseIncludeUnmatched :: Assertion
 caseIncludeUnmatched = do
    let pats = ["**/D*.hs", "**/[MU]*.hs"]
-   everything <- getRecursiveContentsDir "System"
-   let expectedMatches =
+   everything <- fmap Path <$> getRecursiveContentsDir "System"
+   let expectedMatches :: [[Path]]
+       expectedMatches =
           [ [ "System/FilePath/Glob/Directory.hs" ]
           , [ "System/FilePath/Glob/Match.hs"
             , "System/FilePath/Glob/Utils.hs"
@@ -46,16 +49,17 @@ caseIncludeUnmatched = do
    result <- globDirWith (GlobOptions matchDefault True)
                          (map compile pats)
                          "System"
-   mapM_ (uncurry assertEqualUnordered) (zip expectedMatches (fst result))
+   mapM_ (uncurry assertEqualUnordered) (zip expectedMatches (fmap Path <$> fst result))
 
    case snd result of
        Nothing -> assertFailure "Expected Just a list of unmatched files"
-       Just unmatched -> assertEqualUnordered everythingElse unmatched
+       Just unmatched -> assertEqualUnordered everythingElse $ Path <$> unmatched
 
 caseOnlyMatched :: Assertion
 caseOnlyMatched = do
    let pats = ["**/D*.hs", "**/[MU]*.hs"]
-   let expectedMatches =
+   let expectedMatches :: [[Path]]
+       expectedMatches =
           [ [ "System/FilePath/Glob/Directory.hs" ]
           , [ "System/FilePath/Glob/Match.hs"
             , "System/FilePath/Glob/Utils.hs"
@@ -66,7 +70,7 @@ caseOnlyMatched = do
                          (map compile pats)
                          "System"
 
-   mapM_ (uncurry assertEqualUnordered) (zip expectedMatches (fst result))
+   mapM_ (uncurry assertEqualUnordered) (zip expectedMatches (fmap Path <$> fst result))
    assertEqual "" Nothing (snd result)
 
 caseGlobDir1 :: Assertion
@@ -112,7 +116,7 @@ testsCommonDirectoryEdgeCases = zipWith mkTest [1 :: Int ..] testData
  where
    mkTest i (input, expected) =
       testCase (show i) $ do
-         assertEqual "" expected (commonDirectory (compile input))
+         assertEqual "" (first Path expected) (first Path $ commonDirectory (compile input))
          uncurry (assertEqual "") (prop_commonDirectory' input)
 
    testData =
@@ -131,7 +135,7 @@ testsRepeatedPathSeparators = zipWith mkTest [1 :: Int ..] testData
  where
    mkTest i (dir, pat, expected) =
       testCase (show i) $ do
-         actual <- globDir1 (compile pat) dir
+         actual <- fmap Path <$> globDir1 (compile pat) dir
          assertEqualUnordered expected actual
 
    testData =

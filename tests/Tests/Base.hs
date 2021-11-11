@@ -1,6 +1,6 @@
 -- File created: 2008-10-10 22:03:00
 
-module Tests.Base ( PString(unPS), Path(unP), COpts(unCOpts)
+module Tests.Base ( PString(unPS), Path(Path, unP), COpts(unCOpts)
                   , (-->), fromRight, isRight
                   ) where
 
@@ -8,10 +8,35 @@ import System.FilePath (extSeparator, pathSeparators)
 import Test.QuickCheck
 
 import System.FilePath.Glob.Base (CompOptions(..))
+import Data.String (IsString (fromString))
 
 newtype PString = PatString { unPS    :: String } deriving Show
 newtype Path    = Path      { unP     :: String } deriving Show
 newtype COpts   = COpts     { unCOpts :: CompOptions } deriving Show
+
+instance Eq Path where
+   p1 == p2 =
+      let
+         Path s1 = normalizePath p1
+         Path s2 = normalizePath p2
+      in s1 == s2
+
+instance Ord Path where
+   p1 `compare` p2 =
+      let
+         Path s1 = normalizePath p1
+         Path s2 = normalizePath p2
+      in s1 `compare` s2
+
+normalizePath :: Path -> Path
+normalizePath (Path s) =
+   Path $ norm <$> s
+   where
+      norm '\\' = '/'
+      norm c = c
+
+instance IsString Path where
+   fromString = Path
 
 alpha0, alpha :: String
 alpha0 = extSeparator : "-^!" ++ ['a'..'z'] ++ ['0'..'9']

@@ -4,10 +4,11 @@ module Tests.Regression (tests) where
 
 import Test.Framework
 import Test.Framework.Providers.HUnit
-import Test.HUnit.Base hiding (Test)
+import Test.HUnit.Base hiding (Path, Test)
 
 import System.FilePath.Glob.Base
 import System.FilePath.Glob.Match
+import Tests.Base
 
 tests :: Test
 tests = testGroup "Regression"
@@ -21,7 +22,7 @@ tests = testGroup "Regression"
               matchWith mo (compileWith co p) s == b
    , testGroup "Decompilation" .
         flip map decompileCases $ \(n,orig,s) ->
-           tc n $ decompile (compile orig) == s
+           tc n $ Path (decompile (compile orig)) == Path s
    ]
  where
    tc n = testCase n . assert
