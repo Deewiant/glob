@@ -38,7 +38,7 @@ Library
       Build-Depends: semigroups >= 0.18
 
    if os(windows)
-      Build-Depends: Win32 >= 2
+      Build-Depends: Win32 >= 2.5
 
    Default-Language: Haskell98
 
